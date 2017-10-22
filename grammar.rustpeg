@@ -1,0 +1,1073 @@
+// Written for peg 0.5.4
+
+#![arguments(env: &mut Env)]
+
+use ast::*;
+use astutil::*;
+use env::Env;
+use span::{Node, Span};
+
+////
+// Prologue
+////
+
+box<ex> = e:ex { Box::new(e) }
+
+node<ex> = l:#position e:ex r:#position { Node::new(e, Span::span(l, r)) }
+
+// Lists of elements.
+list0<ex> = e:ex ** _ { e }
+list1<ex> = e:ex ++ _ { e }
+cs0<ex> = e:ex ** (_ "," _) { e }
+cs1<ex> = e:ex ++ (_ "," _) { e }
+
+////
+// Whitespace
+////
+
+_ = #quiet<("\n" directive? / [ \t])*>
+
+directive = "#" [^\n]*
+
+////
+// 6.4.1 Keywords
+////
+
+K<E> = #quiet<E ![_a-zA-Z0-9]>
+
+////
+// 6.4.2 Identifiers
+////
+
+// Identifiers.
+identifier -> Node<Identifier> = node<identifier0>
+
+identifier0 -> Identifier =
+    n:$([_a-zA-Z] [_a-zA-Z0-9]*) {? 
+        if !env.reserved.contains(n) {
+            Ok(Identifier {
+                name: n.into(),
+            })
+        } else {
+            Err("identifier")
+        }
+    }
+
+////
+// 6.4.3 Universal character names
+////
+
+// TODO
+
+////
+// 6.4.4 Constants
+////
+
+ohx = "0" [xX]
+dec = [0-9]
+oct = [0-7]
+hex = [0-9a-fA-F]
+
+pub constant -> Constant =
+    &[0-9.] c:numeric_constant { c } /
+    &['uUL] c:character_constant { Constant::Character(c) }
+
+numeric_constant -> Constant =
+    c:float_constant { Constant::Float(c) } /
+    c:integer_constant { Constant::Integer(c) }
+
+integer_constant -> Integer =
+    n:$([1-9] dec* integer_suffix?) { Integer::Decimal(String::from(n)) } /
+    n:$(ohx hex+ integer_suffix?) { Integer::Hexademical(String::from(n)) } /
+    n:$("0" oct* integer_suffix?) { Integer::Octal(String::from(n)) }
+
+integer_suffix = ([uUlL] / gnu<[iIjJ]>)*
+
+float_constant -> Float =
+    n:$(float_decimal) { Float::Decimal(String::from(n)) } /
+    n:$(float_hexademical) { Float::Hexademical(String::from(n)) }
+
+float_decimal =
+    dec* "." dec+ float_decimal_exp? float_suffix? /
+    dec+ "." float_decimal_exp? float_suffix? /
+    dec+ float_decimal_exp float_suffix?
+
+float_decimal_exp = [eE][+-]?dec+
+
+float_hexademical =
+    ohx hex* "." hex+ float_binary_exp float_suffix? /
+    ohx hex+ "." float_binary_exp float_suffix? /
+    ohx hex+ float_binary_exp float_suffix?
+
+float_binary_exp = [pP][+-]?dec+
+
+float_suffix = ([fFlL] / gnu<[iIjJ]>)*
+
+character_constant -> String =
+    c:$([LuU]? "'" character+ "'") { String::from(c) }
+
+character = [^'\\\n] / escape_sequence
+
+escape_sequence = "\\" (['"?\\abcfnrtv] / oct*<1,3> / "x" hex+)
+
+////
+// 6.4.5 String literal
+////
+
+pub string_literal -> Node<Vec<String>> = s:node<list1<string_literal0>> { s }
+
+string_literal0 -> String =
+    s:$(encoding_prefix? "\"" string_char* "\"") { String::from(s) }
+
+encoding_prefix = "u8" / [uUL]
+
+string_char = [^"\\\n] / escape_sequence
+
+////
+// 6.5.1 Primary expression
+////
+
+primary_expression -> Box<Node<Expression>> = box<node<primary_expression0>>
+
+primary_expression0 -> Expression =
+    a:identifier { Expression::Identifier(a) } /
+    a:node<constant> { Expression::Constant(a) } /
+    a:string_literal { Expression::StringLiteral(a) } /
+    "(" _ a:expression0 _ ")" { a } /
+    generic_selection /
+    gnu<gnu_primary_expression>
+
+generic_selection -> Expression =
+    K<"_Generic"> _ "(" _ e:assignment_expression _ "," _ a:cs1<node<generic_association>> _ ")" {
+        Expression::GenericSelection {
+            expression: e, 
+            associations: a,
+        }
+    }
+
+generic_association -> GenericAssociation =
+    t:type_name _ ":" _ e:assignment_expression {
+        GenericAssociation::Type {
+            type_name: t,
+            expression: e,
+        }
+    } /
+    K<"default"> _ ":" _ e:assignment_expression {
+        GenericAssociation::Default(e)
+    }
+
+//// 6.5.2 Postfix operators
+
+postfix_expression -> Box<Node<Expression>> = box<node<postfix_expression0>>
+
+#[cache]
+postfix_expression0 -> Expression =
+    e:node<postfix_expression1> _ t:list0<node<postfix_expressionT>> { apply_ops(t, e).node }
+
+postfix_expression1 -> Expression =
+    primary_expression0 /
+    compound_literal
+
+postfix_expressionT -> Operation =
+    index_operator /
+    "(" _ e:cs0<node<assignment_expression0>> _ ")" { Operation::Call(e) } /
+    o:node<member_operator> _ i:identifier { Operation::Member(o, i) } /
+    o:node<postfix_operator> { Operation::Unary(o) }
+
+index_operator -> Operation =
+    i:node<index_operator0> { Operation::Binary(Node::new(BinaryOperator::Index, i.span), i.node) }
+
+index_operator0 -> Node<Expression> =
+    "[" _ e:node<expression0> _ "]" { e }
+
+member_operator -> MemberOperator =
+    "." { MemberOperator::Direct } /
+    "->" { MemberOperator::Indirect }
+
+postfix_operator -> UnaryOperator =
+    "++" { UnaryOperator::PostIncrement } /
+    "--" { UnaryOperator::PostDecrement }
+
+compound_literal -> Expression =
+    "(" _ t:type_name _ ")" _ "{" _ i:cs1<node<initializer>> _ ","? _ "}" {
+        Expression::CompoundLiteral {
+            type_name: t,
+            initializer_list: i,
+        }
+    }
+
+////
+// 6.5.3 Unary operators
+////
+
+unary_expression -> Box<Node<Expression>> = box<node<unary_expression0>>
+
+unary_expression0 -> Expression =
+    postfix_expression0 /
+    unary_prefix /
+    unary_cast /
+    sizeof_expression /
+    alignof_expression /
+    gnu<K<"__extension__">> _ e:unary_expression0 { e }
+
+unary_prefix -> Expression =
+    op:node<prefix_operator> _ e:unary_expression {
+        Expression::UnaryOperator {
+            operator: op,
+            operand: e,
+        }
+    }
+
+prefix_operator -> UnaryOperator =
+    "++" { UnaryOperator::PreIncrement } /
+    "--" { UnaryOperator::PreDecrement } /
+    K<"sizeof"> { UnaryOperator::SizeOf }
+
+unary_cast -> Expression =
+    op:node<unary_operator> _ e:cast_expression {
+        Expression::UnaryOperator {
+            operator: op,
+            operand: e,
+        }
+    }
+
+unary_operator -> UnaryOperator =
+    "&" { UnaryOperator::Address } /
+    "*" { UnaryOperator::Indirection } /
+    "+" { UnaryOperator::Plus } /
+    "-" { UnaryOperator::Minus } /
+    "~" { UnaryOperator::Complement } /
+    "!" { UnaryOperator::Negate }
+
+sizeof_expression -> Expression =
+    K<"sizeof"> _ "(" _ t:type_name _ ")" {
+        Expression::SizeOf(t)
+    }
+
+alignof_expression -> Expression =
+    K<"_Alignof" / gnu<"__alignof" "__"?>> _ "(" _ t:type_name _ ")" {
+        Expression::AlignOf(t)
+    }
+
+////
+// 6.5.4 Cast expressions
+////
+
+cast_expression -> Box<Node<Expression>> = box<node<cast_expression0>>
+
+cast_expression0 -> Expression =
+    "(" _ t:type_name _ ")" _ e:cast_expression {
+        Expression::Cast {
+            type_name: t,
+            expression: e,
+        }
+    } /
+    unary_expression0
+
+////
+// 6.5.5 -- 6.5.14 Binary operators
+////
+
+binary_expression -> Box<Node<Expression>> = box<binary_expression0>
+
+binary_expression0 -> Node<Expression> = #infix<binary_operand> {
+#L  x o:infix<"||"> y { infix(o, BinaryOperator::LogicalOr, x, y) }
+#L  x o:infix<"&&"> y { infix(o, BinaryOperator::LogicalAnd, x, y) }
+#L  x o:infix<"|"> y { infix(o, BinaryOperator::BitwiseOr, x, y) }
+#L  x o:infix<"^"> y { infix(o, BinaryOperator::BitwiseXor, x, y) }
+#L  x o:infix<"&"> y { infix(o, BinaryOperator::BitwiseAnd, x, y) }
+#L  x o:infix<"=="> y { infix(o, BinaryOperator::Equals, x, y) }
+    x o:infix<"!="> y { infix(o, BinaryOperator::NotEquals, x, y) }
+#L  x o:infix<"<"> y { infix(o, BinaryOperator::Less, x, y) }
+    x o:infix<">"> y { infix(o, BinaryOperator::Greater, x, y) }
+    x o:infix<"<="> y { infix(o, BinaryOperator::LessOrEqual, x, y) }
+    x o:infix<">="> y { infix(o, BinaryOperator::GreaterOrEqual, x, y) }
+#L  x o:infix<"<<"> y { infix(o, BinaryOperator::ShiftLeft, x, y) }
+    x o:infix<">>"> y { infix(o, BinaryOperator::ShiftRight, x, y) }
+#L  x o:infix<"+"> y { infix(o, BinaryOperator::Plus, x, y) }
+    x o:infix<"-"> y { infix(o, BinaryOperator::Minus, x, y) }
+#L  x o:infix<"*"> y { infix(o, BinaryOperator::Multiply, x, y) }
+    x o:infix<"/"> y { infix(o, BinaryOperator::Divide, x, y) }
+    x o:infix<"%"> y { infix(o, BinaryOperator::Modulo, x, y) }
+}
+
+infix<ex> = _ n:node<ex> _ { n }
+
+binary_operand -> Node<Expression> = node<cast_expression0>
+
+////
+// 6.5.15 Conditional operator
+////
+
+conditional_expression -> Box<Node<Expression>> = box<node<conditional_expression0>>
+
+conditional_expression0 -> Expression =
+    a:binary_expression0 _ t:conditional_expressionT? {
+        if let Some((b, c)) = t {
+            Expression::Conditional {
+                condition: Box::new(a),
+                then_expression: b,
+                else_expression: c,
+            }
+        } else {
+            a.node
+        }
+    }
+    
+conditional_expressionT -> (Box<Node<Expression>>, Box<Node<Expression>>) =
+    "?" _ a:node<expression0> _ ":" _ b:node<conditional_expression0> { (Box::new(a), Box::new(b)) }
+
+////
+// 6.5.16 Assignment operators
+////
+
+assignment_expression -> Box<Node<Expression>> = box<node<assignment_expression0>>
+
+assignment_expression0 -> Expression =
+    a:unary_expression _ op:node<assignment_operator> _ b:assignment_expression {
+        Expression::BinaryOperator {
+            operator: op,
+            lhs: a,
+            rhs: b,
+        }
+    } /
+    conditional_expression0
+
+assignment_operator -> BinaryOperator =
+    "=" { BinaryOperator::Assign } /
+    "*=" { BinaryOperator::AssignMultiply } /
+    "/=" { BinaryOperator::AssignDivide } /
+    "%=" { BinaryOperator::AssignModulo } /
+    "+=" { BinaryOperator::AssignPlus } /
+    "-=" { BinaryOperator::AssignMinus } /
+    "<<=" { BinaryOperator::AssignShiftLeft } /
+    ">>=" { BinaryOperator::AssignShiftRight } /
+    "&=" { BinaryOperator::AssignBitwiseAnd } /
+    "^=" { BinaryOperator::AssignBitwiseXor } /
+    "|=" { BinaryOperator::AssignBitwiseOr }
+
+////
+// 6.5.17 Comma operator
+////
+
+pub expression -> Box<Node<Expression>> = box<node<expression0>>
+
+expression0 -> Expression =
+    e:node<assignment_expression0> _ t:list0<expressionT> {
+        if t.len() > 0 {
+            let mut t  = t;
+            t.insert(0, e);
+            Expression::Comma(t)
+        } else {
+            e.node
+        }
+    }
+
+expressionT -> Node<Expression> =
+    "," _ e:node<assignment_expression0> { e }
+
+////
+// 6.6 Constant expressions
+////
+
+constant_expression -> Box<Node<Expression>> = conditional_expression
+constant_expression0 -> Expression = conditional_expression0
+
+////
+// 6.7 Declarations
+////
+
+pub declaration -> Node<Declaration> = d:node<declaration0> {
+        env.handle_declaration(&d.node);
+        d
+    }
+
+declaration0 -> Declaration =
+    s:list1<declaration_specifier> _ d:cs0<node<init_declarator>> _ ";" {
+        Declaration::Declaration {
+            specifiers: s,
+            declarators: d,
+        }
+    } /
+    s:static_assert_declaration { Declaration::StaticAssert(s) }
+
+declaration_specifier -> Node<DeclarationSpecifier> = node<declaration_specifier0>
+
+declaration_specifier0 -> DeclarationSpecifier =
+    s:storage_class_specifier { DeclarationSpecifier::StorageClass(s) } /
+    s:type_specifier { DeclarationSpecifier::TypeSpecifier(s) } /
+    s:type_qualifier { DeclarationSpecifier::TypeQualifier(s) } /
+    s:function_specifier { DeclarationSpecifier::Function(s) } /
+    s:alignment_specifier { DeclarationSpecifier::Alignment(s) } /
+    s:gnu<attribute_specifier> { DeclarationSpecifier::Extension(s) } 
+
+init_declarator -> InitDeclarator =
+    d:declarator _ e:gnu<init_declarator_gnu>? _ i:node<init_declarator_init>?
+    {
+        let mut d = d;
+        if let Some(e) = e {
+            d.node.extensions.extend(e);
+        }
+        InitDeclarator {
+            declarator: d,
+            initializer: i,
+        }
+    }
+
+init_declarator_init -> Initializer =
+    "=" _ i:initializer { i }
+
+init_declarator_gnu -> Vec<Node<Extension>> =
+    l:asm_label? _ a:attribute_specifier_list { l.into_iter().chain(a).collect() }
+
+////
+// 6.7.1 Storage-class specifiers
+////
+
+storage_class_specifier -> Node<StorageClassSpecifier> = node<storage_class_specifier0>
+
+storage_class_specifier0 -> StorageClassSpecifier =
+    K<"typedef"> { StorageClassSpecifier::Typedef } /
+    K<"extern"> { StorageClassSpecifier::Extern } /
+    K<"static"> { StorageClassSpecifier::Static } /
+    K<"_Thread_local"> { StorageClassSpecifier::ThreadLocal } /
+    K<"auto"> { StorageClassSpecifier::Auto } /
+    K<"register"> { StorageClassSpecifier::Register }
+
+////
+// 6.7.2 Type specifiers
+////
+
+type_specifier -> Node<TypeSpecifier> = node<type_specifier0>
+
+type_specifier0 -> TypeSpecifier =
+    K<"void"> { TypeSpecifier::Void } /
+    K<"char"> { TypeSpecifier::Char } /
+    K<"short"> { TypeSpecifier::Short } /
+    K<"int"> { TypeSpecifier::Int } /
+    K<"long"> { TypeSpecifier::Long } /
+    K<"float"> { TypeSpecifier::Float } /
+    K<"double"> { TypeSpecifier::Double } /
+    K<"signed" / gnu<"__signed" "__"?>> { TypeSpecifier::Signed } /
+    K<"unsigned"> { TypeSpecifier::Unsigned } /
+    K<"_Bool"> { TypeSpecifier::Bool } /
+    K<"_Complex" / gnu<"__complex" "__"?>> { TypeSpecifier::Complex } /
+    K<"_Atomic"> _ "(" _ t:type_name _ ")" { TypeSpecifier::Atomic(t) } /
+    t:typedef_name { TypeSpecifier::TypedefName(t) } /
+    struct_or_union_specifier /
+    enum_specifier /
+    gnu<typeof_specifier>
+
+struct_or_union_specifier -> TypeSpecifier =
+    t:node<struct_or_union> _ i:identifier? _ "{" _ d:list1<node<struct_declaration>> _ "}" {
+        TypeSpecifier::Struct {
+            kind: t,
+            identifier: i,
+            declarations: d,
+        }
+    } /
+    t:node<struct_or_union> _ i:identifier {
+        TypeSpecifier::Struct {
+            kind: t,
+            identifier: Some(i),
+            declarations: Vec::new(),
+        }
+    }
+
+struct_or_union -> StructType =
+    K<"struct"> { StructType::Struct } /
+    K<"union"> { StructType::Union }
+
+struct_declaration -> StructDeclaration =
+    s:list1<specifier_qualifier> _ d:cs0<node<struct_declarator>> _ ";" {
+        StructDeclaration::Field {
+            specifiers: s,
+            declarators: d,
+        }
+    } /
+    s:static_assert_declaration { StructDeclaration::StaticAssert(s) } /
+    gnu<K<"__extension__">> _ d:struct_declaration { d }
+
+specifier_qualifier -> Node<SpecifierQualifier> = node<specifier_qualifier0>
+
+specifier_qualifier0 -> SpecifierQualifier =
+    s:type_specifier { SpecifierQualifier::TypeSpecifier(s) } /
+    q:type_qualifier { SpecifierQualifier::TypeQualifier(q) }
+
+struct_declarator -> StructDeclarator =
+    d:declarator? _ ":" _ e:constant_expression {
+        StructDeclarator {
+            declarator: d,
+            bit_width: Some(e),
+        }
+    } /
+    d:declarator {
+        StructDeclarator {
+            declarator: Some(d),
+            bit_width: None,
+        }
+    }
+
+enum_specifier -> TypeSpecifier =
+    K<"enum"> _ i:identifier? _ "{" _ e:cs1<node<enumerator>> _ ","? _ "}" {
+        TypeSpecifier::Enum {
+            identifier: i,
+            enumerators: e,
+        }
+    } /
+    K<"enum"> _ i:identifier {
+        TypeSpecifier::Enum {
+            identifier: Some(i),
+            enumerators: Vec::new(),
+        }
+    }
+
+enumerator -> Enumerator =
+    i:identifier _ e:enumerator_constant? {
+        Enumerator {
+            identifier: i,
+            expression: e,
+        }
+    }
+
+enumerator_constant -> Box<Node<Expression>> =
+    "=" _ e:constant_expression { e }
+
+////
+// 6.7.3 Type qualifiers
+////
+
+type_qualifier -> Node<TypeQualifier> = node<type_qualifier0>
+
+type_qualifier0 -> TypeQualifier =
+    K<"const"    / gnu<"__const">> { TypeQualifier::Const } /
+    K<"restrict" / gnu<"__restrict" "__"?>> { TypeQualifier::Restrict } /
+    K<"volatile" / gnu<"__volatile" "__"?>> { TypeQualifier::Volatile } /
+    K<"_Atomic"> { TypeQualifier::Atomic }
+
+////
+// 6.7.4 Function specifiers
+////
+
+function_specifier -> Node<FunctionSpecifier> = node<function_specifier0>
+
+function_specifier0 -> FunctionSpecifier =
+    K<"inline" / gnu<"__inline" "__"?>> { FunctionSpecifier::Inline } /
+    K<"_Noreturn"> { FunctionSpecifier::Noreturn }
+
+////
+// 6.7.5 Alignment specifiers
+////
+
+alignment_specifier -> Node<AlignmentSpecifier> = node<alignment_specifier0>
+
+alignment_specifier0 -> AlignmentSpecifier =
+    K<"_Alignas"> _ "(" _ t:type_name _ ")" { AlignmentSpecifier::Type(t) } /
+    K<"_Alignas"> _ "(" _ e:constant_expression _ ")" { AlignmentSpecifier::Constant(e) }
+
+////
+// 6.7.6 Declarators
+////
+
+declarator -> Node<Declarator> = node<declarator0>
+
+declarator0 -> Declarator =
+    attr:gnu<attribute_specifier_list>?
+    pointer:list0<pointer> _ 
+    kind:node<direct_declarator> _
+    derived:list0<node<derived_declarator>>
+    {
+        Declarator {
+            kind: kind,
+            derived: concat(pointer, derived),
+            extensions: attr.unwrap_or_default(),
+        }
+    }
+
+direct_declarator -> DeclaratorKind =
+    i:identifier { DeclaratorKind::Identifier(i) } /
+    "(" _ d:declarator _ ")" { DeclaratorKind::Declarator(Box::new(d)) }
+
+derived_declarator -> DerivedDeclarator =
+    "[" _ a:array_declarator {
+        DerivedDeclarator::Array {
+            qualifiers: a.0,
+            size: a.1,
+        }
+    } /
+    "(" _ p:cs1<parameter_declaration> _ e:ellipsis _ ")" {
+        DerivedDeclarator::Function {
+            parameters: p,
+            ellipsis: e,
+        }
+    } /
+    "(" _ p:list0<identifier> _ ")" { DerivedDeclarator::KRFunction(p) }
+
+array_declarator -> (Vec<Node<TypeQualifier>>, ArraySize) =
+    q:list0<type_qualifier> _ "]" { (q, ArraySize::Unknown) } /
+    q:list0<type_qualifier> _ e:assignment_expression _ "]" { (q, ArraySize::VariableExpression(e)) } /
+    K<"static"> _ q:list0<type_qualifier> _ e:assignment_expression _ "]" { (q, ArraySize::StaticExpression(e)) } /
+    q:list1<type_qualifier> _ K<"static"> _ e:assignment_expression _ "]" { (q, ArraySize::StaticExpression(e)) } /
+    q:list0<type_qualifier> _ "*" _ "]" { (q, ArraySize::VariableUnknown) }
+
+pointer -> Node<DerivedDeclarator> = node<pointer0>
+
+pointer0 -> DerivedDeclarator =
+    "*" _ q:list0<node<pointer_qualifier>> { DerivedDeclarator::Pointer(q) }
+
+pointer_qualifier -> PointerQualifier =
+    q:type_qualifier { PointerQualifier::TypeQualifier(q) } /
+    e:gnu<attribute_specifier> { PointerQualifier::Extension(e) }
+
+ellipsis -> Ellipsis =
+    "," _ "..." { Ellipsis::Some } / { Ellipsis::None }
+
+parameter_declaration -> Node<ParameterDeclaration> = node<parameter_declaration0>
+
+parameter_declaration0 -> ParameterDeclaration =
+    s:list1<declaration_specifier> _ d:parameter_declarator _ a:gnu<attribute_specifier_list>? {
+        ParameterDeclaration {
+            specifiers: s,
+            declarator: d,
+            extensions: a.unwrap_or_default()
+        }
+    }
+
+parameter_declarator -> Option<Node<Declarator>> =
+    d:declarator { Some(d) } /
+    d:abstract_declarator { Some(d) } /
+    { None }
+
+////
+// 6.7.7 Type names
+////
+
+type_name -> Node<TypeName> = node<type_name0>
+
+type_name0 -> TypeName =
+    s:list1<specifier_qualifier> _ d:abstract_declarator? {
+        TypeName {
+            specifiers: s,
+            declarator: d,
+        }
+    }
+
+abstract_declarator -> Node<Declarator> = node<abstract_declarator0>
+
+abstract_declarator0 -> Declarator =
+    p:list0<pointer> _ k:node<direct_abstract_declarator> _ d:list0<derived_abstract_declarator> {
+        Declarator {
+            kind: k,
+            derived: concat(p, d),
+            extensions: Vec::new(),
+        }
+    } /
+    p:list0<pointer> k:#position _ d:list1<derived_abstract_declarator> {
+        Declarator {
+            kind: Node::new(DeclaratorKind::Abstract, Span::span(k, k)),
+            derived: concat(p, d),
+            extensions: Vec::new(),
+        }
+    } /
+    p:list1<pointer> k:#position {
+        Declarator {
+            kind: Node::new(DeclaratorKind::Abstract, Span::span(k, k)),
+            derived: p,
+            extensions: Vec::new(),
+        }
+    }
+
+direct_abstract_declarator -> DeclaratorKind =
+    "(" _ d:abstract_declarator _ ")" { DeclaratorKind::Declarator(Box::new(d)) }
+
+derived_abstract_declarator -> Node<DerivedDeclarator> = node<derived_abstract_declarator0>
+
+derived_abstract_declarator0 -> DerivedDeclarator =
+    "[" _ a:abstract_array_declarator {
+        DerivedDeclarator::Array {
+            qualifiers: a.0,
+            size: a.1,
+        }
+    } /
+    "(" _ p:cs1<parameter_declaration> _ e:ellipsis _ ")" {
+        DerivedDeclarator::Function {
+            parameters: p,
+            ellipsis: e,
+        }
+    } /
+    "(" _ ")" {
+        DerivedDeclarator::Function {
+            parameters: Vec::new(),
+            ellipsis: Ellipsis::None,
+        }
+    }
+
+abstract_array_declarator -> (Vec<Node<TypeQualifier>>, ArraySize) =
+    q:list0<type_qualifier> _ "]" { (q, ArraySize::Unknown) } /
+    q:list0<type_qualifier> _ e:assignment_expression _ "]" { (q, ArraySize::VariableExpression(e)) } /
+    K<"static"> _ q:list0<type_qualifier> _ e:assignment_expression _ "]" { (q, ArraySize::StaticExpression(e)) } /
+    q:list1<type_qualifier> _ K<"static"> _ e:assignment_expression _ "]" { (q, ArraySize::StaticExpression(e)) } /
+    "*" _ "]" { (Vec::new(), ArraySize::VariableUnknown) }
+
+////
+// 6.7.8 Type definitions
+////
+
+typedef_name -> Node<Identifier> = #quiet<typedef_name0> / #expected("<typedef_name>")
+
+typedef_name0 -> Node<Identifier> = i:identifier {?
+    if env.is_typename(&i.node.name) {
+        Ok(i)
+    } else {
+        Err("<unused>")
+    }
+}
+
+////
+// 6.7.9 Initialization
+////
+
+initializer -> Initializer =
+    e:assignment_expression { Initializer::Expression(e) } /
+    "{" _ i:cs1<node<initializer_list_item>> _ ","? _ "}" { Initializer::List(i) } /
+    gnu<"{" _ "}"> { Initializer::List(Vec::new()) }
+
+initializer_list_item -> InitializerListItem =
+    d:designation? _ i:node<initializer> {
+        InitializerListItem {
+            designation: d.unwrap_or_default(),
+            initializer: Box::new(i),
+        }
+    }
+
+designation -> Vec<Node<Designator>> =
+    d:list1<node<designator>> _ "=" { d } /
+    d:gnu<node<colon_designation>> { vec! [ d ] } /
+    d:gnu<node<array_designator>> { vec![ d ] }
+
+colon_designation -> Designator =
+    i:identifier _ ":" { Designator::Member(i) }
+
+designator -> Designator =
+    d:array_designator { d } /
+    "." _ i:identifier { Designator::Member(i) }
+
+array_designator -> Designator =
+    "[" _ a:node<constant_expression0> _ b:gnu<range_designator_ext>? "]" { 
+        match b {
+            Some(b) => Designator::Range { from: a, to: b },
+            None => Designator::Index(a),
+        }
+    }
+
+range_designator_ext -> Node<Expression> =
+    "..." _ e:node<constant_expression0> { e }
+
+////
+// 6.7.10 Static assertions
+////
+
+static_assert_declaration -> Node<StaticAssert> = node<static_assert_declaration0>
+
+static_assert_declaration0 -> StaticAssert =
+    K<"_Static_assert"> _ "(" _ e:constant_expression _ "," _ s:string_literal _ ")" _ ";" {
+        StaticAssert {
+            expression: e,
+            message: s,
+        }
+    }
+
+////
+// 6.8 Statements and blocks
+////
+
+pub statement -> Box<Node<Statement>> = box<node<statement0>>
+
+statement0 -> Statement =
+    labeled_statement /
+    compound_statement /
+    expression_statement /
+    selection_statement /
+    iteration_statement /
+    jump_statement /
+    gnu<asm_statement>
+
+////
+// 6.8.1 Labeled statements
+////
+
+labeled_statement -> Statement =
+    l:node<label> _ ":" _ s:statement {
+        Statement::Labeled {
+            label: l,
+            statement: s,
+        }
+    }
+
+label -> Label =
+    i:identifier { Label::Identifier(i) } /
+    K<"case"> _ e:constant_expression { Label::Case(e) } /
+    K<"default"> { Label::Default }
+
+////
+// 6.8.2 Compound statement
+////
+
+compound_statement -> Statement =
+    "{" _ b:list0<node<block_item>> _ "}" { Statement::Compound(b) }
+
+block_item -> BlockItem =
+    gnu<K<"__extension__">>? _ d:declaration { BlockItem::Declaration(d) } /
+    s:node<statement0> { BlockItem::Statement(s) }
+
+////
+// 6.8.3 Expression and null statements
+////
+
+expression_statement -> Statement =
+    e:expression? _ ";" { Statement::Expression(e) }
+
+////
+// 6.8.4 Selection statement
+////
+
+selection_statement -> Statement =
+    if_statement /
+    switch_statement
+
+if_statement -> Statement =
+    K<"if"> _ "(" _ e:expression _ ")" _ a:statement _ b:else_statement? {
+        Statement::If {
+            condition: e,
+            then_statement: a,
+            else_statement: b,
+        }
+    }
+
+else_statement -> Box<Node<Statement>> = K<"else"> _ s:statement { s }
+
+switch_statement -> Statement =
+    K<"switch"> _ "(" _ e:expression _ ")" _ s:statement {
+        Statement::Switch {
+            expression: e,
+            statement: s,
+        }
+    }
+
+////
+// 6.8.5 Iteration statement
+////
+
+iteration_statement -> Statement =
+    while_statement /
+    do_while_statement /
+    for_statement
+
+while_statement -> Statement =
+    K<"while"> _ "(" _ e:expression _ ")" _ s:statement {
+        Statement::While {
+            expression: e,
+            statement: s,
+        }
+    }
+
+do_while_statement -> Statement =
+    K<"do"> _ s:statement _ K<"while"> _ "(" _ e:expression _ ")" _ ";" {
+        Statement::DoWhile {
+            statement: s,
+            expression: e,
+        }
+    }
+
+for_statement -> Statement =
+    K<"for"> _ "(" _ a:node<for_initializer> _ b:expression? _ ";" _ c:expression? _ ")" _ s:statement {
+        Statement::For {
+            initializer: a,
+            condition: b,
+            step: c,
+            statement: s,
+        }
+    }
+
+for_initializer -> ForInitializer =
+    e:expression _ ";" { ForInitializer::Expression(e) } /
+    d:declaration { ForInitializer::Declaration(d) } /
+    ";" { ForInitializer::Empty }
+
+////
+// 6.8.6 Jump statements
+////
+
+jump_statement -> Statement =
+    K<"goto"> _ i:identifier _ ";" { Statement::Goto(i) } /
+    K<"continue"> _ ";" { Statement::Continue } /
+    K<"break"> _ ";" { Statement::Break } /
+    K<"return"> _ e:expression? _ ";" { Statement::Return(e) }
+
+////
+// 6.9 External definitions
+////
+
+scoped<e> = ({ env.enter_scope(); }) e:e? {? env.leave_scope(); e.ok_or("") }
+
+pub translation_unit -> TranslationUnit =
+    directive? _ d:list0<node<external_declaration>> _ { TranslationUnit(d) }
+
+external_declaration -> ExternalDeclaration =
+    d:declaration { ExternalDeclaration::Declaration(d) } /
+    d:scoped<node<function_definition>> { ExternalDeclaration::FunctionDefinition(d) } /
+    gnu<K<"__extension__">> _ d:external_declaration { d } 
+
+function_definition -> FunctionDefinition =
+    a:list1<declaration_specifier> _ b:declarator _ c:list0<declaration> _ d:node<compound_statement> {
+        FunctionDefinition {
+            specifiers: a, 
+            declarator: b,
+            declarations: c,
+            statement: d,
+        }
+    }
+
+////
+// GNU extensions
+////
+
+gnu<E> = &gnu_guard e:E { e } 
+
+gnu_guard = {? if env.extensions_gnu { Ok(()) } else { Err("gnu extensions disabled") } }
+
+////
+// GNU attributes
+////
+
+attribute_specifier_list -> Vec<Node<Extension>> =
+    a:list0<attribute_specifier> { a.into_iter().flat_map(|v| v).collect() }
+
+attribute_specifier -> Vec<Node<Extension>> =
+    K<"__attribute__"> _ "((" _ a:cs0<node<attribute>> _ "))" { a }
+
+attribute -> Extension =
+    n:node<attribute_name> _ p:attribute_parameters? {
+        Extension::Attribute {
+            name: n,
+            arguments: p.unwrap_or_default(),
+        }
+    }
+
+attribute_name -> String =
+    n:$(#quiet<[_a-zA-Z][_a-zA-Z0-9]*>) { String::from(n) }
+
+attribute_parameters -> Vec<Node<Expression>> =
+    "(" _ e:cs0<node<assignment_expression0>> _")" { e }
+
+////
+// GNU assembler labels
+////
+
+asm_label -> Node<Extension> = node<asm_label0>
+
+asm_label0 -> Extension =
+    asm_label_keyword _ "(" _ s:string_literal _ ")" { Extension::AsmLabel(s) }
+
+asm_label_keyword = 
+    #quiet<K<"asm"> / K<"__asm" "__"?>> / #expected("asm")
+
+////
+// GNU assembler statements
+////
+
+asm_statement -> Statement =
+    s:node<asm_statement0> { Statement::Asm(s) }
+
+asm_statement0 -> AsmStatement =
+    K<"asm" / "__asm" "__"?> _ q:type_qualifier? _ "(" _
+        a:string_literal _ 
+        o:asm_ext<asm_operand_list, asm_ext<asm_operand_list, asm_ext<cs0<string_literal>, ()>>>? _ 
+    ")" _ ";" {
+        if let Some((o, (i, (c, ())))) = o {
+            AsmStatement::GnuExtended {
+                qualifier: q,
+                template: a,
+                outputs: o,
+                inputs: i,
+                clobbers: c,
+            }
+        } else {
+            AsmStatement::GnuBasic(a)
+        }
+    }
+
+asm_ext<e, t> = ":" _ e:e _ t:t? { (e, t.unwrap_or_default()) }
+
+asm_operand_list -> Vec<Node<GnuAsmOperand>> = cs0<node<asm_operand>>
+
+asm_operand -> GnuAsmOperand =
+    i:("[" _ i:identifier _ "]" _ {i})? s:string_literal _ "(" _ e:node<expression0> _ ")" {
+        GnuAsmOperand {
+            symbolic_name: i,
+            constraints: s,
+            variable_name: e,
+        }
+    }
+
+////
+// GNU expression extensions
+////
+
+gnu_primary_expression -> Expression =
+    statement_expression /
+    offsetof_expression /
+    va_arg_expression /
+    func_expression
+
+statement_expression -> Expression =
+    "(" _ s:scoped<node<compound_statement>> _ ")" { Expression::Statement(s) }
+
+va_arg_expression -> Expression =
+    K<"__builtin_va_arg"> _ "(" _ e:assignment_expression _ "," _ t:type_name _ ")" {
+        Expression::VaArg {
+            va_list: e,
+            type_name: t,
+        }
+    }
+
+func_expression -> Expression =
+    l:#position K<"__func__"> r:#position {
+        let ident = Identifier {
+            name: "__func__".to_string(),
+        };
+        Expression::Identifier(Node::new(ident, Span::span(l, r)))
+    }
+
+offsetof_expression -> Expression =
+    K<"__builtin_offsetof"> _ "(" _ t:type_name _ "," _ d:node<offsetof_designator> _ ")" {
+        Expression::OffsetOf {
+            type_name: t,
+            designator: d,
+        }
+    }
+
+offsetof_designator -> OffsetDesignator =
+    i:identifier _ d:list0<node<offsetof_member>> {
+        OffsetDesignator {
+            base: i,
+            members: d,
+        }
+    }
+
+offsetof_member -> OffsetMember =
+    "." _ i:identifier { OffsetMember::Member(i) } /
+    "->" _ i:identifier { OffsetMember::IndirectMember(i) } /
+    "[" _ e:node<expression0> _ "]" { OffsetMember::Index(e) }
+
+////
+// GNU typeof extension
+////
+
+typeof_specifier -> TypeSpecifier =
+    K<"typeof" / "__typeof" "__"?> _ "(" _ e:node<typeof_specifier0> _ ")" { TypeSpecifier::TypeOf(e) }
+
+typeof_specifier0 -> TypeOf =
+    e:node<expression0> { TypeOf::Expression(e) } /
+    t:type_name { TypeOf::Type(t) }
+

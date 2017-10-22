@@ -1,6 +1,7 @@
 # Lang-C
 
 [![Build Status](https://travis-ci.org/vickenty/lang-c.svg?branch=master)](https://travis-ci.org/vickenty/lang-c)
+[![Documentation](https://docs.rs/lang-c/badge.svg)](https://docs.rs/lang-c)
 
 Ligtweight parser of C language for Rust users. Almost full support for C11 revision of the language.
 Several GNU extensions are supported as an option (and enabled by default).

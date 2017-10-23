@@ -8,3 +8,8 @@ exclude = [ "*~", "*.bk", "/Makefile", "/grammar.*" ]
 documentation = "https://docs.rs/lang-c"
 homepage = "https://github.com/vickenty/lang-c"
 repository = "https://github.com/vickenty/lang-c"
+keywords = [ "ast", "c", "parser", "c-language" ]
+categories = [ "parser-implementations" ]
+
+[badges]
+travis-ci = { repository = "vickenty/lang-c" }

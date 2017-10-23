@@ -1700,3 +1700,23 @@ fn test_declaration6() {
         )
     );
 }
+
+#[test]
+fn test_keyword_expr() {
+    use parser::expression;
+
+    assert_eq!(
+        expression("__func__", &mut Env::new()),
+        Ok(Expression::Identifier(ident("__func__")).into())
+    );
+
+    assert_eq!(
+        expression("__FUNCTION__", &mut Env::new()),
+        Ok(Expression::Identifier(ident("__FUNCTION__")).into())
+    );
+
+    assert_eq!(
+        expression("__PRETTY_FUNCTION__", &mut Env::new()),
+        Ok(Expression::Identifier(ident("__PRETTY_FUNCTION__")).into())
+    );
+}

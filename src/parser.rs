@@ -13184,7 +13184,7 @@ fn __parse_gnu_primary_expression<'input>(__input: &'input str, __state: &mut Pa
                         let __choice_res = __parse_va_arg_expression(__input, __state, __pos, env);
                         match __choice_res {
                             Matched(__pos, __value) => Matched(__pos, __value),
-                            Failed => __parse_func_expression(__input, __state, __pos, env),
+                            Failed => __parse_keyword_expression(__input, __state, __pos, env),
                         }
                     }
                 }
@@ -13375,16 +13375,84 @@ fn __parse_va_arg_expression<'input>(__input: &'input str, __state: &mut ParseSt
     }
 }
 
-fn __parse_func_expression<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Expression> {
+fn __parse_keyword_expression<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Expression> {
     #![allow(non_snake_case, unused)]
     {
-        let __seq_res = Matched(__pos, __pos);
+        let __seq_res = {
+            let __seq_res = Matched(__pos, __pos);
+            match __seq_res {
+                Matched(__pos, l) => {
+                    let __seq_res = {
+                        let str_start = __pos;
+                        match __parse_keyword_expression0(__input, __state, __pos, env) {
+                            Matched(__newpos, _) => Matched(__newpos, &__input[str_start..__newpos]),
+                            Failed => Failed,
+                        }
+                    };
+                    match __seq_res {
+                        Matched(__pos, e) => {
+                            let __seq_res = Matched(__pos, __pos);
+                            match __seq_res {
+                                Matched(__pos, r) => Matched(__pos, { Node::new(e, Span::span(l, r)) }),
+                                Failed => Failed,
+                            }
+                        }
+                        Failed => Failed,
+                    }
+                }
+                Failed => Failed,
+            }
+        };
         match __seq_res {
-            Matched(__pos, l) => {
-                let __seq_res = {
+            Matched(__pos, k) => Matched(__pos, {
+                let ident = Identifier {
+                    name: k.node.to_string(),
+                };
+                Expression::Identifier(Node::new(ident, k.span))
+            }),
+            Failed => Failed,
+        }
+    }
+}
+
+fn __parse_keyword_expression0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<()> {
+    #![allow(non_snake_case, unused)]
+    {
+        let __choice_res = {
+            __state.suppress_fail += 1;
+            let res = {
+                let __seq_res = slice_eq(__input, __state, __pos, "__func__");
+                match __seq_res {
+                    Matched(__pos, _) => {
+                        __state.suppress_fail += 1;
+                        let __assert_res = if __input.len() > __pos {
+                            let (__ch, __next) = char_range_at(__input, __pos);
+                            match __ch {
+                                '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                            }
+                        } else {
+                            __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                        };
+                        __state.suppress_fail -= 1;
+                        match __assert_res {
+                            Failed => Matched(__pos, ()),
+                            Matched(..) => Failed,
+                        }
+                    }
+                    Failed => Failed,
+                }
+            };
+            __state.suppress_fail -= 1;
+            res
+        };
+        match __choice_res {
+            Matched(__pos, __value) => Matched(__pos, __value),
+            Failed => {
+                let __choice_res = {
                     __state.suppress_fail += 1;
                     let res = {
-                        let __seq_res = slice_eq(__input, __state, __pos, "__func__");
+                        let __seq_res = slice_eq(__input, __state, __pos, "__FUNCTION__");
                         match __seq_res {
                             Matched(__pos, _) => {
                                 __state.suppress_fail += 1;
@@ -13409,23 +13477,38 @@ fn __parse_func_expression<'input>(__input: &'input str, __state: &mut ParseStat
                     __state.suppress_fail -= 1;
                     res
                 };
-                match __seq_res {
-                    Matched(__pos, _) => {
-                        let __seq_res = Matched(__pos, __pos);
-                        match __seq_res {
-                            Matched(__pos, r) => Matched(__pos, {
-                                let ident = Identifier {
-                                    name: "__func__".to_string(),
-                                };
-                                Expression::Identifier(Node::new(ident, Span::span(l, r)))
-                            }),
-                            Failed => Failed,
-                        }
+                match __choice_res {
+                    Matched(__pos, __value) => Matched(__pos, __value),
+                    Failed => {
+                        __state.suppress_fail += 1;
+                        let res = {
+                            let __seq_res = slice_eq(__input, __state, __pos, "__PRETTY_FUNCTION__");
+                            match __seq_res {
+                                Matched(__pos, _) => {
+                                    __state.suppress_fail += 1;
+                                    let __assert_res = if __input.len() > __pos {
+                                        let (__ch, __next) = char_range_at(__input, __pos);
+                                        match __ch {
+                                            '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                            _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                        }
+                                    } else {
+                                        __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                    };
+                                    __state.suppress_fail -= 1;
+                                    match __assert_res {
+                                        Failed => Matched(__pos, ()),
+                                        Matched(..) => Failed,
+                                    }
+                                }
+                                Failed => Failed,
+                            }
+                        };
+                        __state.suppress_fail -= 1;
+                        res
                     }
-                    Failed => Failed,
                 }
             }
-            Failed => Failed,
         }
     }
 }

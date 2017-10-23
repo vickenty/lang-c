@@ -1014,7 +1014,7 @@ gnu_primary_expression -> Expression =
     statement_expression /
     offsetof_expression /
     va_arg_expression /
-    func_expression
+    keyword_expression
 
 statement_expression -> Expression =
     "(" _ s:scoped<node<compound_statement>> _ ")" { Expression::Statement(s) }
@@ -1027,13 +1027,18 @@ va_arg_expression -> Expression =
         }
     }
 
-func_expression -> Expression =
-    l:#position K<"__func__"> r:#position {
+keyword_expression -> Expression =
+    k:node<$(keyword_expression0)> {
         let ident = Identifier {
-            name: "__func__".to_string(),
+            name: k.node.to_string(),
         };
-        Expression::Identifier(Node::new(ident, Span::span(l, r)))
+        Expression::Identifier(Node::new(ident, k.span))
     }
+
+keyword_expression0 =
+    K<"__func__"> /
+    K<"__FUNCTION__"> /
+    K<"__PRETTY_FUNCTION__">
 
 offsetof_expression -> Expression =
     K<"__builtin_offsetof"> _ "(" _ t:type_name _ "," _ d:node<offsetof_designator> _ ")" {

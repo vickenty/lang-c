@@ -9,36 +9,34 @@ pub enum Operation {
     Call(Vec<Node<Expression>>),
 }
 
-impl Node<Operation> {
-    pub fn apply(self, a: Node<Expression>) -> Node<Expression> {
-        let span = Span::span(a.span.start, self.span.end);
-        let expr = match self.node {
-            Operation::Member(op, id) => Expression::Member {
-                operator: op,
-                expression: Box::new(a),
-                identifier: id,
-            },
-            Operation::Unary(op) => Expression::UnaryOperator {
-                operator: op,
-                operand: Box::new(a),
-            },
-            Operation::Binary(op, b) => Expression::BinaryOperator {
-                operator: op,
-                lhs: Box::new(a),
-                rhs: Box::new(b),
-            },
-            Operation::Call(args) => Expression::Call {
-                callee: Box::new(a),
-                arguments: args,
-            },
-        };
+fn apply_op(a: Node<Expression>, op: Node<Operation>) -> Node<Expression> {
+    let span = Span::span(a.span.start, op.span.end);
+    let expr = match op.node {
+        Operation::Member(op, id) => Expression::Member {
+            operator: op,
+            expression: Box::new(a),
+            identifier: id,
+        },
+        Operation::Unary(op) => Expression::UnaryOperator {
+            operator: op,
+            operand: Box::new(a),
+        },
+        Operation::Binary(op, b) => Expression::BinaryOperator {
+            operator: op,
+            lhs: Box::new(a),
+            rhs: Box::new(b),
+        },
+        Operation::Call(args) => Expression::Call {
+            callee: Box::new(a),
+            arguments: args,
+        },
+    };
 
-        Node::new(expr, span)
-    }
+    Node::new(expr, span)
 }
 
 pub fn apply_ops(ops: Vec<Node<Operation>>, expr: Node<Expression>) -> Node<Expression> {
-    ops.into_iter().fold(expr, |a, op| op.apply(a))
+    ops.into_iter().fold(expr, apply_op)
 }
 
 pub fn concat<T>(mut a: Vec<T>, b: Vec<T>) -> Vec<T> {

@@ -798,26 +798,26 @@ pub enum Statement {
 pub enum Label {
     /// Goto label
     ///
-    /// `ident: ...`
+    /// `ident: …`
     Identifier(Node<Identifier>),
     /// Case in a `switch` statement
     ///
-    /// `case 'a': ...`
+    /// `case 'a': …`
     Case(Box<Node<Expression>>),
     /// Default case in a `switch` statement
     ///
-    /// `default: ...`
+    /// `default: …`
     Default,
 }
 
 /// First element of a `for` statement
 #[derive(Debug, PartialEq, Clone)]
 pub enum ForInitializer {
-    /// `for(; ...)`
+    /// `for(; …)`
     Empty,
-    /// `for(a = 1; ...)`
+    /// `for(a = 1; …)`
     Expression(Box<Node<Expression>>),
-    /// `for(int a = 1; ...)`
+    /// `for(int a = 1; …)`
     Declaration(Node<Declaration>),
 }
 

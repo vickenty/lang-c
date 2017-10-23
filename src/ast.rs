@@ -9,13 +9,13 @@
 //! draft](http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf)
 //! published on April 12, 2011.
 //!
-//! A number of GNU extensions to the standard C are included
-//! here. Where appropriate, types, struct fields or enum variants
-//! specific to GNU are marked as "GNU extension". Supported
-//! extensions are:
+//! A number of GNU extensions to the standard C are included here.
+//! Types, struct fields or enum variants specific to GNU are marked as
+//! "GNU extension" with a link to the relevant section of gcc
+//! documentation. Supported extensions are:
 //!
 //! - attributes in various positions
-//! - inline asembly statements and asm labels
+//! - inline assembly statements and asm labels
 //! - extensions to the initializer list syntax
 //! - statement expressions
 //! - `typeof` type specifiers
@@ -24,7 +24,7 @@ use span::Node;
 
 // From 6.4 Lexical elements
 
-/// Variable, function and other names that are not types
+/// Variable, function and other names that are not type names
 ///
 /// (C11 6.4.2)
 #[derive(Debug, PartialEq, Clone)]
@@ -659,7 +659,7 @@ pub enum ArraySize {
 ///
 /// This is so called "new-style" or "C89" parameter declaration that
 /// follows in parenthesis after a function name. "Old-style" or "K&R"
-/// function parameter declaration are collected in the
+/// function parameter declarations are collected in the
 /// `FunctionDefinition::declarations` field.
 ///
 /// (C11 6.7.6.3)

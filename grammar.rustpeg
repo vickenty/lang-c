@@ -404,12 +404,8 @@ declaration_specifier0 -> DeclarationSpecifier =
 init_declarator -> InitDeclarator =
     d:declarator _ e:gnu<init_declarator_gnu>? _ i:node<init_declarator_init>?
     {
-        let mut d = d;
-        if let Some(e) = e {
-            d.node.extensions.extend(e);
-        }
         InitDeclarator {
-            declarator: d,
+            declarator: with_ext(d, e),
             initializer: i,
         }
     }
@@ -495,15 +491,15 @@ specifier_qualifier0 -> SpecifierQualifier =
     q:type_qualifier { SpecifierQualifier::TypeQualifier(q) }
 
 struct_declarator -> StructDeclarator =
-    d:declarator? _ ":" _ e:constant_expression {
+    d:declarator? _ ":" _ e:constant_expression a:gnu<attribute_specifier_list>? {
         StructDeclarator {
-            declarator: d,
+            declarator: d.map(|d| with_ext(d, a)),
             bit_width: Some(e),
         }
     } /
-    d:declarator {
+    d:declarator a:gnu<attribute_specifier_list>? {
         StructDeclarator {
-            declarator: Some(d),
+            declarator: Some(with_ext(d, a)),
             bit_width: None,
         }
     }

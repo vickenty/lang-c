@@ -1586,3 +1586,117 @@ fn test_attribute5() {
         ]))
     );
 }
+
+#[test]
+fn test_declaration6() {
+    use parser::declaration;
+    use ast::Declaration::Declaration;
+    use ast::Expression::AlignOf;
+    use ast::Extension::Attribute;
+    use ast::TypeSpecifier::{Double, Long, Struct};
+    use ast::SpecifierQualifier::TypeSpecifier;
+    use ast::DeclaratorKind::Identifier;
+    use ast::StructDeclaration::Field;
+    use ast::StorageClassSpecifier::Typedef;
+
+    assert_eq!(
+        declaration(
+            r"typedef struct {
+              long long __max_align_ll __attribute__((__aligned__(__alignof__(long long))));
+              long double __max_align_ld __attribute__((__aligned__(__alignof__(long double))));
+            } max_align_t;",
+            &mut Env::new()
+        ),
+        Ok(
+            Declaration {
+                specifiers: vec![
+                    DeclarationSpecifier::StorageClass(Typedef.into()).into(),
+                    DeclarationSpecifier::TypeSpecifier(
+                        Struct {
+                            kind: StructType::Struct.into(),
+                            identifier: None,
+                            declarations: vec![
+                                Field {
+                                    specifiers: vec![
+                                        TypeSpecifier(Long.into()).into(),
+                                        TypeSpecifier(Long.into()).into(),
+                                    ],
+                                    declarators: vec![
+                                        StructDeclarator {
+                                            declarator: Some(
+                                                Declarator {
+                                                    kind: Identifier(ident("__max_align_ll")).into(),
+                                                    derived: vec![],
+                                                    extensions: vec![
+                                                        Attribute {
+                                                            name: "__aligned__".into(),
+                                                            arguments: vec![
+                                                                AlignOf(
+                                                                    TypeName {
+                                                                        specifiers: vec![
+                                                                            TypeSpecifier(Long.into()).into(),
+                                                                            TypeSpecifier(Long.into()).into(),
+                                                                        ],
+                                                                        declarator: None,
+                                                                    }.into(),
+                                                                ).into(),
+                                                            ],
+                                                        }.into(),
+                                                    ],
+                                                }.into(),
+                                            ),
+                                            bit_width: None,
+                                        }.into(),
+                                    ],
+                                }.into(),
+                                Field {
+                                    specifiers: vec![
+                                        TypeSpecifier(Long.into()).into(),
+                                        TypeSpecifier(Double.into()).into(),
+                                    ],
+                                    declarators: vec![
+                                        StructDeclarator {
+                                            declarator: Some(
+                                                Declarator {
+                                                    kind: Identifier(ident("__max_align_ld")).into(),
+                                                    derived: vec![],
+                                                    extensions: vec![
+                                                        Attribute {
+                                                            name: "__aligned__".into(),
+                                                            arguments: vec![
+                                                                AlignOf(
+                                                                    TypeName {
+                                                                        specifiers: vec![
+                                                                            TypeSpecifier(Long.into()).into(),
+                                                                            TypeSpecifier(Double.into()).into(),
+                                                                        ],
+                                                                        declarator: None,
+                                                                    }.into(),
+                                                                ).into(),
+                                                            ],
+                                                        }.into(),
+                                                    ],
+                                                }.into(),
+                                            ),
+                                            bit_width: None,
+                                        }.into(),
+                                    ],
+                                }.into(),
+                            ],
+                        }.into(),
+                    ).into(),
+                ],
+                declarators: vec![
+                    InitDeclarator {
+                        declarator: Declarator {
+                            kind: Identifier(ident("max_align_t")).into(),
+                            derived: vec![],
+                            extensions: vec![],
+                        }.into(),
+                        initializer: None,
+                    }.into(),
+                ],
+            }.into()
+        )
+    );
+}

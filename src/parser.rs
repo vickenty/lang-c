@@ -4951,12 +4951,8 @@ fn __parse_init_declarator<'input>(__input: &'input str, __state: &mut ParseStat
                                         };
                                         match __seq_res {
                                             Matched(__pos, i) => Matched(__pos, {
-                                                let mut d = d;
-                                                if let Some(e) = e {
-                                                    d.node.extensions.extend(e);
-                                                }
                                                 InitDeclarator {
-                                                    declarator: d,
+                                                    declarator: with_ext(d, e),
                                                     initializer: i,
                                                 }
                                             }),
@@ -6481,12 +6477,41 @@ fn __parse_struct_declarator<'input>(__input: &'input str, __state: &mut ParseSt
                                         Matched(__pos, _) => {
                                             let __seq_res = __parse_constant_expression(__input, __state, __pos, env);
                                             match __seq_res {
-                                                Matched(__pos, e) => Matched(__pos, {
-                                                    StructDeclarator {
-                                                        declarator: d,
-                                                        bit_width: Some(e),
+                                                Matched(__pos, e) => {
+                                                    let __seq_res = match {
+                                                        let __seq_res = {
+                                                            __state.suppress_fail += 1;
+                                                            let __assert_res = __parse_gnu_guard(__input, __state, __pos, env);
+                                                            __state.suppress_fail -= 1;
+                                                            match __assert_res {
+                                                                Matched(_, __value) => Matched(__pos, __value),
+                                                                Failed => Failed,
+                                                            }
+                                                        };
+                                                        match __seq_res {
+                                                            Matched(__pos, _) => {
+                                                                let __seq_res = __parse_attribute_specifier_list(__input, __state, __pos, env);
+                                                                match __seq_res {
+                                                                    Matched(__pos, e) => Matched(__pos, { e }),
+                                                                    Failed => Failed,
+                                                                }
+                                                            }
+                                                            Failed => Failed,
+                                                        }
+                                                    } {
+                                                        Matched(__newpos, __value) => Matched(__newpos, Some(__value)),
+                                                        Failed => Matched(__pos, None),
+                                                    };
+                                                    match __seq_res {
+                                                        Matched(__pos, a) => Matched(__pos, {
+                                                            StructDeclarator {
+                                                                declarator: d.map(|d| with_ext(d, a)),
+                                                                bit_width: Some(e),
+                                                            }
+                                                        }),
+                                                        Failed => Failed,
                                                     }
-                                                }),
+                                                }
                                                 Failed => Failed,
                                             }
                                         }
@@ -6507,12 +6532,41 @@ fn __parse_struct_declarator<'input>(__input: &'input str, __state: &mut ParseSt
             Failed => {
                 let __seq_res = __parse_declarator(__input, __state, __pos, env);
                 match __seq_res {
-                    Matched(__pos, d) => Matched(__pos, {
-                        StructDeclarator {
-                            declarator: Some(d),
-                            bit_width: None,
+                    Matched(__pos, d) => {
+                        let __seq_res = match {
+                            let __seq_res = {
+                                __state.suppress_fail += 1;
+                                let __assert_res = __parse_gnu_guard(__input, __state, __pos, env);
+                                __state.suppress_fail -= 1;
+                                match __assert_res {
+                                    Matched(_, __value) => Matched(__pos, __value),
+                                    Failed => Failed,
+                                }
+                            };
+                            match __seq_res {
+                                Matched(__pos, _) => {
+                                    let __seq_res = __parse_attribute_specifier_list(__input, __state, __pos, env);
+                                    match __seq_res {
+                                        Matched(__pos, e) => Matched(__pos, { e }),
+                                        Failed => Failed,
+                                    }
+                                }
+                                Failed => Failed,
+                            }
+                        } {
+                            Matched(__newpos, __value) => Matched(__newpos, Some(__value)),
+                            Failed => Matched(__pos, None),
+                        };
+                        match __seq_res {
+                            Matched(__pos, a) => Matched(__pos, {
+                                StructDeclarator {
+                                    declarator: Some(with_ext(d, a)),
+                                    bit_width: None,
+                                }
+                            }),
+                            Failed => Failed,
                         }
-                    }),
+                    }
                     Failed => Failed,
                 }
             }

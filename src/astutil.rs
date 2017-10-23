@@ -57,3 +57,10 @@ pub fn infix(node: Node<()>, op: BinaryOperator, lhs: Node<Expression>, rhs: Nod
         span,
     )
 }
+
+pub fn with_ext(mut d: Node<Declarator>, e: Option<Vec<Node<Extension>>>) -> Node<Declarator> {
+    if let Some(e) = e {
+        d.node.extensions.extend(e);
+    }
+    d
+}

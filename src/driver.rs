@@ -105,8 +105,7 @@ impl fmt::Display for SyntaxError {
         write!(
             fmt,
             "unexpected token at line {} column {}, expected ",
-            self.line,
-            self.column
+            self.line, self.column
         )?;
         self.format_expected(fmt)
     }

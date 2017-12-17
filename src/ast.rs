@@ -224,7 +224,7 @@ pub struct MemberExpression {
     pub expression: Box<Node<Expression>>,
     pub identifier: Node<Identifier>,
 }
- 
+
 /// Function call expression
 ///
 /// (C11 6.5.2)

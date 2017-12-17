@@ -431,12 +431,9 @@ pub enum OffsetMember {
 ///
 /// (C11 6.7)
 #[derive(Debug, PartialEq, Clone)]
-pub enum Declaration {
-    Declaration {
-        specifiers: Vec<Node<DeclarationSpecifier>>,
-        declarators: Vec<Node<InitDeclarator>>,
-    },
-    StaticAssert(Node<StaticAssert>),
+pub struct Declaration {
+    pub specifiers: Vec<Node<DeclarationSpecifier>>,
+    pub declarators: Vec<Node<InitDeclarator>>,
 }
 
 /// Common part of a declaration
@@ -892,6 +889,8 @@ pub enum ForInitializer {
     Expression(Box<Node<Expression>>),
     /// `for(int a = 1; …)`
     Declaration(Node<Declaration>),
+    /// `for(_StaticAssert(…); …)`
+    StaticAssert(Node<StaticAssert>),
 }
 
 // From 6.8.2
@@ -900,6 +899,7 @@ pub enum ForInitializer {
 #[derive(Debug, PartialEq, Clone)]
 pub enum BlockItem {
     Declaration(Node<Declaration>),
+    StaticAssert(Node<StaticAssert>),
     Statement(Node<Statement>),
 }
 
@@ -917,6 +917,7 @@ pub struct TranslationUnit(pub Vec<Node<ExternalDeclaration>>);
 #[derive(Debug, PartialEq, Clone)]
 pub enum ExternalDeclaration {
     Declaration(Node<Declaration>),
+    StaticAssert(Node<StaticAssert>),
     FunctionDefinition(Node<FunctionDefinition>),
 }
 

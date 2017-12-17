@@ -292,7 +292,6 @@ fn test_cast() {
 #[test]
 fn test_declaration1() {
     use parser::declaration;
-    use ast::Declaration::Declaration;
     use ast::DeclarationSpecifier::{StorageClass, TypeSpecifier};
     use ast::DeclaratorKind::Identifier;
     use ast::DerivedDeclarator::{Array, Pointer};
@@ -352,7 +351,6 @@ fn test_declaration1() {
 fn test_declaration2() {
     use parser::declaration;
     use ast::Enumerator;
-    use ast::Declaration::Declaration;
     use ast::DeclarationSpecifier::{StorageClass, TypeSpecifier};
     use ast::StorageClassSpecifier::Typedef;
     use ast::PointerQualifier::TypeQualifier;
@@ -405,7 +403,6 @@ fn test_declaration2() {
 #[test]
 fn test_declaration3() {
     use parser::declaration;
-    use ast::Declaration::Declaration;
     use ast::DeclarationSpecifier::TypeSpecifier;
     use ast::TypeSpecifier::Struct;
     use ast::TypeSpecifier::{Float, Int};
@@ -485,7 +482,6 @@ fn test_declaration3() {
 #[test]
 fn test_declaration4() {
     use parser::declaration;
-    use ast::Declaration::Declaration;
     use ast::DeclarationSpecifier::{TypeQualifier, TypeSpecifier};
     use ast::TypeSpecifier::Int;
     use ast::TypeQualifier::Restrict;
@@ -523,7 +519,6 @@ fn test_declaration4() {
 #[test]
 fn test_declaration5() {
     use parser::declaration;
-    use ast::Declaration::Declaration;
     use ast::DeclarationSpecifier::{TypeQualifier, TypeSpecifier};
     use ast::TypeSpecifier::{Char, Int, TypedefName};
     use ast::TypeQualifier::Const;
@@ -626,7 +621,6 @@ fn test_declaration5() {
 #[test]
 fn test_attribute() {
     use parser::declaration;
-    use ast::Declaration::Declaration;
     use ast::DeclarationSpecifier::{StorageClass, TypeSpecifier};
     use ast::TypeSpecifier::{Char, Int, TypedefName};
     use ast::StorageClassSpecifier::Extern;
@@ -722,7 +716,6 @@ fn test_attribute() {
 #[test]
 fn test_attribute2() {
     use parser::declaration;
-    use ast::Declaration::Declaration;
     use ast::DeclarationSpecifier::{Extension, TypeQualifier, TypeSpecifier};
     use ast::TypeSpecifier::{Char, Void};
     use ast::TypeQualifier::Const;
@@ -989,7 +982,6 @@ fn test_alignof() {
 #[test]
 fn test_stmt_expr() {
     use parser::expression;
-    use ast::Declaration::Declaration;
     use ast::DeclaratorKind::Identifier;
     use ast::Expression::Statement;
     use ast::Statement::{Compound, Expression};
@@ -1108,7 +1100,6 @@ fn test_gnu_asm() {
 #[test]
 fn test_union() {
     use parser::declaration;
-    use ast::Declaration::Declaration;
     use ast::SpecifierQualifier::TypeSpecifier;
     use ast::DeclaratorKind::Identifier;
     use ast::DerivedDeclarator::Array;
@@ -1304,7 +1295,6 @@ fn test_call() {
 #[test]
 fn test_typeof() {
     use parser::declaration;
-    use ast::Declaration::Declaration;
     use ast::DeclaratorKind::Identifier;
     use ast::DeclarationSpecifier::TypeSpecifier;
     use ast::TypeSpecifier::TypeOf;
@@ -1398,7 +1388,6 @@ fn test_if() {
 #[test]
 fn test_attribute4() {
     use parser::translation_unit;
-    use ast::Declaration::Declaration;
     use ast::DeclarationSpecifier::{StorageClass, TypeSpecifier};
     use ast::Extension::Attribute;
     use ast::TypeSpecifier::Int;
@@ -1574,7 +1563,6 @@ fn test_attribute5() {
 #[test]
 fn test_declaration6() {
     use parser::declaration;
-    use ast::Declaration::Declaration;
     use ast::Expression::AlignOf;
     use ast::Extension::Attribute;
     use ast::TypeSpecifier::{Double, Long, Struct};

@@ -53,18 +53,10 @@ impl Env {
     }
 
     pub fn handle_declaration(&mut self, declaration: &Declaration) {
-        use ast::Declaration::Declaration;
-
-        if let &Declaration {
-            ref specifiers,
-            ref declarators,
-        } = declaration
-        {
-            if specifiers.iter().any(is_typedef) {
-                for init_decl in declarators {
-                    if let Some(name) = find_declarator_name(&init_decl.node.declarator.node.kind.node) {
-                        self.add_typename(name);
-                    }
+        if declaration.specifiers.iter().any(is_typedef) {
+            for init_decl in &declaration.declarators {
+                if let Some(name) = find_declarator_name(&init_decl.node.declarator.node.kind.node) {
+                    self.add_typename(name);
                 }
             }
         }

@@ -399,13 +399,12 @@ pub declaration -> Node<Declaration> = d:node<declaration0> {
     }
 
 declaration0 -> Declaration =
-    s:list1<declaration_specifier> _ d:cs0<node<init_declarator>> _ ";" {
-        Declaration::Declaration {
+    gnu<K<"__extension__">>? s:list1<declaration_specifier> _ d:cs0<node<init_declarator>> _ ";" {
+        Declaration {
             specifiers: s,
             declarators: d,
         }
-    } /
-    s:static_assert_declaration { Declaration::StaticAssert(s) }
+    }
 
 declaration_specifier -> Node<DeclarationSpecifier> = node<declaration_specifier0>
 
@@ -497,7 +496,7 @@ struct_declaration -> StructDeclaration =
             declarators: d,
         }
     } /
-    s:static_assert_declaration { StructDeclaration::StaticAssert(s) } /
+    s:static_assert { StructDeclaration::StaticAssert(s) } /
     gnu<K<"__extension__">> _ d:struct_declaration { d }
 
 specifier_qualifier -> Node<SpecifierQualifier> = node<specifier_qualifier0>
@@ -779,10 +778,10 @@ range_designator_ext -> Node<Expression> =
 // 6.7.10 Static assertions
 ////
 
-static_assert_declaration -> Node<StaticAssert> = node<static_assert_declaration0>
+static_assert -> Node<StaticAssert> = node<static_assert0>
 
-static_assert_declaration0 -> StaticAssert =
-    K<"_Static_assert"> _ "(" _ e:constant_expression _ "," _ s:string_literal _ ")" _ ";" {
+static_assert0 -> StaticAssert =
+   gnu<K<"__extension__">>? K<"_Static_assert"> _ "(" _ e:constant_expression _ "," _ s:string_literal _ ")" _ ";" {
         StaticAssert {
             expression: e,
             message: s,
@@ -829,7 +828,8 @@ compound_statement -> Statement =
     "{" _ b:list0<node<block_item>> _ "}" { Statement::Compound(b) }
 
 block_item -> BlockItem =
-    gnu<K<"__extension__">>? _ d:declaration { BlockItem::Declaration(d) } /
+    d:declaration { BlockItem::Declaration(d) } /
+    s:static_assert { BlockItem::StaticAssert(s) } /
     s:node<statement0> { BlockItem::Statement(s) }
 
 ////
@@ -904,6 +904,7 @@ for_statement -> Statement =
 for_initializer -> ForInitializer =
     e:expression _ ";" { ForInitializer::Expression(e) } /
     d:declaration { ForInitializer::Declaration(d) } /
+    s:static_assert { ForInitializer::StaticAssert(s) } /
     ";" { ForInitializer::Empty }
 
 ////
@@ -927,6 +928,7 @@ pub translation_unit -> TranslationUnit =
 
 external_declaration -> ExternalDeclaration =
     d:declaration { ExternalDeclaration::Declaration(d) } /
+    s:static_assert { ExternalDeclaration::StaticAssert(s) } /
     d:scoped<node<function_definition>> { ExternalDeclaration::FunctionDefinition(d) } /
     gnu<K<"__extension__">> _ d:external_declaration { d } 
 
@@ -1093,4 +1095,3 @@ typeof_specifier -> TypeSpecifier =
 typeof_specifier0 -> TypeOf =
     e:node<expression0> { TypeOf::Expression(e) } /
     t:type_name { TypeOf::Type(t) }
-

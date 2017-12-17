@@ -31,8 +31,7 @@ impl ::std::fmt::Display for ParseError {
         try!(write!(
             fmt,
             "error at {}:{}: expected ",
-            self.line,
-            self.column
+            self.line, self.column
         ))
 ;
         if self.expected.len() == 0 {
@@ -311,15 +310,17 @@ fn __parse_ohx<'input>(__input: &'input str, __state: &mut ParseState<'input>, _
     {
         let __seq_res = slice_eq(__input, __state, __pos, "0");
         match __seq_res {
-            Matched(__pos, _) => if __input.len() > __pos {
-                let (__ch, __next) = char_range_at(__input, __pos);
-                match __ch {
-                    'x' | 'X' => Matched(__next, ()),
-                    _ => __state.mark_failure(__pos, "[xX]"),
+            Matched(__pos, _) => {
+                if __input.len() > __pos {
+                    let (__ch, __next) = char_range_at(__input, __pos);
+                    match __ch {
+                        'x' | 'X' => Matched(__next, ()),
+                        _ => __state.mark_failure(__pos, "[xX]"),
+                    }
+                } else {
+                    __state.mark_failure(__pos, "[xX]")
                 }
-            } else {
-                __state.mark_failure(__pos, "[xX]")
-            },
+            }
             Failed => Failed,
         }
     }
@@ -1662,7 +1663,31 @@ fn __parse_primary_expression0<'input>(__input: &'input str, __state: &mut Parse
                                 match __choice_res {
                                     Matched(__pos, __value) => Matched(__pos, __value),
                                     Failed => {
-                                        let __choice_res = __parse_generic_selection(__input, __state, __pos, env);
+                                        let __choice_res = {
+                                            let __seq_res = {
+                                                let __seq_res = Matched(__pos, __pos);
+                                                match __seq_res {
+                                                    Matched(__pos, l) => {
+                                                        let __seq_res = __parse_generic_selection(__input, __state, __pos, env);
+                                                        match __seq_res {
+                                                            Matched(__pos, e) => {
+                                                                let __seq_res = Matched(__pos, __pos);
+                                                                match __seq_res {
+                                                                    Matched(__pos, r) => Matched(__pos, { Node::new(e, Span::span(l, r)) }),
+                                                                    Failed => Failed,
+                                                                }
+                                                            }
+                                                            Failed => Failed,
+                                                        }
+                                                    }
+                                                    Failed => Failed,
+                                                }
+                                            };
+                                            match __seq_res {
+                                                Matched(__pos, a) => Matched(__pos, { Expression::GenericSelection(a) }),
+                                                Failed => Failed,
+                                            }
+                                        };
                                         match __choice_res {
                                             Matched(__pos, __value) => Matched(__pos, __value),
                                             Failed => {
@@ -1698,7 +1723,7 @@ fn __parse_primary_expression0<'input>(__input: &'input str, __state: &mut Parse
     }
 }
 
-fn __parse_generic_selection<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Expression> {
+fn __parse_generic_selection<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<GenericSelection> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -1827,7 +1852,7 @@ fn __parse_generic_selection<'input>(__input: &'input str, __state: &mut ParseSt
                                                                                         let __seq_res = slice_eq(__input, __state, __pos, ")");
                                                                                         match __seq_res {
                                                                                             Matched(__pos, _) => Matched(__pos, {
-                                                                                                Expression::GenericSelection {
+                                                                                                GenericSelection {
                                                                                                     expression: e,
                                                                                                     associations: a,
                                                                                                 }
@@ -2416,6 +2441,35 @@ fn __parse_postfix_operator<'input>(__input: &'input str, __state: &mut ParseSta
 fn __parse_compound_literal<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Expression> {
     #![allow(non_snake_case, unused)]
     {
+        let __seq_res = {
+            let __seq_res = Matched(__pos, __pos);
+            match __seq_res {
+                Matched(__pos, l) => {
+                    let __seq_res = __parse_compound_literal_inner(__input, __state, __pos, env);
+                    match __seq_res {
+                        Matched(__pos, e) => {
+                            let __seq_res = Matched(__pos, __pos);
+                            match __seq_res {
+                                Matched(__pos, r) => Matched(__pos, { Node::new(e, Span::span(l, r)) }),
+                                Failed => Failed,
+                            }
+                        }
+                        Failed => Failed,
+                    }
+                }
+                Failed => Failed,
+            }
+        };
+        match __seq_res {
+            Matched(__pos, n) => Matched(__pos, { Expression::CompoundLiteral(n) }),
+            Failed => Failed,
+        }
+    }
+}
+
+fn __parse_compound_literal_inner<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<CompoundLiteral> {
+    #![allow(non_snake_case, unused)]
+    {
         let __seq_res = slice_eq(__input, __state, __pos, "(");
         match __seq_res {
             Matched(__pos, _) => {
@@ -2524,7 +2578,7 @@ fn __parse_compound_literal<'input>(__input: &'input str, __state: &mut ParseSta
                                                                                                         let __seq_res = slice_eq(__input, __state, __pos, "}");
                                                                                                         match __seq_res {
                                                                                                             Matched(__pos, _) => Matched(__pos, {
-                                                                                                                Expression::CompoundLiteral {
+                                                                                                                CompoundLiteral {
                                                                                                                     type_name: t,
                                                                                                                     initializer_list: i,
                                                                                                                 }
@@ -2706,6 +2760,35 @@ fn __parse_unary_prefix<'input>(__input: &'input str, __state: &mut ParseState<'
             let __seq_res = Matched(__pos, __pos);
             match __seq_res {
                 Matched(__pos, l) => {
+                    let __seq_res = __parse_unary_prefix_inner(__input, __state, __pos, env);
+                    match __seq_res {
+                        Matched(__pos, e) => {
+                            let __seq_res = Matched(__pos, __pos);
+                            match __seq_res {
+                                Matched(__pos, r) => Matched(__pos, { Node::new(e, Span::span(l, r)) }),
+                                Failed => Failed,
+                            }
+                        }
+                        Failed => Failed,
+                    }
+                }
+                Failed => Failed,
+            }
+        };
+        match __seq_res {
+            Matched(__pos, n) => Matched(__pos, { Expression::UnaryOperator(n) }),
+            Failed => Failed,
+        }
+    }
+}
+
+fn __parse_unary_prefix_inner<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<UnaryOperatorExpression> {
+    #![allow(non_snake_case, unused)]
+    {
+        let __seq_res = {
+            let __seq_res = Matched(__pos, __pos);
+            match __seq_res {
+                Matched(__pos, l) => {
                     let __seq_res = __parse_prefix_operator(__input, __state, __pos, env);
                     match __seq_res {
                         Matched(__pos, e) => {
@@ -2729,7 +2812,7 @@ fn __parse_unary_prefix<'input>(__input: &'input str, __state: &mut ParseState<'
                         let __seq_res = __parse_unary_expression(__input, __state, __pos, env);
                         match __seq_res {
                             Matched(__pos, e) => Matched(__pos, {
-                                Expression::UnaryOperator {
+                                UnaryOperatorExpression {
                                     operator: op,
                                     operand: e,
                                 }
@@ -2814,6 +2897,35 @@ fn __parse_unary_cast<'input>(__input: &'input str, __state: &mut ParseState<'in
             let __seq_res = Matched(__pos, __pos);
             match __seq_res {
                 Matched(__pos, l) => {
+                    let __seq_res = __parse_unary_cast_inner(__input, __state, __pos, env);
+                    match __seq_res {
+                        Matched(__pos, e) => {
+                            let __seq_res = Matched(__pos, __pos);
+                            match __seq_res {
+                                Matched(__pos, r) => Matched(__pos, { Node::new(e, Span::span(l, r)) }),
+                                Failed => Failed,
+                            }
+                        }
+                        Failed => Failed,
+                    }
+                }
+                Failed => Failed,
+            }
+        };
+        match __seq_res {
+            Matched(__pos, n) => Matched(__pos, { Expression::UnaryOperator(n) }),
+            Failed => Failed,
+        }
+    }
+}
+
+fn __parse_unary_cast_inner<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<UnaryOperatorExpression> {
+    #![allow(non_snake_case, unused)]
+    {
+        let __seq_res = {
+            let __seq_res = Matched(__pos, __pos);
+            match __seq_res {
+                Matched(__pos, l) => {
                     let __seq_res = __parse_unary_operator(__input, __state, __pos, env);
                     match __seq_res {
                         Matched(__pos, e) => {
@@ -2837,7 +2949,7 @@ fn __parse_unary_cast<'input>(__input: &'input str, __state: &mut ParseState<'in
                         let __seq_res = __parse_cast_expression(__input, __state, __pos, env);
                         match __seq_res {
                             Matched(__pos, e) => Matched(__pos, {
-                                Expression::UnaryOperator {
+                                UnaryOperatorExpression {
                                     operator: op,
                                     operand: e,
                                 }
@@ -3140,56 +3252,85 @@ fn __parse_cast_expression0<'input>(__input: &'input str, __state: &mut ParseSta
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
-            let __seq_res = slice_eq(__input, __state, __pos, "(");
-            match __seq_res {
-                Matched(__pos, _) => {
-                    let __seq_res = __parse__(__input, __state, __pos, env);
-                    match __seq_res {
-                        Matched(__pos, _) => {
-                            let __seq_res = __parse_type_name(__input, __state, __pos, env);
-                            match __seq_res {
-                                Matched(__pos, t) => {
-                                    let __seq_res = __parse__(__input, __state, __pos, env);
-                                    match __seq_res {
-                                        Matched(__pos, _) => {
-                                            let __seq_res = slice_eq(__input, __state, __pos, ")");
-                                            match __seq_res {
-                                                Matched(__pos, _) => {
-                                                    let __seq_res = __parse__(__input, __state, __pos, env);
-                                                    match __seq_res {
-                                                        Matched(__pos, _) => {
-                                                            let __seq_res = __parse_cast_expression(__input, __state, __pos, env);
-                                                            match __seq_res {
-                                                                Matched(__pos, e) => Matched(__pos, {
-                                                                    Expression::Cast {
-                                                                        type_name: t,
-                                                                        expression: e,
-                                                                    }
-                                                                }),
-                                                                Failed => Failed,
-                                                            }
-                                                        }
-                                                        Failed => Failed,
-                                                    }
-                                                }
-                                                Failed => Failed,
-                                            }
-                                        }
-                                        Failed => Failed,
-                                    }
+            let __seq_res = {
+                let __seq_res = Matched(__pos, __pos);
+                match __seq_res {
+                    Matched(__pos, l) => {
+                        let __seq_res = __parse_cast_expression_inner(__input, __state, __pos, env);
+                        match __seq_res {
+                            Matched(__pos, e) => {
+                                let __seq_res = Matched(__pos, __pos);
+                                match __seq_res {
+                                    Matched(__pos, r) => Matched(__pos, { Node::new(e, Span::span(l, r)) }),
+                                    Failed => Failed,
                                 }
-                                Failed => Failed,
                             }
+                            Failed => Failed,
                         }
-                        Failed => Failed,
                     }
+                    Failed => Failed,
                 }
+            };
+            match __seq_res {
+                Matched(__pos, c) => Matched(__pos, { Expression::Cast(c) }),
                 Failed => Failed,
             }
         };
         match __choice_res {
             Matched(__pos, __value) => Matched(__pos, __value),
             Failed => __parse_unary_expression0(__input, __state, __pos, env),
+        }
+    }
+}
+
+fn __parse_cast_expression_inner<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<CastExpression> {
+    #![allow(non_snake_case, unused)]
+    {
+        let __seq_res = slice_eq(__input, __state, __pos, "(");
+        match __seq_res {
+            Matched(__pos, _) => {
+                let __seq_res = __parse__(__input, __state, __pos, env);
+                match __seq_res {
+                    Matched(__pos, _) => {
+                        let __seq_res = __parse_type_name(__input, __state, __pos, env);
+                        match __seq_res {
+                            Matched(__pos, t) => {
+                                let __seq_res = __parse__(__input, __state, __pos, env);
+                                match __seq_res {
+                                    Matched(__pos, _) => {
+                                        let __seq_res = slice_eq(__input, __state, __pos, ")");
+                                        match __seq_res {
+                                            Matched(__pos, _) => {
+                                                let __seq_res = __parse__(__input, __state, __pos, env);
+                                                match __seq_res {
+                                                    Matched(__pos, _) => {
+                                                        let __seq_res = __parse_cast_expression(__input, __state, __pos, env);
+                                                        match __seq_res {
+                                                            Matched(__pos, e) => Matched(__pos, {
+                                                                CastExpression {
+                                                                    type_name: t,
+                                                                    expression: e,
+                                                                }
+                                                            }),
+                                                            Failed => Failed,
+                                                        }
+                                                    }
+                                                    Failed => Failed,
+                                                }
+                                            }
+                                            Failed => Failed,
+                                        }
+                                    }
+                                    Failed => Failed,
+                                }
+                            }
+                            Failed => Failed,
+                        }
+                    }
+                    Failed => Failed,
+                }
+            }
+            Failed => Failed,
         }
     }
 }
@@ -4104,11 +4245,15 @@ fn __parse_conditional_expression0<'input>(__input: &'input str, __state: &mut P
                         match __seq_res {
                             Matched(__pos, t) => Matched(__pos, {
                                 if let Some((b, c)) = t {
-                                    Expression::Conditional {
-                                        condition: Box::new(a),
-                                        then_expression: b,
-                                        else_expression: c,
-                                    }
+                                    let span = Span::span(a.span.start, c.span.end);
+                                    Expression::Conditional(Node::new(
+                                        ConditionalExpression {
+                                            condition: Box::new(a),
+                                            then_expression: b,
+                                            else_expression: c,
+                                        },
+                                        span,
+                                    ))
                                 } else {
                                     a.node
                                 }
@@ -4240,45 +4385,56 @@ fn __parse_assignment_expression0<'input>(__input: &'input str, __state: &mut Pa
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
-            let __seq_res = __parse_unary_expression(__input, __state, __pos, env);
-            match __seq_res {
-                Matched(__pos, a) => {
-                    let __seq_res = __parse__(__input, __state, __pos, env);
-                    match __seq_res {
-                        Matched(__pos, _) => {
-                            let __seq_res = {
+            let __seq_res = {
+                let __seq_res = Matched(__pos, __pos);
+                match __seq_res {
+                    Matched(__pos, l) => {
+                        let __seq_res = __parse_assignment_expression_inner(__input, __state, __pos, env);
+                        match __seq_res {
+                            Matched(__pos, e) => {
                                 let __seq_res = Matched(__pos, __pos);
                                 match __seq_res {
-                                    Matched(__pos, l) => {
-                                        let __seq_res = __parse_assignment_operator(__input, __state, __pos, env);
-                                        match __seq_res {
-                                            Matched(__pos, e) => {
-                                                let __seq_res = Matched(__pos, __pos);
-                                                match __seq_res {
-                                                    Matched(__pos, r) => Matched(__pos, { Node::new(e, Span::span(l, r)) }),
-                                                    Failed => Failed,
-                                                }
-                                            }
-                                            Failed => Failed,
-                                        }
-                                    }
+                                    Matched(__pos, r) => Matched(__pos, { Node::new(e, Span::span(l, r)) }),
                                     Failed => Failed,
                                 }
-                            };
+                            }
+                            Failed => Failed,
+                        }
+                    }
+                    Failed => Failed,
+                }
+            };
+            match __seq_res {
+                Matched(__pos, n) => Matched(__pos, { Expression::BinaryOperator(n) }),
+                Failed => Failed,
+            }
+        };
+        match __choice_res {
+            Matched(__pos, __value) => Matched(__pos, __value),
+            Failed => __parse_conditional_expression0(__input, __state, __pos, env),
+        }
+    }
+}
+
+fn __parse_assignment_expression_inner<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<BinaryOperatorExpression> {
+    #![allow(non_snake_case, unused)]
+    {
+        let __seq_res = __parse_unary_expression(__input, __state, __pos, env);
+        match __seq_res {
+            Matched(__pos, a) => {
+                let __seq_res = __parse__(__input, __state, __pos, env);
+                match __seq_res {
+                    Matched(__pos, _) => {
+                        let __seq_res = {
+                            let __seq_res = Matched(__pos, __pos);
                             match __seq_res {
-                                Matched(__pos, op) => {
-                                    let __seq_res = __parse__(__input, __state, __pos, env);
+                                Matched(__pos, l) => {
+                                    let __seq_res = __parse_assignment_operator(__input, __state, __pos, env);
                                     match __seq_res {
-                                        Matched(__pos, _) => {
-                                            let __seq_res = __parse_assignment_expression(__input, __state, __pos, env);
+                                        Matched(__pos, e) => {
+                                            let __seq_res = Matched(__pos, __pos);
                                             match __seq_res {
-                                                Matched(__pos, b) => Matched(__pos, {
-                                                    Expression::BinaryOperator {
-                                                        operator: op,
-                                                        lhs: a,
-                                                        rhs: b,
-                                                    }
-                                                }),
+                                                Matched(__pos, r) => Matched(__pos, { Node::new(e, Span::span(l, r)) }),
                                                 Failed => Failed,
                                             }
                                         }
@@ -4287,16 +4443,34 @@ fn __parse_assignment_expression0<'input>(__input: &'input str, __state: &mut Pa
                                 }
                                 Failed => Failed,
                             }
+                        };
+                        match __seq_res {
+                            Matched(__pos, op) => {
+                                let __seq_res = __parse__(__input, __state, __pos, env);
+                                match __seq_res {
+                                    Matched(__pos, _) => {
+                                        let __seq_res = __parse_assignment_expression(__input, __state, __pos, env);
+                                        match __seq_res {
+                                            Matched(__pos, b) => Matched(__pos, {
+                                                BinaryOperatorExpression {
+                                                    operator: op,
+                                                    lhs: a,
+                                                    rhs: b,
+                                                }
+                                            }),
+                                            Failed => Failed,
+                                        }
+                                    }
+                                    Failed => Failed,
+                                }
+                            }
+                            Failed => Failed,
                         }
-                        Failed => Failed,
                     }
+                    Failed => Failed,
                 }
-                Failed => Failed,
             }
-        };
-        match __choice_res {
-            Matched(__pos, __value) => Matched(__pos, __value),
-            Failed => __parse_conditional_expression0(__input, __state, __pos, env),
+            Failed => Failed,
         }
     }
 }
@@ -13276,6 +13450,35 @@ fn __parse_va_arg_expression<'input>(__input: &'input str, __state: &mut ParseSt
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
+            let __seq_res = Matched(__pos, __pos);
+            match __seq_res {
+                Matched(__pos, l) => {
+                    let __seq_res = __parse_va_arg_expression_inner(__input, __state, __pos, env);
+                    match __seq_res {
+                        Matched(__pos, e) => {
+                            let __seq_res = Matched(__pos, __pos);
+                            match __seq_res {
+                                Matched(__pos, r) => Matched(__pos, { Node::new(e, Span::span(l, r)) }),
+                                Failed => Failed,
+                            }
+                        }
+                        Failed => Failed,
+                    }
+                }
+                Failed => Failed,
+            }
+        };
+        match __seq_res {
+            Matched(__pos, n) => Matched(__pos, { Expression::VaArg(n) }),
+            Failed => Failed,
+        }
+    }
+}
+
+fn __parse_va_arg_expression_inner<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<VaArgExpression> {
+    #![allow(non_snake_case, unused)]
+    {
+        let __seq_res = {
             __state.suppress_fail += 1;
             let res = {
                 let __seq_res = slice_eq(__input, __state, __pos, "__builtin_va_arg");
@@ -13335,7 +13538,7 @@ fn __parse_va_arg_expression<'input>(__input: &'input str, __state: &mut ParseSt
                                                                                         let __seq_res = slice_eq(__input, __state, __pos, ")");
                                                                                         match __seq_res {
                                                                                             Matched(__pos, _) => Matched(__pos, {
-                                                                                                Expression::VaArg {
+                                                                                                VaArgExpression {
                                                                                                     va_list: e,
                                                                                                     type_name: t,
                                                                                                 }
@@ -13517,6 +13720,35 @@ fn __parse_offsetof_expression<'input>(__input: &'input str, __state: &mut Parse
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
+            let __seq_res = Matched(__pos, __pos);
+            match __seq_res {
+                Matched(__pos, l) => {
+                    let __seq_res = __parse_offsetof_expression_inner(__input, __state, __pos, env);
+                    match __seq_res {
+                        Matched(__pos, e) => {
+                            let __seq_res = Matched(__pos, __pos);
+                            match __seq_res {
+                                Matched(__pos, r) => Matched(__pos, { Node::new(e, Span::span(l, r)) }),
+                                Failed => Failed,
+                            }
+                        }
+                        Failed => Failed,
+                    }
+                }
+                Failed => Failed,
+            }
+        };
+        match __seq_res {
+            Matched(__pos, n) => Matched(__pos, { Expression::OffsetOf(n) }),
+            Failed => Failed,
+        }
+    }
+}
+
+fn __parse_offsetof_expression_inner<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<OffsetOfExpression> {
+    #![allow(non_snake_case, unused)]
+    {
+        let __seq_res = {
             __state.suppress_fail += 1;
             let res = {
                 let __seq_res = slice_eq(__input, __state, __pos, "__builtin_offsetof");
@@ -13594,7 +13826,7 @@ fn __parse_offsetof_expression<'input>(__input: &'input str, __state: &mut Parse
                                                                                         let __seq_res = slice_eq(__input, __state, __pos, ")");
                                                                                         match __seq_res {
                                                                                             Matched(__pos, _) => Matched(__pos, {
-                                                                                                Expression::OffsetOf {
+                                                                                                OffsetOfExpression {
                                                                                                     type_name: t,
                                                                                                     designator: d,
                                                                                                 }
@@ -13965,9 +14197,11 @@ pub fn constant<'input>(__input: &'input str, env: &mut Env) -> ParseResult<Cons
     #![allow(non_snake_case, unused)]
     let mut __state = ParseState::new();
     match __parse_constant(__input, &mut __state, 0, env) {
-        Matched(__pos, __value) => if __pos == __input.len() {
-            return Ok(__value);
-        },
+        Matched(__pos, __value) => {
+            if __pos == __input.len() {
+                return Ok(__value);
+            }
+        }
         _ => {}
     }
     let (__line, __col) = pos_to_line(__input, __state.max_err_pos);
@@ -13983,9 +14217,11 @@ pub fn string_literal<'input>(__input: &'input str, env: &mut Env) -> ParseResul
     #![allow(non_snake_case, unused)]
     let mut __state = ParseState::new();
     match __parse_string_literal(__input, &mut __state, 0, env) {
-        Matched(__pos, __value) => if __pos == __input.len() {
-            return Ok(__value);
-        },
+        Matched(__pos, __value) => {
+            if __pos == __input.len() {
+                return Ok(__value);
+            }
+        }
         _ => {}
     }
     let (__line, __col) = pos_to_line(__input, __state.max_err_pos);
@@ -14001,9 +14237,11 @@ pub fn expression<'input>(__input: &'input str, env: &mut Env) -> ParseResult<Bo
     #![allow(non_snake_case, unused)]
     let mut __state = ParseState::new();
     match __parse_expression(__input, &mut __state, 0, env) {
-        Matched(__pos, __value) => if __pos == __input.len() {
-            return Ok(__value);
-        },
+        Matched(__pos, __value) => {
+            if __pos == __input.len() {
+                return Ok(__value);
+            }
+        }
         _ => {}
     }
     let (__line, __col) = pos_to_line(__input, __state.max_err_pos);
@@ -14019,9 +14257,11 @@ pub fn declaration<'input>(__input: &'input str, env: &mut Env) -> ParseResult<N
     #![allow(non_snake_case, unused)]
     let mut __state = ParseState::new();
     match __parse_declaration(__input, &mut __state, 0, env) {
-        Matched(__pos, __value) => if __pos == __input.len() {
-            return Ok(__value);
-        },
+        Matched(__pos, __value) => {
+            if __pos == __input.len() {
+                return Ok(__value);
+            }
+        }
         _ => {}
     }
     let (__line, __col) = pos_to_line(__input, __state.max_err_pos);
@@ -14037,9 +14277,11 @@ pub fn statement<'input>(__input: &'input str, env: &mut Env) -> ParseResult<Box
     #![allow(non_snake_case, unused)]
     let mut __state = ParseState::new();
     match __parse_statement(__input, &mut __state, 0, env) {
-        Matched(__pos, __value) => if __pos == __input.len() {
-            return Ok(__value);
-        },
+        Matched(__pos, __value) => {
+            if __pos == __input.len() {
+                return Ok(__value);
+            }
+        }
         _ => {}
     }
     let (__line, __col) = pos_to_line(__input, __state.max_err_pos);
@@ -14055,9 +14297,11 @@ pub fn translation_unit<'input>(__input: &'input str, env: &mut Env) -> ParseRes
     #![allow(non_snake_case, unused)]
     let mut __state = ParseState::new();
     match __parse_translation_unit(__input, &mut __state, 0, env) {
-        Matched(__pos, __value) => if __pos == __input.len() {
-            return Ok(__value);
-        },
+        Matched(__pos, __value) => {
+            if __pos == __input.len() {
+                return Ok(__value);
+            }
+        }
         _ => {}
     }
     let (__line, __col) = pos_to_line(__input, __state.max_err_pos);

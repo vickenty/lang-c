@@ -51,26 +51,26 @@ mod expr {
     }
 
     pub fn unop<T: From<Expression>>(op: UnaryOperator, e: Box<Expression>) -> T {
-        Expression::UnaryOperator {
+        Expression::UnaryOperator(UnaryOperatorExpression {
             operator: op.into(),
             operand: e.into(),
-        }.into()
+        }.into()).into()
     }
 
     pub fn binop<T: From<Expression>>(op: BinaryOperator, a: Box<Expression>, b: Box<Expression>) -> T {
-        Expression::BinaryOperator {
+        Expression::BinaryOperator(BinaryOperatorExpression {
             operator: op.into(),
             lhs: a.into(),
             rhs: b.into(),
-        }.into()
+        }.into()).into()
     }
 
     pub fn member<T: From<Expression>>(op: MemberOperator, e: Box<Expression>, i: Node<Identifier>) -> T {
-        Expression::Member {
+        Expression::Member(MemberExpression {
             operator: op.into(),
             expression: Box::new(e.into()),
             identifier: i,
-        }.into()
+        }.into()).into()
     }
 
     pub fn cconst<T: From<Expression>>(c: Constant) -> T {
@@ -270,13 +270,13 @@ fn test_cast() {
     assert_eq!(
         expression("(int) 1", env),
         Ok(
-            Cast {
+            Cast(CastExpression {
                 type_name: TypeName {
                     specifiers: vec![TypeSpecifier(Int.into()).into()],
                     declarator: None,
                 }.into(),
                 expression: cconst(int::dec("1")),
-            }.into()
+            }.into()).into()
         )
     );
 
@@ -1056,13 +1056,13 @@ fn test_expr_cast() {
     assert_eq!(
         expression("(U64)foo", env),
         Ok(
-            Cast {
+            Cast(CastExpression {
                 type_name: TypeName {
                     specifiers: vec![TypeSpecifier(TypedefName(ident("U64")).into()).into()],
                     declarator: None,
                 }.into(),
                 expression: var("foo"),
-            }.into()
+            }.into()).into()
         )
     );
 }
@@ -1237,7 +1237,7 @@ fn test_offsetof() {
             &mut Env::new()
         ),
         Ok(
-            OffsetOf {
+            OffsetOf(OffsetOfExpression {
                 type_name: TypeName {
                     specifiers: vec![
                         TypeSpecifier(
@@ -1299,7 +1299,7 @@ fn test_offsetof() {
                     base: ident("a"),
                     members: vec![IndirectMember(ident("b")).into()],
                 }.into(),
-            }.into()
+            }.into()).into()
         )
     );
 }
@@ -1313,10 +1313,10 @@ fn test_call() {
     assert_eq!(
         expression("foo(bar, baz)", &mut Env::new()),
         Ok(
-            Call {
+            Call(CallExpression {
                 callee: var("foo"),
                 arguments: vec![var("bar"), var("baz")],
-            }.into()
+            }.into()).into()
         )
     );
 }
@@ -1343,10 +1343,10 @@ fn test_typeof() {
                     TypeSpecifier(
                         TypeOf(
                             Expression(
-                                Call {
+                                Call(CallExpression {
                                     callee: var("foo"),
                                     arguments: vec![var("bar"), var("baz")],
-                                }.into(),
+                                }.into()).into(),
                             ).into(),
                         ).into(),
                     ).into(),
@@ -1360,10 +1360,10 @@ fn test_typeof() {
                         }.into(),
                         initializer: Some(
                             Initializer::Expression(
-                                Call {
+                                Call(CallExpression {
                                     callee: var("foo"),
                                     arguments: vec![var("bar"), var("baz")],
-                                }.into(),
+                                }.into()).into(),
                             ).into(),
                         ),
                     }.into(),
@@ -1391,10 +1391,10 @@ fn test_if() {
                 }.into(),
                 else_statement: Some(
                     Statement::Expression(Some(
-                        Call {
+                        Call(CallExpression {
                             callee: var("z"),
                             arguments: vec![],
-                        }.into()
+                        }.into()).into()
                     )).into()
                 ),
             }.into()

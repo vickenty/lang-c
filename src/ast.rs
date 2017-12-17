@@ -100,37 +100,24 @@ pub enum Expression {
     /// Generic selection
     ///
     /// (C11 6.5.1.1)
-    GenericSelection {
-        expression: Box<Node<Expression>>,
-        associations: Vec<Node<GenericAssociation>>,
-    },
+    GenericSelection(Node<GenericSelection>),
 
     /// Structure and union members
     ///
     /// Both direct (`.`) and indirect (`->`) access.
     ///
     /// (C11 6.5.2)
-    Member {
-        operator: Node<MemberOperator>,
-        expression: Box<Node<Expression>>,
-        identifier: Node<Identifier>,
-    },
+    Member(Node<MemberExpression>),
 
     /// Function call expression
     ///
     /// (C11 6.5.2)
-    Call {
-        callee: Box<Node<Expression>>,
-        arguments: Vec<Node<Expression>>,
-    },
+    Call(Node<CallExpression>),
 
     /// Compound literal
     ///
     /// (C11 6.5.2)
-    CompoundLiteral {
-        type_name: Node<TypeName>,
-        initializer_list: Vec<Node<Initializer>>,
-    },
+    CompoundLiteral(Node<CompoundLiteral>),
 
     /// Size of a type
     ///
@@ -150,40 +137,26 @@ pub enum Expression {
     /// additional operands are represented by a separate entry in this enum.
     ///
     /// (C11 6.5.2, c11 6.5.3)
-    UnaryOperator {
-        operator: Node<UnaryOperator>,
-        operand: Box<Node<Expression>>,
-    },
+    UnaryOperator(Node<UnaryOperatorExpression>),
 
     /// Cast expression
     ///
     /// `(type) expr`
     ///
     /// (C11 6.5.4)
-    Cast {
-        type_name: Node<TypeName>,
-        expression: Box<Node<Expression>>,
-    },
+    Cast(Node<CastExpression>),
 
     /// Binary operators
     ///
     /// All of C binary operators that can be applied to two expressions.
     ///
     /// (C11 6.5.5 -- 6.5.16)
-    BinaryOperator {
-        operator: Node<BinaryOperator>,
-        lhs: Box<Node<Expression>>,
-        rhs: Box<Node<Expression>>,
-    },
+    BinaryOperator(Node<BinaryOperatorExpression>),
 
     /// Conditional operator
     ///
     /// (C11 6.5.15)
-    Conditional {
-        condition: Box<Node<Expression>>,
-        then_expression: Box<Node<Expression>>,
-        else_expression: Box<Node<Expression>>,
-    },
+    Conditional(Node<ConditionalExpression>),
 
     /// Comma operator
     ///
@@ -195,20 +168,14 @@ pub enum Expression {
     /// Result of expansion of `offsetof` macro.
     ///
     /// (C11 7.19 §3).
-    OffsetOf {
-        type_name: Node<TypeName>,
-        designator: Node<OffsetDesignator>,
-    },
+    OffsetOf(Node<OffsetOfExpression>),
 
     /// Variable argument list access
     ///
     /// Result of expansion of `va_arg` macro.
     ///
     /// (C11 7.16.1.1).
-    VaArg {
-        va_list: Box<Node<Expression>>,
-        type_name: Node<TypeName>,
-    },
+    VaArg(Node<VaArgExpression>),
 
     /// Statement expression
     ///
@@ -225,6 +192,15 @@ pub enum MemberOperator {
     Indirect,
 }
 
+/// Generic selection expression
+///
+/// (C11 6.5.1.1)
+#[derive(Debug, PartialEq, Clone)]
+pub struct GenericSelection {
+    pub expression: Box<Node<Expression>>,
+    pub associations: Vec<Node<GenericAssociation>>,
+}
+
 /// Single element of a generic selection expression
 ///
 /// (C11 6.5.1.1)
@@ -235,6 +211,36 @@ pub enum GenericAssociation {
         expression: Box<Node<Expression>>,
     },
     Default(Box<Node<Expression>>),
+}
+
+/// Structure and union members
+///
+/// Both direct (`.`) and indirect (`->`) access.
+///
+/// (C11 6.5.2)
+#[derive(Debug, PartialEq, Clone)]
+pub struct MemberExpression {
+    pub operator: Node<MemberOperator>,
+    pub expression: Box<Node<Expression>>,
+    pub identifier: Node<Identifier>,
+}
+ 
+/// Function call expression
+///
+/// (C11 6.5.2)
+#[derive(Debug, PartialEq, Clone)]
+pub struct CallExpression {
+    pub callee: Box<Node<Expression>>,
+    pub arguments: Vec<Node<Expression>>,
+}
+
+/// Compound literal
+///
+/// (C11 6.5.2)
+#[derive(Debug, PartialEq, Clone)]
+pub struct CompoundLiteral {
+    pub type_name: Node<TypeName>,
+    pub initializer_list: Vec<Node<Initializer>>,
 }
 
 /// All operators with one operand
@@ -264,6 +270,29 @@ pub enum UnaryOperator {
     Negate,
     /// `sizeof operand`
     SizeOf,
+}
+
+/// Unary operator expression
+///
+/// This represents both postfix and prefix unary oprators. Postfix expressions that take
+/// additional operands are represented by a separate entry in this enum.
+///
+/// (C11 6.5.2, c11 6.5.3)
+#[derive(Debug, PartialEq, Clone)]
+pub struct UnaryOperatorExpression {
+    pub operator: Node<UnaryOperator>,
+    pub operand: Box<Node<Expression>>,
+}
+
+/// Cast expression
+///
+/// `(type) expr`
+///
+/// (C11 6.5.4)
+#[derive(Debug, PartialEq, Clone)]
+pub struct CastExpression {
+    pub type_name: Node<TypeName>,
+    pub expression: Box<Node<Expression>>,
 }
 
 /// All operators with two operands
@@ -331,6 +360,50 @@ pub enum BinaryOperator {
     AssignBitwiseXor,
     /// `lhs |= rhs`
     AssignBitwiseOr,
+}
+
+/// Binary operators
+///
+/// All of C binary operators that can be applied to two expressions.
+///
+/// (C11 6.5.5 -- 6.5.16)
+#[derive(Debug, PartialEq, Clone)]
+pub struct BinaryOperatorExpression {
+    pub operator: Node<BinaryOperator>,
+    pub lhs: Box<Node<Expression>>,
+    pub rhs: Box<Node<Expression>>,
+}
+
+/// Conditional operator
+///
+/// (C11 6.5.15)
+#[derive(Debug, PartialEq, Clone)]
+pub struct ConditionalExpression {
+    pub condition: Box<Node<Expression>>,
+    pub then_expression: Box<Node<Expression>>,
+    pub else_expression: Box<Node<Expression>>,
+}
+
+/// Variable argument list access
+///
+/// Result of expansion of `va_arg` macro.
+///
+/// (C11 7.16.1.1).
+#[derive(Debug, PartialEq, Clone)]
+pub struct VaArgExpression {
+    pub va_list: Box<Node<Expression>>,
+    pub type_name: Node<TypeName>,
+}
+
+/// Member offset expression
+///
+/// Result of expansion of `offsetof` macro.
+///
+/// (C11 7.19 §3).
+#[derive(Debug, PartialEq, Clone)]
+pub struct OffsetOfExpression {
+    pub type_name: Node<TypeName>,
+    pub designator: Node<OffsetDesignator>,
 }
 
 /// Offset designator in a `offsetof` macro expansion

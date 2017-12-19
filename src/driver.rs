@@ -1,14 +1,14 @@
 //! Preprocess and parse C source file into an abstract syntax tree
 
-use std::io;
+use std::collections::HashSet;
 use std::error;
 use std::fmt;
+use std::io;
 use std::path::Path;
 use std::process::Command;
-use std::collections::HashSet;
 
-use env::Env;
 use ast::TranslationUnit;
+use env::Env;
 use parser::translation_unit;
 
 /// Parser configuration

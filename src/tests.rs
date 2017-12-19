@@ -144,8 +144,8 @@ fn cstr<T: From<StringLiteral>>(i: &[&str]) -> T {
 
 #[test]
 fn test_integer() {
-    use parser::constant;
     use self::int::*;
+    use parser::constant;
 
     let env = &mut Env::new();
 
@@ -166,8 +166,8 @@ fn test_integer() {
 
 #[test]
 fn test_floating() {
-    use parser::constant;
     use self::float::*;
+    use parser::constant;
 
     let env = &mut Env::new();
 
@@ -206,8 +206,8 @@ fn test_character() {
 
 #[test]
 fn test_string() {
-    use parser::expression;
     use self::expr::*;
+    use parser::expression;
 
     let env = &mut Env::new();
 
@@ -219,11 +219,11 @@ fn test_string() {
 
 #[test]
 fn test_postfix() {
-    use parser::expression;
-    use ast::UnaryOperator::PostIncrement;
+    use self::expr::*;
     use ast::BinaryOperator::Index;
     use ast::MemberOperator::{Direct, Indirect};
-    use self::expr::*;
+    use ast::UnaryOperator::PostIncrement;
+    use parser::expression;
 
     let env = &mut Env::new();
 
@@ -243,10 +243,10 @@ fn test_postfix() {
 
 #[test]
 fn test_multiplicative() {
-    use parser::expression;
+    use self::expr::*;
     use ast::BinaryOperator::{Divide, Multiply};
     use ast::UnaryOperator::{PostDecrement, PreIncrement};
-    use self::expr::*;
+    use parser::expression;
 
     let mut env = Env::new();
     let env = &mut env;
@@ -267,9 +267,9 @@ fn test_multiplicative() {
 
 #[test]
 fn test_comma() {
-    use parser::expression;
-    use ast::Expression::Comma;
     use self::expr::*;
+    use ast::Expression::Comma;
+    use parser::expression;
 
     let env = &mut Env::new();
 
@@ -282,13 +282,13 @@ fn test_comma() {
 
 #[test]
 fn test_cast() {
-    use parser::expression;
-    use ast::TypeName;
-    use ast::SpecifierQualifier::TypeSpecifier;
-    use ast::TypeSpecifier::Int;
-    use ast::Expression::Cast;
-    use env::Env;
     use self::expr::*;
+    use ast::Expression::Cast;
+    use ast::SpecifierQualifier::TypeSpecifier;
+    use ast::TypeName;
+    use ast::TypeSpecifier::Int;
+    use env::Env;
+    use parser::expression;
 
     let env = &mut Env::new();
 
@@ -310,17 +310,17 @@ fn test_cast() {
 
 #[test]
 fn test_declaration1() {
-    use parser::declaration;
+    use self::expr::*;
+    use ast::ArraySize::{StaticExpression, VariableUnknown};
     use ast::DeclarationSpecifier::{StorageClass, TypeSpecifier};
     use ast::DeclaratorKind::Identifier;
-    use ast::DerivedDeclarator::{Pointer};
-    use ast::TypeSpecifier::Int;
-    use ast::TypeQualifier::Const;
-    use ast::StorageClassSpecifier::Typedef;
+    use ast::DerivedDeclarator::Pointer;
     use ast::Initializer::Expression;
+    use ast::StorageClassSpecifier::Typedef;
+    use ast::TypeQualifier::Const;
+    use ast::TypeSpecifier::Int;
     use ast::UnaryOperator::Address;
-    use ast::ArraySize::{StaticExpression, VariableUnknown};
-    use self::expr::*;
+    use parser::declaration;
 
     let mut env = Env::new();
     let env = &mut env;
@@ -368,16 +368,16 @@ fn test_declaration1() {
 
 #[test]
 fn test_declaration2() {
-    use parser::declaration;
-    use ast::Enumerator;
+    use self::expr::*;
     use ast::DeclarationSpecifier::{StorageClass, TypeSpecifier};
-    use ast::StorageClassSpecifier::Typedef;
-    use ast::PointerQualifier::TypeQualifier;
-    use ast::TypeSpecifier::Enum;
-    use ast::TypeQualifier::Const;
     use ast::DeclaratorKind::Identifier;
     use ast::DerivedDeclarator::Pointer;
-    use self::expr::*;
+    use ast::Enumerator;
+    use ast::PointerQualifier::TypeQualifier;
+    use ast::StorageClassSpecifier::Typedef;
+    use ast::TypeQualifier::Const;
+    use ast::TypeSpecifier::Enum;
+    use parser::declaration;
 
     let mut env = Env::new();
     let env = &mut env;
@@ -423,11 +423,11 @@ fn test_declaration2() {
 
 #[test]
 fn test_declaration3() {
-    use parser::declaration;
     use ast::DeclarationSpecifier::TypeSpecifier;
-    use ast::TypeSpecifier::Struct;
-    use ast::TypeSpecifier::{Float, Int};
     use ast::DeclaratorKind::Identifier;
+    use ast::TypeSpecifier::{Float, Int};
+    use ast::TypeSpecifier::Struct;
+    use parser::declaration;
 
     let mut env = Env::new();
     let env = &mut env;
@@ -503,11 +503,11 @@ fn test_declaration3() {
 
 #[test]
 fn test_declaration4() {
-    use parser::declaration;
     use ast::DeclarationSpecifier::{TypeQualifier, TypeSpecifier};
-    use ast::TypeSpecifier::Int;
-    use ast::TypeQualifier::Restrict;
     use ast::DeclaratorKind::Identifier;
+    use ast::TypeQualifier::Restrict;
+    use ast::TypeSpecifier::Int;
+    use parser::declaration;
 
     assert_eq!(
         declaration("int __restrict__;", &mut Env::with_gnu(false)),
@@ -540,15 +540,15 @@ fn test_declaration4() {
 
 #[test]
 fn test_declaration5() {
-    use parser::declaration;
-    use ast::DeclarationSpecifier::{TypeQualifier, TypeSpecifier};
-    use ast::TypeSpecifier::{Char, Int, TypedefName};
-    use ast::TypeQualifier::Const;
-    use ast::DeclaratorKind::{Abstract, Identifier};
-    use ast::DerivedDeclarator::{Pointer};
-    use ast::ArraySize::VariableExpression;
     use self::expr::cconst;
     use self::int::dec;
+    use ast::ArraySize::VariableExpression;
+    use ast::DeclarationSpecifier::{TypeQualifier, TypeSpecifier};
+    use ast::DeclaratorKind::{Abstract, Identifier};
+    use ast::DerivedDeclarator::Pointer;
+    use ast::TypeQualifier::Const;
+    use ast::TypeSpecifier::{Char, Int, TypedefName};
+    use parser::declaration;
 
     let env = &mut Env::new();
 
@@ -642,14 +642,14 @@ fn test_declaration5() {
 
 #[test]
 fn test_attribute() {
-    use parser::declaration;
-    use ast::DeclarationSpecifier::{StorageClass, TypeSpecifier};
-    use ast::TypeSpecifier::{Char, Int, TypedefName};
-    use ast::StorageClassSpecifier::Extern;
-    use ast::DeclaratorKind::Identifier;
-    use ast::DerivedDeclarator::{Pointer};
-    use ast::Extension::{AsmLabel, };
     use self::expr::cconst;
+    use ast::DeclarationSpecifier::{StorageClass, TypeSpecifier};
+    use ast::DeclaratorKind::Identifier;
+    use ast::DerivedDeclarator::Pointer;
+    use ast::Extension::AsmLabel;
+    use ast::StorageClassSpecifier::Extern;
+    use ast::TypeSpecifier::{Char, Int, TypedefName};
+    use parser::declaration;
 
     let env = &mut Env::new();
     env.add_typename("size_t");
@@ -737,14 +737,14 @@ fn test_attribute() {
 
 #[test]
 fn test_attribute2() {
-    use parser::declaration;
-    use ast::DeclarationSpecifier::{Extension, TypeQualifier, TypeSpecifier};
-    use ast::TypeSpecifier::{Char, Void};
-    use ast::TypeQualifier::Const;
-    use ast::DeclaratorKind::{Abstract, Identifier};
-    use ast::DerivedDeclarator::{Pointer};
     use self::expr::*;
     use self::int::dec;
+    use ast::DeclarationSpecifier::{Extension, TypeQualifier, TypeSpecifier};
+    use ast::DeclaratorKind::{Abstract, Identifier};
+    use ast::DerivedDeclarator::Pointer;
+    use ast::TypeQualifier::Const;
+    use ast::TypeSpecifier::{Char, Void};
+    use parser::declaration;
 
     assert_eq!(
         declaration(
@@ -842,15 +842,15 @@ fn test_attribute2() {
 
 #[test]
 fn test_attribute3() {
-    use parser::translation_unit;
     use ast::DeclarationSpecifier::{Extension, Function, StorageClass, TypeQualifier, TypeSpecifier};
-    use ast::StorageClassSpecifier::Extern;
-    use ast::FunctionSpecifier::Inline;
-    use ast::TypeSpecifier::Char;
-    use ast::TypeQualifier::{Const, Restrict};
     use ast::DeclaratorKind::Identifier;
     use ast::DerivedDeclarator::Pointer;
+    use ast::FunctionSpecifier::Inline;
     use ast::Statement::Compound;
+    use ast::StorageClassSpecifier::Extern;
+    use ast::TypeQualifier::{Const, Restrict};
+    use ast::TypeSpecifier::Char;
+    use parser::translation_unit;
 
     assert_eq!(
         translation_unit(
@@ -903,44 +903,46 @@ fn test_attribute3() {
                                     }.into(),
                                 ]).into(),
                             ]).into(),
-                            DerivedDeclarator::Function(FunctionDeclarator {
-                                parameters: vec![
-                                    ParameterDeclaration {
-                                        specifiers: vec![
-                                            TypeQualifier(Const.into()).into(),
-                                            TypeSpecifier(Char.into()).into(),
-                                        ],
-                                        declarator: Some(
-                                            Declarator {
-                                                kind: Identifier(ident("__name")).into(),
-                                                derived: vec![
-                                                    Pointer(vec![
-                                                        PointerQualifier::TypeQualifier(Restrict.into()).into(),
-                                                    ]).into(),
-                                                ],
-                                                extensions: vec![],
-                                            }.into(),
-                                        ),
-                                        extensions: vec![],
-                                    }.into(),
-                                    ParameterDeclaration {
-                                        specifiers: vec![TypeSpecifier(Char.into()).into()],
-                                        declarator: Some(
-                                            Declarator {
-                                                kind: Identifier(ident("__resolved")).into(),
-                                                derived: vec![
-                                                    Pointer(vec![
-                                                        PointerQualifier::TypeQualifier(Restrict.into()).into(),
-                                                    ]).into(),
-                                                ],
-                                                extensions: vec![],
-                                            }.into(),
-                                        ),
-                                        extensions: vec![],
-                                    }.into(),
-                                ],
-                                ellipsis: Ellipsis::None,
-                            }.into()).into(),
+                            DerivedDeclarator::Function(
+                                FunctionDeclarator {
+                                    parameters: vec![
+                                        ParameterDeclaration {
+                                            specifiers: vec![
+                                                TypeQualifier(Const.into()).into(),
+                                                TypeSpecifier(Char.into()).into(),
+                                            ],
+                                            declarator: Some(
+                                                Declarator {
+                                                    kind: Identifier(ident("__name")).into(),
+                                                    derived: vec![
+                                                        Pointer(vec![
+                                                            PointerQualifier::TypeQualifier(Restrict.into()).into(),
+                                                        ]).into(),
+                                                    ],
+                                                    extensions: vec![],
+                                                }.into(),
+                                            ),
+                                            extensions: vec![],
+                                        }.into(),
+                                        ParameterDeclaration {
+                                            specifiers: vec![TypeSpecifier(Char.into()).into()],
+                                            declarator: Some(
+                                                Declarator {
+                                                    kind: Identifier(ident("__resolved")).into(),
+                                                    derived: vec![
+                                                        Pointer(vec![
+                                                            PointerQualifier::TypeQualifier(Restrict.into()).into(),
+                                                        ]).into(),
+                                                    ],
+                                                    extensions: vec![],
+                                                }.into(),
+                                            ),
+                                            extensions: vec![],
+                                        }.into(),
+                                    ],
+                                    ellipsis: Ellipsis::None,
+                                }.into(),
+                            ).into(),
                         ],
                         extensions: vec![],
                     }.into(),
@@ -954,10 +956,10 @@ fn test_attribute3() {
 
 #[test]
 fn test_alignof() {
-    use parser::expression;
     use ast::Expression::AlignOf;
     use ast::SpecifierQualifier::TypeSpecifier;
     use ast::TypeSpecifier::Long;
+    use parser::expression;
 
     assert_eq!(
         expression("_Alignof(long long)", &mut Env::new()),
@@ -1001,12 +1003,12 @@ fn test_alignof() {
 
 #[test]
 fn test_stmt_expr() {
-    use parser::expression;
+    use ast::DeclarationSpecifier::TypeSpecifier;
     use ast::DeclaratorKind::Identifier;
     use ast::Expression::Statement;
     use ast::Statement::{Compound, Expression};
-    use ast::DeclarationSpecifier::TypeSpecifier;
     use ast::TypeSpecifier::Int;
+    use parser::expression;
 
     use self::expr::*;
     use self::int::oct;
@@ -1038,11 +1040,11 @@ fn test_stmt_expr() {
 
 #[test]
 fn test_expr_cast() {
-    use parser::expression;
-    use ast::TypeName;
     use ast::Expression::Cast;
     use ast::SpecifierQualifier::TypeSpecifier;
+    use ast::TypeName;
     use ast::TypeSpecifier::TypedefName;
+    use parser::expression;
 
     use self::expr::*;
 
@@ -1085,8 +1087,8 @@ fn test_directives() {
 
 #[test]
 fn test_gnu_asm() {
-    use parser::statement;
     use self::expr::var;
+    use parser::statement;
 
     assert_eq!(
         statement(
@@ -1094,41 +1096,43 @@ fn test_gnu_asm() {
             &mut Env::new()
         ),
         Ok(Statement::Asm(
-            AsmStatement::GnuExtended(GnuExtendedAsmStatement {
-                qualifier: None,
-                template: cstr(&[r#""pmovmskb %1, %0""#]),
-                outputs: vec![
-                    GnuAsmOperand {
-                        symbolic_name: None,
-                        constraints: cstr(&[r#""=r""#]),
-                        variable_name: var("__m"),
-                    }.into(),
-                ],
-                inputs: vec![
-                    GnuAsmOperand {
-                        symbolic_name: None,
-                        constraints: cstr(&[r#""x""#]),
-                        variable_name: var("__x"),
-                    }.into(),
-                ],
-                clobbers: vec![],
-            }.into()).into(),
+            AsmStatement::GnuExtended(
+                GnuExtendedAsmStatement {
+                    qualifier: None,
+                    template: cstr(&[r#""pmovmskb %1, %0""#]),
+                    outputs: vec![
+                        GnuAsmOperand {
+                            symbolic_name: None,
+                            constraints: cstr(&[r#""=r""#]),
+                            variable_name: var("__m"),
+                        }.into(),
+                    ],
+                    inputs: vec![
+                        GnuAsmOperand {
+                            symbolic_name: None,
+                            constraints: cstr(&[r#""x""#]),
+                            variable_name: var("__x"),
+                        }.into(),
+                    ],
+                    clobbers: vec![],
+                }.into()
+            ).into(),
         ).into())
     );
 }
 
 #[test]
 fn test_union() {
-    use parser::declaration;
-    use ast::SpecifierQualifier::TypeSpecifier;
-    use ast::DeclaratorKind::Identifier;
-    use ast::TypeSpecifier::{Double, Int, Long};
-    use ast::ArraySize::VariableExpression;
-    use ast::TypeSpecifier::Struct;
-    use ast::Initializer::{Expression, List};
-    use ast::Designator::Member;
     use self::expr::*;
     use self::int::dec;
+    use ast::ArraySize::VariableExpression;
+    use ast::DeclaratorKind::Identifier;
+    use ast::Designator::Member;
+    use ast::Initializer::{Expression, List};
+    use ast::SpecifierQualifier::TypeSpecifier;
+    use ast::TypeSpecifier::{Double, Int, Long};
+    use ast::TypeSpecifier::Struct;
+    use parser::declaration;
 
     assert_eq!(
         declaration(
@@ -1209,16 +1213,16 @@ fn test_union() {
 
 #[test]
 fn test_offsetof() {
-    use parser::expression;
-    use ast::SpecifierQualifier::TypeSpecifier;
-    use ast::DeclaratorKind::Identifier;
-    use ast::TypeSpecifier::Int;
-    use ast::ArraySize::VariableExpression;
-    use ast::TypeSpecifier::Struct;
-    use ast::OffsetMember::IndirectMember;
-    use ast::Expression::OffsetOf;
     use self::expr::*;
     use self::int::dec;
+    use ast::ArraySize::VariableExpression;
+    use ast::DeclaratorKind::Identifier;
+    use ast::Expression::OffsetOf;
+    use ast::OffsetMember::IndirectMember;
+    use ast::SpecifierQualifier::TypeSpecifier;
+    use ast::TypeSpecifier::Int;
+    use ast::TypeSpecifier::Struct;
+    use parser::expression;
 
     assert_eq!(
         expression(
@@ -1299,9 +1303,9 @@ fn test_offsetof() {
 
 #[test]
 fn test_call() {
-    use parser::expression;
-    use ast::Expression::Call;
     use self::expr::*;
+    use ast::Expression::Call;
+    use parser::expression;
 
     assert_eq!(
         expression("foo(bar, baz)", &mut Env::new()),
@@ -1316,13 +1320,13 @@ fn test_call() {
 
 #[test]
 fn test_typeof() {
-    use parser::declaration;
-    use ast::DeclaratorKind::Identifier;
-    use ast::DeclarationSpecifier::TypeSpecifier;
-    use ast::TypeSpecifier::TypeOf;
-    use ast::TypeOf::Expression;
-    use ast::Expression::Call;
     use self::expr::*;
+    use ast::DeclarationSpecifier::TypeSpecifier;
+    use ast::DeclaratorKind::Identifier;
+    use ast::Expression::Call;
+    use ast::TypeOf::Expression;
+    use ast::TypeSpecifier::TypeOf;
+    use parser::declaration;
 
     assert_eq!(
         declaration(
@@ -1369,20 +1373,22 @@ fn test_typeof() {
 
 #[test]
 fn test_if() {
-    use parser::statement;
-    use ast::Statement::{Compound, DoWhile, If};
-    use ast::Expression::Call;
     use self::expr::var;
+    use ast::Expression::Call;
+    use ast::Statement::{Compound, DoWhile, If};
+    use parser::statement;
 
     assert_eq!(
         statement("if (x) do {} while(y); else z();", &mut Env::new()),
         Ok(Box::new(
             If(IfStatement {
                 condition: var("x"),
-                then_statement: DoWhile(DoWhileStatement {
-                    statement: Compound(vec![]).into(),
-                    expression: var("y"),
-                }.into()).into(),
+                then_statement: DoWhile(
+                    DoWhileStatement {
+                        statement: Compound(vec![]).into(),
+                        expression: var("y"),
+                    }.into()
+                ).into(),
                 else_statement: Some(
                     Statement::Expression(Some(
                         Call(
@@ -1393,7 +1399,8 @@ fn test_if() {
                         ).into()
                     )).into()
                 ),
-            }.into()).into(),
+            }.into())
+                .into(),
         ))
     );
 }
@@ -1409,12 +1416,12 @@ fn test_if() {
 // ```:
 #[test]
 fn test_attribute4() {
-    use parser::translation_unit;
     use ast::DeclarationSpecifier::{StorageClass, TypeSpecifier};
-    use ast::TypeSpecifier::Int;
-    use ast::Statement::Compound;
     use ast::DeclaratorKind::Identifier;
+    use ast::Statement::Compound;
     use ast::StorageClassSpecifier::Typedef;
+    use ast::TypeSpecifier::Int;
+    use parser::translation_unit;
 
     let env = &mut Env::new();
 
@@ -1512,11 +1519,11 @@ fn test_attribute4() {
 
 #[test]
 fn test_attribute5() {
-    use parser::translation_unit;
+    use ast::DeclarationSpecifier::TypeSpecifier;
     use ast::DeclaratorKind::Identifier;
     use ast::Statement::Compound;
-    use ast::DeclarationSpecifier::TypeSpecifier;
     use ast::TypeSpecifier::Int;
+    use parser::translation_unit;
 
     assert_eq!(
         translation_unit(
@@ -1580,12 +1587,12 @@ fn test_attribute5() {
 
 #[test]
 fn test_declaration6() {
-    use parser::declaration;
-    use ast::Expression::AlignOf;
-    use ast::TypeSpecifier::{Double, Long, Struct};
-    use ast::SpecifierQualifier::TypeSpecifier;
     use ast::DeclaratorKind::Identifier;
+    use ast::Expression::AlignOf;
+    use ast::SpecifierQualifier::TypeSpecifier;
     use ast::StorageClassSpecifier::Typedef;
+    use ast::TypeSpecifier::{Double, Long, Struct};
+    use parser::declaration;
 
     assert_eq!(
         declaration(

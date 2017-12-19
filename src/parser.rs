@@ -1911,10 +1911,14 @@ fn __parse_generic_association<'input>(__input: &'input str, __state: &mut Parse
                                             let __seq_res = __parse_assignment_expression(__input, __state, __pos, env);
                                             match __seq_res {
                                                 Matched(__pos, e) => Matched(__pos, {
-                                                    GenericAssociation::Type {
-                                                        type_name: t,
-                                                        expression: e,
-                                                    }
+                                                    let span = Span::span(t.span.start, e.span.end);
+                                                    GenericAssociation::Type(Node::new(
+                                                        GenericAssociationType {
+                                                            type_name: t,
+                                                            expression: e,
+                                                        },
+                                                        span,
+                                                    ))
                                                 }),
                                                 Failed => Failed,
                                             }
@@ -6082,11 +6086,59 @@ fn __parse_type_specifier0<'input>(__input: &'input str, __state: &mut ParseStat
                                                                                                         match __choice_res {
                                                                                                             Matched(__pos, __value) => Matched(__pos, __value),
                                                                                                             Failed => {
-                                                                                                                let __choice_res = __parse_struct_or_union_specifier(__input, __state, __pos, env);
+                                                                                                                let __choice_res = {
+                                                                                                                    let __seq_res = {
+                                                                                                                        let __seq_res = Matched(__pos, __pos);
+                                                                                                                        match __seq_res {
+                                                                                                                            Matched(__pos, l) => {
+                                                                                                                                let __seq_res = __parse_struct_or_union_specifier(__input, __state, __pos, env);
+                                                                                                                                match __seq_res {
+                                                                                                                                    Matched(__pos, e) => {
+                                                                                                                                        let __seq_res = Matched(__pos, __pos);
+                                                                                                                                        match __seq_res {
+                                                                                                                                            Matched(__pos, r) => Matched(__pos, { Node::new(e, Span::span(l, r)) }),
+                                                                                                                                            Failed => Failed,
+                                                                                                                                        }
+                                                                                                                                    }
+                                                                                                                                    Failed => Failed,
+                                                                                                                                }
+                                                                                                                            }
+                                                                                                                            Failed => Failed,
+                                                                                                                        }
+                                                                                                                    };
+                                                                                                                    match __seq_res {
+                                                                                                                        Matched(__pos, s) => Matched(__pos, { TypeSpecifier::Struct(s) }),
+                                                                                                                        Failed => Failed,
+                                                                                                                    }
+                                                                                                                };
                                                                                                                 match __choice_res {
                                                                                                                     Matched(__pos, __value) => Matched(__pos, __value),
                                                                                                                     Failed => {
-                                                                                                                        let __choice_res = __parse_enum_specifier(__input, __state, __pos, env);
+                                                                                                                        let __choice_res = {
+                                                                                                                            let __seq_res = {
+                                                                                                                                let __seq_res = Matched(__pos, __pos);
+                                                                                                                                match __seq_res {
+                                                                                                                                    Matched(__pos, l) => {
+                                                                                                                                        let __seq_res = __parse_enum_specifier(__input, __state, __pos, env);
+                                                                                                                                        match __seq_res {
+                                                                                                                                            Matched(__pos, e) => {
+                                                                                                                                                let __seq_res = Matched(__pos, __pos);
+                                                                                                                                                match __seq_res {
+                                                                                                                                                    Matched(__pos, r) => Matched(__pos, { Node::new(e, Span::span(l, r)) }),
+                                                                                                                                                    Failed => Failed,
+                                                                                                                                                }
+                                                                                                                                            }
+                                                                                                                                            Failed => Failed,
+                                                                                                                                        }
+                                                                                                                                    }
+                                                                                                                                    Failed => Failed,
+                                                                                                                                }
+                                                                                                                            };
+                                                                                                                            match __seq_res {
+                                                                                                                                Matched(__pos, e) => Matched(__pos, { TypeSpecifier::Enum(e) }),
+                                                                                                                                Failed => Failed,
+                                                                                                                            }
+                                                                                                                        };
                                                                                                                         match __choice_res {
                                                                                                                             Matched(__pos, __value) => Matched(__pos, __value),
                                                                                                                             Failed => {
@@ -6142,7 +6194,7 @@ fn __parse_type_specifier0<'input>(__input: &'input str, __state: &mut ParseStat
     }
 }
 
-fn __parse_struct_or_union_specifier<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<TypeSpecifier> {
+fn __parse_struct_or_union_specifier<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<StructType> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -6248,7 +6300,7 @@ fn __parse_struct_or_union_specifier<'input>(__input: &'input str, __state: &mut
                                                                             let __seq_res = slice_eq(__input, __state, __pos, "}");
                                                                             match __seq_res {
                                                                                 Matched(__pos, _) => Matched(__pos, {
-                                                                                    TypeSpecifier::Struct {
+                                                                                    StructType {
                                                                                         kind: t,
                                                                                         identifier: i,
                                                                                         declarations: d,
@@ -6311,7 +6363,7 @@ fn __parse_struct_or_union_specifier<'input>(__input: &'input str, __state: &mut
                                 let __seq_res = __parse_identifier(__input, __state, __pos, env);
                                 match __seq_res {
                                     Matched(__pos, i) => Matched(__pos, {
-                                        TypeSpecifier::Struct {
+                                        StructType {
                                             kind: t,
                                             identifier: Some(i),
                                             declarations: Vec::new(),
@@ -6330,7 +6382,7 @@ fn __parse_struct_or_union_specifier<'input>(__input: &'input str, __state: &mut
     }
 }
 
-fn __parse_struct_or_union<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<StructType> {
+fn __parse_struct_or_union<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<StructKind> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -6363,7 +6415,7 @@ fn __parse_struct_or_union<'input>(__input: &'input str, __state: &mut ParseStat
                 res
             };
             match __seq_res {
-                Matched(__pos, _) => Matched(__pos, { StructType::Struct }),
+                Matched(__pos, _) => Matched(__pos, { StructKind::Struct }),
                 Failed => Failed,
             }
         };
@@ -6399,7 +6451,7 @@ fn __parse_struct_or_union<'input>(__input: &'input str, __state: &mut ParseStat
                     res
                 };
                 match __seq_res {
-                    Matched(__pos, _) => Matched(__pos, { StructType::Union }),
+                    Matched(__pos, _) => Matched(__pos, { StructKind::Union }),
                     Failed => Failed,
                 }
             }
@@ -6412,135 +6464,26 @@ fn __parse_struct_declaration<'input>(__input: &'input str, __state: &mut ParseS
     {
         let __choice_res = {
             let __seq_res = {
-                let __seq_res = {
-                    let mut __repeat_pos = __pos;
-                    let mut __repeat_value = vec![];
-                    loop {
-                        let __pos = __repeat_pos;
-                        let __pos = if __repeat_value.len() > 0 {
-                            let __sep_res = __parse__(__input, __state, __pos, env);
-                            match __sep_res {
-                                Matched(__newpos, _) => __newpos,
-                                Failed => break,
+                let __seq_res = Matched(__pos, __pos);
+                match __seq_res {
+                    Matched(__pos, l) => {
+                        let __seq_res = __parse_struct_field(__input, __state, __pos, env);
+                        match __seq_res {
+                            Matched(__pos, e) => {
+                                let __seq_res = Matched(__pos, __pos);
+                                match __seq_res {
+                                    Matched(__pos, r) => Matched(__pos, { Node::new(e, Span::span(l, r)) }),
+                                    Failed => Failed,
+                                }
                             }
-                        } else {
-                            __pos
-                        };
-                        let __step_res = __parse_specifier_qualifier(__input, __state, __pos, env);
-                        match __step_res {
-                            Matched(__newpos, __value) => {
-                                __repeat_pos = __newpos;
-                                __repeat_value.push(__value);
-                            }
-                            Failed => {
-                                break;
-                            }
+                            Failed => Failed,
                         }
                     }
-                    if __repeat_value.len() >= 1 {
-                        Matched(__repeat_pos, __repeat_value)
-                    } else {
-                        Failed
-                    }
-                };
-                match __seq_res {
-                    Matched(__pos, e) => Matched(__pos, { e }),
                     Failed => Failed,
                 }
             };
             match __seq_res {
-                Matched(__pos, s) => {
-                    let __seq_res = __parse__(__input, __state, __pos, env);
-                    match __seq_res {
-                        Matched(__pos, _) => {
-                            let __seq_res = {
-                                let __seq_res = {
-                                    let mut __repeat_pos = __pos;
-                                    let mut __repeat_value = vec![];
-                                    loop {
-                                        let __pos = __repeat_pos;
-                                        let __pos = if __repeat_value.len() > 0 {
-                                            let __sep_res = {
-                                                let __seq_res = __parse__(__input, __state, __pos, env);
-                                                match __seq_res {
-                                                    Matched(__pos, _) => {
-                                                        let __seq_res = slice_eq(__input, __state, __pos, ",");
-                                                        match __seq_res {
-                                                            Matched(__pos, _) => __parse__(__input, __state, __pos, env),
-                                                            Failed => Failed,
-                                                        }
-                                                    }
-                                                    Failed => Failed,
-                                                }
-                                            };
-                                            match __sep_res {
-                                                Matched(__newpos, _) => __newpos,
-                                                Failed => break,
-                                            }
-                                        } else {
-                                            __pos
-                                        };
-                                        let __step_res = {
-                                            let __seq_res = Matched(__pos, __pos);
-                                            match __seq_res {
-                                                Matched(__pos, l) => {
-                                                    let __seq_res = __parse_struct_declarator(__input, __state, __pos, env);
-                                                    match __seq_res {
-                                                        Matched(__pos, e) => {
-                                                            let __seq_res = Matched(__pos, __pos);
-                                                            match __seq_res {
-                                                                Matched(__pos, r) => Matched(__pos, { Node::new(e, Span::span(l, r)) }),
-                                                                Failed => Failed,
-                                                            }
-                                                        }
-                                                        Failed => Failed,
-                                                    }
-                                                }
-                                                Failed => Failed,
-                                            }
-                                        };
-                                        match __step_res {
-                                            Matched(__newpos, __value) => {
-                                                __repeat_pos = __newpos;
-                                                __repeat_value.push(__value);
-                                            }
-                                            Failed => {
-                                                break;
-                                            }
-                                        }
-                                    }
-                                    Matched(__repeat_pos, __repeat_value)
-                                };
-                                match __seq_res {
-                                    Matched(__pos, e) => Matched(__pos, { e }),
-                                    Failed => Failed,
-                                }
-                            };
-                            match __seq_res {
-                                Matched(__pos, d) => {
-                                    let __seq_res = __parse__(__input, __state, __pos, env);
-                                    match __seq_res {
-                                        Matched(__pos, _) => {
-                                            let __seq_res = slice_eq(__input, __state, __pos, ";");
-                                            match __seq_res {
-                                                Matched(__pos, _) => Matched(__pos, {
-                                                    StructDeclaration::Field {
-                                                        specifiers: s,
-                                                        declarators: d,
-                                                    }
-                                                }),
-                                                Failed => Failed,
-                                            }
-                                        }
-                                        Failed => Failed,
-                                    }
-                                }
-                                Failed => Failed,
-                            }
-                        }
-                        Failed => Failed,
-                    }
-                }
+                Matched(__pos, f) => Matched(__pos, { StructDeclaration::Field(f) }),
                 Failed => Failed,
             }
         };
@@ -6624,6 +6567,144 @@ fn __parse_struct_declaration<'input>(__input: &'input str, __state: &mut ParseS
                     }
                 }
             }
+        }
+    }
+}
+
+fn __parse_struct_field<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<StructField> {
+    #![allow(non_snake_case, unused)]
+    {
+        let __seq_res = {
+            let __seq_res = {
+                let mut __repeat_pos = __pos;
+                let mut __repeat_value = vec![];
+                loop {
+                    let __pos = __repeat_pos;
+                    let __pos = if __repeat_value.len() > 0 {
+                        let __sep_res = __parse__(__input, __state, __pos, env);
+                        match __sep_res {
+                            Matched(__newpos, _) => __newpos,
+                            Failed => break,
+                        }
+                    } else {
+                        __pos
+                    };
+                    let __step_res = __parse_specifier_qualifier(__input, __state, __pos, env);
+                    match __step_res {
+                        Matched(__newpos, __value) => {
+                            __repeat_pos = __newpos;
+                            __repeat_value.push(__value);
+                        }
+                        Failed => {
+                            break;
+                        }
+                    }
+                }
+                if __repeat_value.len() >= 1 {
+                    Matched(__repeat_pos, __repeat_value)
+                } else {
+                    Failed
+                }
+            };
+            match __seq_res {
+                Matched(__pos, e) => Matched(__pos, { e }),
+                Failed => Failed,
+            }
+        };
+        match __seq_res {
+            Matched(__pos, s) => {
+                let __seq_res = __parse__(__input, __state, __pos, env);
+                match __seq_res {
+                    Matched(__pos, _) => {
+                        let __seq_res = {
+                            let __seq_res = {
+                                let mut __repeat_pos = __pos;
+                                let mut __repeat_value = vec![];
+                                loop {
+                                    let __pos = __repeat_pos;
+                                    let __pos = if __repeat_value.len() > 0 {
+                                        let __sep_res = {
+                                            let __seq_res = __parse__(__input, __state, __pos, env);
+                                            match __seq_res {
+                                                Matched(__pos, _) => {
+                                                    let __seq_res = slice_eq(__input, __state, __pos, ",");
+                                                    match __seq_res {
+                                                        Matched(__pos, _) => __parse__(__input, __state, __pos, env),
+                                                        Failed => Failed,
+                                                    }
+                                                }
+                                                Failed => Failed,
+                                            }
+                                        };
+                                        match __sep_res {
+                                            Matched(__newpos, _) => __newpos,
+                                            Failed => break,
+                                        }
+                                    } else {
+                                        __pos
+                                    };
+                                    let __step_res = {
+                                        let __seq_res = Matched(__pos, __pos);
+                                        match __seq_res {
+                                            Matched(__pos, l) => {
+                                                let __seq_res = __parse_struct_declarator(__input, __state, __pos, env);
+                                                match __seq_res {
+                                                    Matched(__pos, e) => {
+                                                        let __seq_res = Matched(__pos, __pos);
+                                                        match __seq_res {
+                                                            Matched(__pos, r) => Matched(__pos, { Node::new(e, Span::span(l, r)) }),
+                                                            Failed => Failed,
+                                                        }
+                                                    }
+                                                    Failed => Failed,
+                                                }
+                                            }
+                                            Failed => Failed,
+                                        }
+                                    };
+                                    match __step_res {
+                                        Matched(__newpos, __value) => {
+                                            __repeat_pos = __newpos;
+                                            __repeat_value.push(__value);
+                                        }
+                                        Failed => {
+                                            break;
+                                        }
+                                    }
+                                }
+                                Matched(__repeat_pos, __repeat_value)
+                            };
+                            match __seq_res {
+                                Matched(__pos, e) => Matched(__pos, { e }),
+                                Failed => Failed,
+                            }
+                        };
+                        match __seq_res {
+                            Matched(__pos, d) => {
+                                let __seq_res = __parse__(__input, __state, __pos, env);
+                                match __seq_res {
+                                    Matched(__pos, _) => {
+                                        let __seq_res = slice_eq(__input, __state, __pos, ";");
+                                        match __seq_res {
+                                            Matched(__pos, _) => Matched(__pos, {
+                                                StructField {
+                                                    specifiers: s,
+                                                    declarators: d,
+                                                }
+                                            }),
+                                            Failed => Failed,
+                                        }
+                                    }
+                                    Failed => Failed,
+                                }
+                            }
+                            Failed => Failed,
+                        }
+                    }
+                    Failed => Failed,
+                }
+            }
+            Failed => Failed,
         }
     }
 }
@@ -6792,7 +6873,7 @@ fn __parse_struct_declarator<'input>(__input: &'input str, __state: &mut ParseSt
     }
 }
 
-fn __parse_enum_specifier<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<TypeSpecifier> {
+fn __parse_enum_specifier<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<EnumType> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -6928,7 +7009,7 @@ fn __parse_enum_specifier<'input>(__input: &'input str, __state: &mut ParseState
                                                                                             let __seq_res = slice_eq(__input, __state, __pos, "}");
                                                                                             match __seq_res {
                                                                                                 Matched(__pos, _) => Matched(__pos, {
-                                                                                                    TypeSpecifier::Enum {
+                                                                                                    EnumType {
                                                                                                         identifier: i,
                                                                                                         enumerators: e,
                                                                                                     }
@@ -7005,7 +7086,7 @@ fn __parse_enum_specifier<'input>(__input: &'input str, __state: &mut ParseState
                                 let __seq_res = __parse_identifier(__input, __state, __pos, env);
                                 match __seq_res {
                                     Matched(__pos, i) => Matched(__pos, {
-                                        TypeSpecifier::Enum {
+                                        EnumType {
                                             identifier: Some(i),
                                             enumerators: Vec::new(),
                                         }
@@ -7908,14 +7989,27 @@ fn __parse_derived_declarator<'input>(__input: &'input str, __state: &mut ParseS
                     let __seq_res = __parse__(__input, __state, __pos, env);
                     match __seq_res {
                         Matched(__pos, _) => {
-                            let __seq_res = __parse_array_declarator(__input, __state, __pos, env);
-                            match __seq_res {
-                                Matched(__pos, a) => Matched(__pos, {
-                                    DerivedDeclarator::Array {
-                                        qualifiers: a.0,
-                                        size: a.1,
+                            let __seq_res = {
+                                let __seq_res = Matched(__pos, __pos);
+                                match __seq_res {
+                                    Matched(__pos, l) => {
+                                        let __seq_res = __parse_array_declarator(__input, __state, __pos, env);
+                                        match __seq_res {
+                                            Matched(__pos, e) => {
+                                                let __seq_res = Matched(__pos, __pos);
+                                                match __seq_res {
+                                                    Matched(__pos, r) => Matched(__pos, { Node::new(e, Span::span(l, r)) }),
+                                                    Failed => Failed,
+                                                }
+                                            }
+                                            Failed => Failed,
+                                        }
                                     }
-                                }),
+                                    Failed => Failed,
+                                }
+                            };
+                            match __seq_res {
+                                Matched(__pos, a) => Matched(__pos, { DerivedDeclarator::Array(a) }),
                                 Failed => Failed,
                             }
                         }
@@ -7936,79 +8030,32 @@ fn __parse_derived_declarator<'input>(__input: &'input str, __state: &mut ParseS
                             match __seq_res {
                                 Matched(__pos, _) => {
                                     let __seq_res = {
-                                        let __seq_res = {
-                                            let mut __repeat_pos = __pos;
-                                            let mut __repeat_value = vec![];
-                                            loop {
-                                                let __pos = __repeat_pos;
-                                                let __pos = if __repeat_value.len() > 0 {
-                                                    let __sep_res = {
-                                                        let __seq_res = __parse__(__input, __state, __pos, env);
+                                        let __seq_res = Matched(__pos, __pos);
+                                        match __seq_res {
+                                            Matched(__pos, l) => {
+                                                let __seq_res = __parse_function_declarator(__input, __state, __pos, env);
+                                                match __seq_res {
+                                                    Matched(__pos, e) => {
+                                                        let __seq_res = Matched(__pos, __pos);
                                                         match __seq_res {
-                                                            Matched(__pos, _) => {
-                                                                let __seq_res = slice_eq(__input, __state, __pos, ",");
-                                                                match __seq_res {
-                                                                    Matched(__pos, _) => __parse__(__input, __state, __pos, env),
-                                                                    Failed => Failed,
-                                                                }
-                                                            }
+                                                            Matched(__pos, r) => Matched(__pos, { Node::new(e, Span::span(l, r)) }),
                                                             Failed => Failed,
                                                         }
-                                                    };
-                                                    match __sep_res {
-                                                        Matched(__newpos, _) => __newpos,
-                                                        Failed => break,
                                                     }
-                                                } else {
-                                                    __pos
-                                                };
-                                                let __step_res = __parse_parameter_declaration(__input, __state, __pos, env);
-                                                match __step_res {
-                                                    Matched(__newpos, __value) => {
-                                                        __repeat_pos = __newpos;
-                                                        __repeat_value.push(__value);
-                                                    }
-                                                    Failed => {
-                                                        break;
-                                                    }
+                                                    Failed => Failed,
                                                 }
                                             }
-                                            if __repeat_value.len() >= 1 {
-                                                Matched(__repeat_pos, __repeat_value)
-                                            } else {
-                                                Failed
-                                            }
-                                        };
-                                        match __seq_res {
-                                            Matched(__pos, e) => Matched(__pos, { e }),
                                             Failed => Failed,
                                         }
                                     };
                                     match __seq_res {
-                                        Matched(__pos, p) => {
+                                        Matched(__pos, f) => {
                                             let __seq_res = __parse__(__input, __state, __pos, env);
                                             match __seq_res {
                                                 Matched(__pos, _) => {
-                                                    let __seq_res = __parse_ellipsis(__input, __state, __pos, env);
+                                                    let __seq_res = slice_eq(__input, __state, __pos, ")");
                                                     match __seq_res {
-                                                        Matched(__pos, e) => {
-                                                            let __seq_res = __parse__(__input, __state, __pos, env);
-                                                            match __seq_res {
-                                                                Matched(__pos, _) => {
-                                                                    let __seq_res = slice_eq(__input, __state, __pos, ")");
-                                                                    match __seq_res {
-                                                                        Matched(__pos, _) => Matched(__pos, {
-                                                                            DerivedDeclarator::Function {
-                                                                                parameters: p,
-                                                                                ellipsis: e,
-                                                                            }
-                                                                        }),
-                                                                        Failed => Failed,
-                                                                    }
-                                                                }
-                                                                Failed => Failed,
-                                                            }
-                                                        }
+                                                        Matched(__pos, _) => Matched(__pos, { DerivedDeclarator::Function(f) }),
                                                         Failed => Failed,
                                                     }
                                                 }
@@ -8095,7 +8142,7 @@ fn __parse_derived_declarator<'input>(__input: &'input str, __state: &mut ParseS
     }
 }
 
-fn __parse_array_declarator<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<(Vec<Node<TypeQualifier>>, ArraySize)> {
+fn __parse_array_declarator<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<ArrayDeclarator> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -8139,7 +8186,12 @@ fn __parse_array_declarator<'input>(__input: &'input str, __state: &mut ParseSta
                         Matched(__pos, _) => {
                             let __seq_res = slice_eq(__input, __state, __pos, "]");
                             match __seq_res {
-                                Matched(__pos, _) => Matched(__pos, { (q, ArraySize::Unknown) }),
+                                Matched(__pos, _) => Matched(__pos, {
+                                    ArrayDeclarator {
+                                        qualifiers: q,
+                                        size: ArraySize::Unknown,
+                                    }
+                                }),
                                 Failed => Failed,
                             }
                         }
@@ -8199,7 +8251,12 @@ fn __parse_array_declarator<'input>(__input: &'input str, __state: &mut ParseSta
                                                 Matched(__pos, _) => {
                                                     let __seq_res = slice_eq(__input, __state, __pos, "]");
                                                     match __seq_res {
-                                                        Matched(__pos, _) => Matched(__pos, { (q, ArraySize::VariableExpression(e)) }),
+                                                        Matched(__pos, _) => Matched(__pos, {
+                                                            ArrayDeclarator {
+                                                                qualifiers: q,
+                                                                size: ArraySize::VariableExpression(e),
+                                                            }
+                                                        }),
                                                         Failed => Failed,
                                                     }
                                                 }
@@ -8298,7 +8355,12 @@ fn __parse_array_declarator<'input>(__input: &'input str, __state: &mut ParseSta
                                                                         Matched(__pos, _) => {
                                                                             let __seq_res = slice_eq(__input, __state, __pos, "]");
                                                                             match __seq_res {
-                                                                                Matched(__pos, _) => Matched(__pos, { (q, ArraySize::StaticExpression(e)) }),
+                                                                                Matched(__pos, _) => Matched(__pos, {
+                                                                                    ArrayDeclarator {
+                                                                                        qualifiers: q,
+                                                                                        size: ArraySize::StaticExpression(e),
+                                                                                    }
+                                                                                }),
                                                                                 Failed => Failed,
                                                                             }
                                                                         }
@@ -8407,7 +8469,12 @@ fn __parse_array_declarator<'input>(__input: &'input str, __state: &mut ParseSta
                                                                                 Matched(__pos, _) => {
                                                                                     let __seq_res = slice_eq(__input, __state, __pos, "]");
                                                                                     match __seq_res {
-                                                                                        Matched(__pos, _) => Matched(__pos, { (q, ArraySize::StaticExpression(e)) }),
+                                                                                        Matched(__pos, _) => Matched(__pos, {
+                                                                                            ArrayDeclarator {
+                                                                                                qualifiers: q,
+                                                                                                size: ArraySize::StaticExpression(e),
+                                                                                            }
+                                                                                        }),
                                                                                         Failed => Failed,
                                                                                     }
                                                                                 }
@@ -8478,7 +8545,12 @@ fn __parse_array_declarator<'input>(__input: &'input str, __state: &mut ParseSta
                                                                     Matched(__pos, _) => {
                                                                         let __seq_res = slice_eq(__input, __state, __pos, "]");
                                                                         match __seq_res {
-                                                                            Matched(__pos, _) => Matched(__pos, { (q, ArraySize::VariableUnknown) }),
+                                                                            Matched(__pos, _) => Matched(__pos, {
+                                                                                ArrayDeclarator {
+                                                                                    qualifiers: q,
+                                                                                    size: ArraySize::VariableUnknown,
+                                                                                }
+                                                                            }),
                                                                             Failed => Failed,
                                                                         }
                                                                     }
@@ -8500,6 +8572,82 @@ fn __parse_array_declarator<'input>(__input: &'input str, __state: &mut ParseSta
                     }
                 }
             }
+        }
+    }
+}
+
+fn __parse_function_declarator<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<FunctionDeclarator> {
+    #![allow(non_snake_case, unused)]
+    {
+        let __seq_res = {
+            let __seq_res = {
+                let mut __repeat_pos = __pos;
+                let mut __repeat_value = vec![];
+                loop {
+                    let __pos = __repeat_pos;
+                    let __pos = if __repeat_value.len() > 0 {
+                        let __sep_res = {
+                            let __seq_res = __parse__(__input, __state, __pos, env);
+                            match __seq_res {
+                                Matched(__pos, _) => {
+                                    let __seq_res = slice_eq(__input, __state, __pos, ",");
+                                    match __seq_res {
+                                        Matched(__pos, _) => __parse__(__input, __state, __pos, env),
+                                        Failed => Failed,
+                                    }
+                                }
+                                Failed => Failed,
+                            }
+                        };
+                        match __sep_res {
+                            Matched(__newpos, _) => __newpos,
+                            Failed => break,
+                        }
+                    } else {
+                        __pos
+                    };
+                    let __step_res = __parse_parameter_declaration(__input, __state, __pos, env);
+                    match __step_res {
+                        Matched(__newpos, __value) => {
+                            __repeat_pos = __newpos;
+                            __repeat_value.push(__value);
+                        }
+                        Failed => {
+                            break;
+                        }
+                    }
+                }
+                if __repeat_value.len() >= 1 {
+                    Matched(__repeat_pos, __repeat_value)
+                } else {
+                    Failed
+                }
+            };
+            match __seq_res {
+                Matched(__pos, e) => Matched(__pos, { e }),
+                Failed => Failed,
+            }
+        };
+        match __seq_res {
+            Matched(__pos, p) => {
+                let __seq_res = __parse__(__input, __state, __pos, env);
+                match __seq_res {
+                    Matched(__pos, _) => {
+                        let __seq_res = __parse_ellipsis(__input, __state, __pos, env);
+                        match __seq_res {
+                            Matched(__pos, e) => Matched(__pos, {
+                                FunctionDeclarator {
+                                    parameters: p,
+                                    ellipsis: e,
+                                }
+                            }),
+                            Failed => Failed,
+                        }
+                    }
+                    Failed => Failed,
+                }
+            }
+            Failed => Failed,
         }
     }
 }
@@ -9292,14 +9440,27 @@ fn __parse_derived_abstract_declarator0<'input>(__input: &'input str, __state: &
                     let __seq_res = __parse__(__input, __state, __pos, env);
                     match __seq_res {
                         Matched(__pos, _) => {
-                            let __seq_res = __parse_abstract_array_declarator(__input, __state, __pos, env);
-                            match __seq_res {
-                                Matched(__pos, a) => Matched(__pos, {
-                                    DerivedDeclarator::Array {
-                                        qualifiers: a.0,
-                                        size: a.1,
+                            let __seq_res = {
+                                let __seq_res = Matched(__pos, __pos);
+                                match __seq_res {
+                                    Matched(__pos, l) => {
+                                        let __seq_res = __parse_abstract_array_declarator(__input, __state, __pos, env);
+                                        match __seq_res {
+                                            Matched(__pos, e) => {
+                                                let __seq_res = Matched(__pos, __pos);
+                                                match __seq_res {
+                                                    Matched(__pos, r) => Matched(__pos, { Node::new(e, Span::span(l, r)) }),
+                                                    Failed => Failed,
+                                                }
+                                            }
+                                            Failed => Failed,
+                                        }
                                     }
-                                }),
+                                    Failed => Failed,
+                                }
+                            };
+                            match __seq_res {
+                                Matched(__pos, a) => Matched(__pos, { DerivedDeclarator::Array(a) }),
                                 Failed => Failed,
                             }
                         }
@@ -9312,87 +9473,22 @@ fn __parse_derived_abstract_declarator0<'input>(__input: &'input str, __state: &
         match __choice_res {
             Matched(__pos, __value) => Matched(__pos, __value),
             Failed => {
-                let __choice_res = {
-                    let __seq_res = slice_eq(__input, __state, __pos, "(");
-                    match __seq_res {
-                        Matched(__pos, _) => {
-                            let __seq_res = __parse__(__input, __state, __pos, env);
-                            match __seq_res {
-                                Matched(__pos, _) => {
-                                    let __seq_res = {
-                                        let __seq_res = {
-                                            let mut __repeat_pos = __pos;
-                                            let mut __repeat_value = vec![];
-                                            loop {
-                                                let __pos = __repeat_pos;
-                                                let __pos = if __repeat_value.len() > 0 {
-                                                    let __sep_res = {
-                                                        let __seq_res = __parse__(__input, __state, __pos, env);
-                                                        match __seq_res {
-                                                            Matched(__pos, _) => {
-                                                                let __seq_res = slice_eq(__input, __state, __pos, ",");
-                                                                match __seq_res {
-                                                                    Matched(__pos, _) => __parse__(__input, __state, __pos, env),
-                                                                    Failed => Failed,
-                                                                }
-                                                            }
-                                                            Failed => Failed,
-                                                        }
-                                                    };
-                                                    match __sep_res {
-                                                        Matched(__newpos, _) => __newpos,
-                                                        Failed => break,
-                                                    }
-                                                } else {
-                                                    __pos
-                                                };
-                                                let __step_res = __parse_parameter_declaration(__input, __state, __pos, env);
-                                                match __step_res {
-                                                    Matched(__newpos, __value) => {
-                                                        __repeat_pos = __newpos;
-                                                        __repeat_value.push(__value);
-                                                    }
-                                                    Failed => {
-                                                        break;
-                                                    }
-                                                }
-                                            }
-                                            if __repeat_value.len() >= 1 {
-                                                Matched(__repeat_pos, __repeat_value)
-                                            } else {
-                                                Failed
-                                            }
-                                        };
-                                        match __seq_res {
-                                            Matched(__pos, e) => Matched(__pos, { e }),
-                                            Failed => Failed,
-                                        }
-                                    };
+                let __seq_res = slice_eq(__input, __state, __pos, "(");
+                match __seq_res {
+                    Matched(__pos, _) => {
+                        let __seq_res = __parse__(__input, __state, __pos, env);
+                        match __seq_res {
+                            Matched(__pos, _) => {
+                                let __seq_res = {
+                                    let __seq_res = Matched(__pos, __pos);
                                     match __seq_res {
-                                        Matched(__pos, p) => {
-                                            let __seq_res = __parse__(__input, __state, __pos, env);
+                                        Matched(__pos, l) => {
+                                            let __seq_res = __parse_abstract_function_declarator(__input, __state, __pos, env);
                                             match __seq_res {
-                                                Matched(__pos, _) => {
-                                                    let __seq_res = __parse_ellipsis(__input, __state, __pos, env);
+                                                Matched(__pos, e) => {
+                                                    let __seq_res = Matched(__pos, __pos);
                                                     match __seq_res {
-                                                        Matched(__pos, e) => {
-                                                            let __seq_res = __parse__(__input, __state, __pos, env);
-                                                            match __seq_res {
-                                                                Matched(__pos, _) => {
-                                                                    let __seq_res = slice_eq(__input, __state, __pos, ")");
-                                                                    match __seq_res {
-                                                                        Matched(__pos, _) => Matched(__pos, {
-                                                                            DerivedDeclarator::Function {
-                                                                                parameters: p,
-                                                                                ellipsis: e,
-                                                                            }
-                                                                        }),
-                                                                        Failed => Failed,
-                                                                    }
-                                                                }
-                                                                Failed => Failed,
-                                                            }
-                                                        }
+                                                        Matched(__pos, r) => Matched(__pos, { Node::new(e, Span::span(l, r)) }),
                                                         Failed => Failed,
                                                     }
                                                 }
@@ -9401,30 +9497,18 @@ fn __parse_derived_abstract_declarator0<'input>(__input: &'input str, __state: &
                                         }
                                         Failed => Failed,
                                     }
-                                }
-                                Failed => Failed,
-                            }
-                        }
-                        Failed => Failed,
-                    }
-                };
-                match __choice_res {
-                    Matched(__pos, __value) => Matched(__pos, __value),
-                    Failed => {
-                        let __seq_res = slice_eq(__input, __state, __pos, "(");
-                        match __seq_res {
-                            Matched(__pos, _) => {
-                                let __seq_res = __parse__(__input, __state, __pos, env);
+                                };
                                 match __seq_res {
-                                    Matched(__pos, _) => {
-                                        let __seq_res = slice_eq(__input, __state, __pos, ")");
+                                    Matched(__pos, d) => {
+                                        let __seq_res = __parse__(__input, __state, __pos, env);
                                         match __seq_res {
-                                            Matched(__pos, _) => Matched(__pos, {
-                                                DerivedDeclarator::Function {
-                                                    parameters: Vec::new(),
-                                                    ellipsis: Ellipsis::None,
+                                            Matched(__pos, _) => {
+                                                let __seq_res = slice_eq(__input, __state, __pos, ")");
+                                                match __seq_res {
+                                                    Matched(__pos, _) => Matched(__pos, { DerivedDeclarator::Function(d) }),
+                                                    Failed => Failed,
                                                 }
-                                            }),
+                                            }
                                             Failed => Failed,
                                         }
                                     }
@@ -9434,13 +9518,14 @@ fn __parse_derived_abstract_declarator0<'input>(__input: &'input str, __state: &
                             Failed => Failed,
                         }
                     }
+                    Failed => Failed,
                 }
             }
         }
     }
 }
 
-fn __parse_abstract_array_declarator<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<(Vec<Node<TypeQualifier>>, ArraySize)> {
+fn __parse_abstract_array_declarator<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<ArrayDeclarator> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -9484,7 +9569,12 @@ fn __parse_abstract_array_declarator<'input>(__input: &'input str, __state: &mut
                         Matched(__pos, _) => {
                             let __seq_res = slice_eq(__input, __state, __pos, "]");
                             match __seq_res {
-                                Matched(__pos, _) => Matched(__pos, { (q, ArraySize::Unknown) }),
+                                Matched(__pos, _) => Matched(__pos, {
+                                    ArrayDeclarator {
+                                        qualifiers: q,
+                                        size: ArraySize::Unknown,
+                                    }
+                                }),
                                 Failed => Failed,
                             }
                         }
@@ -9544,7 +9634,12 @@ fn __parse_abstract_array_declarator<'input>(__input: &'input str, __state: &mut
                                                 Matched(__pos, _) => {
                                                     let __seq_res = slice_eq(__input, __state, __pos, "]");
                                                     match __seq_res {
-                                                        Matched(__pos, _) => Matched(__pos, { (q, ArraySize::VariableExpression(e)) }),
+                                                        Matched(__pos, _) => Matched(__pos, {
+                                                            ArrayDeclarator {
+                                                                qualifiers: q,
+                                                                size: ArraySize::VariableExpression(e),
+                                                            }
+                                                        }),
                                                         Failed => Failed,
                                                     }
                                                 }
@@ -9643,7 +9738,12 @@ fn __parse_abstract_array_declarator<'input>(__input: &'input str, __state: &mut
                                                                         Matched(__pos, _) => {
                                                                             let __seq_res = slice_eq(__input, __state, __pos, "]");
                                                                             match __seq_res {
-                                                                                Matched(__pos, _) => Matched(__pos, { (q, ArraySize::StaticExpression(e)) }),
+                                                                                Matched(__pos, _) => Matched(__pos, {
+                                                                                    ArrayDeclarator {
+                                                                                        qualifiers: q,
+                                                                                        size: ArraySize::StaticExpression(e),
+                                                                                    }
+                                                                                }),
                                                                                 Failed => Failed,
                                                                             }
                                                                         }
@@ -9752,7 +9852,12 @@ fn __parse_abstract_array_declarator<'input>(__input: &'input str, __state: &mut
                                                                                 Matched(__pos, _) => {
                                                                                     let __seq_res = slice_eq(__input, __state, __pos, "]");
                                                                                     match __seq_res {
-                                                                                        Matched(__pos, _) => Matched(__pos, { (q, ArraySize::StaticExpression(e)) }),
+                                                                                        Matched(__pos, _) => Matched(__pos, {
+                                                                                            ArrayDeclarator {
+                                                                                                qualifiers: q,
+                                                                                                size: ArraySize::StaticExpression(e),
+                                                                                            }
+                                                                                        }),
                                                                                         Failed => Failed,
                                                                                     }
                                                                                 }
@@ -9785,7 +9890,12 @@ fn __parse_abstract_array_declarator<'input>(__input: &'input str, __state: &mut
                                                     Matched(__pos, _) => {
                                                         let __seq_res = slice_eq(__input, __state, __pos, "]");
                                                         match __seq_res {
-                                                            Matched(__pos, _) => Matched(__pos, { (Vec::new(), ArraySize::VariableUnknown) }),
+                                                            Matched(__pos, _) => Matched(__pos, {
+                                                                ArrayDeclarator {
+                                                                    qualifiers: Vec::new(),
+                                                                    size: ArraySize::VariableUnknown,
+                                                                }
+                                                            }),
                                                             Failed => Failed,
                                                         }
                                                     }
@@ -9801,6 +9911,93 @@ fn __parse_abstract_array_declarator<'input>(__input: &'input str, __state: &mut
                     }
                 }
             }
+        }
+    }
+}
+
+fn __parse_abstract_function_declarator<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<FunctionDeclarator> {
+    #![allow(non_snake_case, unused)]
+    {
+        let __choice_res = {
+            let __seq_res = {
+                let __seq_res = {
+                    let mut __repeat_pos = __pos;
+                    let mut __repeat_value = vec![];
+                    loop {
+                        let __pos = __repeat_pos;
+                        let __pos = if __repeat_value.len() > 0 {
+                            let __sep_res = {
+                                let __seq_res = __parse__(__input, __state, __pos, env);
+                                match __seq_res {
+                                    Matched(__pos, _) => {
+                                        let __seq_res = slice_eq(__input, __state, __pos, ",");
+                                        match __seq_res {
+                                            Matched(__pos, _) => __parse__(__input, __state, __pos, env),
+                                            Failed => Failed,
+                                        }
+                                    }
+                                    Failed => Failed,
+                                }
+                            };
+                            match __sep_res {
+                                Matched(__newpos, _) => __newpos,
+                                Failed => break,
+                            }
+                        } else {
+                            __pos
+                        };
+                        let __step_res = __parse_parameter_declaration(__input, __state, __pos, env);
+                        match __step_res {
+                            Matched(__newpos, __value) => {
+                                __repeat_pos = __newpos;
+                                __repeat_value.push(__value);
+                            }
+                            Failed => {
+                                break;
+                            }
+                        }
+                    }
+                    if __repeat_value.len() >= 1 {
+                        Matched(__repeat_pos, __repeat_value)
+                    } else {
+                        Failed
+                    }
+                };
+                match __seq_res {
+                    Matched(__pos, e) => Matched(__pos, { e }),
+                    Failed => Failed,
+                }
+            };
+            match __seq_res {
+                Matched(__pos, p) => {
+                    let __seq_res = __parse__(__input, __state, __pos, env);
+                    match __seq_res {
+                        Matched(__pos, _) => {
+                            let __seq_res = __parse_ellipsis(__input, __state, __pos, env);
+                            match __seq_res {
+                                Matched(__pos, e) => Matched(__pos, {
+                                    FunctionDeclarator {
+                                        parameters: p,
+                                        ellipsis: e,
+                                    }
+                                }),
+                                Failed => Failed,
+                            }
+                        }
+                        Failed => Failed,
+                    }
+                }
+                Failed => Failed,
+            }
+        };
+        match __choice_res {
+            Matched(__pos, __value) => Matched(__pos, __value),
+            Failed => Matched(__pos, {
+                FunctionDeclarator {
+                    parameters: Vec::new(),
+                    ellipsis: Ellipsis::None,
+                }
+            }),
         }
     }
 }
@@ -10366,7 +10563,10 @@ fn __parse_array_designator<'input>(__input: &'input str, __state: &mut ParseSta
                                                 match __seq_res {
                                                     Matched(__pos, _) => Matched(__pos, {
                                                         match b {
-                                                            Some(b) => Designator::Range { from: a, to: b },
+                                                            Some(b) => {
+                                                                let span = Span::span(a.span.start, b.span.end);
+                                                                Designator::Range(Node::new(RangeDesignator { from: a, to: b }, span))
+                                                            }
                                                             None => Designator::Index(a),
                                                         }
                                                     }),
@@ -10657,7 +10857,31 @@ fn __parse_statement<'input>(__input: &'input str, __state: &mut ParseState<'inp
 fn __parse_statement0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Statement> {
     #![allow(non_snake_case, unused)]
     {
-        let __choice_res = __parse_labeled_statement(__input, __state, __pos, env);
+        let __choice_res = {
+            let __seq_res = {
+                let __seq_res = Matched(__pos, __pos);
+                match __seq_res {
+                    Matched(__pos, l) => {
+                        let __seq_res = __parse_labeled_statement(__input, __state, __pos, env);
+                        match __seq_res {
+                            Matched(__pos, e) => {
+                                let __seq_res = Matched(__pos, __pos);
+                                match __seq_res {
+                                    Matched(__pos, r) => Matched(__pos, { Node::new(e, Span::span(l, r)) }),
+                                    Failed => Failed,
+                                }
+                            }
+                            Failed => Failed,
+                        }
+                    }
+                    Failed => Failed,
+                }
+            };
+            match __seq_res {
+                Matched(__pos, s) => Matched(__pos, { Statement::Labeled(s) }),
+                Failed => Failed,
+            }
+        };
         match __choice_res {
             Matched(__pos, __value) => Matched(__pos, __value),
             Failed => {
@@ -10715,7 +10939,7 @@ fn __parse_statement0<'input>(__input: &'input str, __state: &mut ParseState<'in
     }
 }
 
-fn __parse_labeled_statement<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Statement> {
+fn __parse_labeled_statement<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<LabeledStatement> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -10751,7 +10975,7 @@ fn __parse_labeled_statement<'input>(__input: &'input str, __state: &mut ParseSt
                                         let __seq_res = __parse_statement(__input, __state, __pos, env);
                                         match __seq_res {
                                             Matched(__pos, s) => Matched(__pos, {
-                                                Statement::Labeled {
+                                                LabeledStatement {
                                                     label: l,
                                                     statement: s,
                                                 }
@@ -11041,15 +11265,63 @@ fn __parse_expression_statement<'input>(__input: &'input str, __state: &mut Pars
 fn __parse_selection_statement<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Statement> {
     #![allow(non_snake_case, unused)]
     {
-        let __choice_res = __parse_if_statement(__input, __state, __pos, env);
+        let __choice_res = {
+            let __seq_res = {
+                let __seq_res = Matched(__pos, __pos);
+                match __seq_res {
+                    Matched(__pos, l) => {
+                        let __seq_res = __parse_if_statement(__input, __state, __pos, env);
+                        match __seq_res {
+                            Matched(__pos, e) => {
+                                let __seq_res = Matched(__pos, __pos);
+                                match __seq_res {
+                                    Matched(__pos, r) => Matched(__pos, { Node::new(e, Span::span(l, r)) }),
+                                    Failed => Failed,
+                                }
+                            }
+                            Failed => Failed,
+                        }
+                    }
+                    Failed => Failed,
+                }
+            };
+            match __seq_res {
+                Matched(__pos, s) => Matched(__pos, { Statement::If(s) }),
+                Failed => Failed,
+            }
+        };
         match __choice_res {
             Matched(__pos, __value) => Matched(__pos, __value),
-            Failed => __parse_switch_statement(__input, __state, __pos, env),
+            Failed => {
+                let __seq_res = {
+                    let __seq_res = Matched(__pos, __pos);
+                    match __seq_res {
+                        Matched(__pos, l) => {
+                            let __seq_res = __parse_switch_statement(__input, __state, __pos, env);
+                            match __seq_res {
+                                Matched(__pos, e) => {
+                                    let __seq_res = Matched(__pos, __pos);
+                                    match __seq_res {
+                                        Matched(__pos, r) => Matched(__pos, { Node::new(e, Span::span(l, r)) }),
+                                        Failed => Failed,
+                                    }
+                                }
+                                Failed => Failed,
+                            }
+                        }
+                        Failed => Failed,
+                    }
+                };
+                match __seq_res {
+                    Matched(__pos, s) => Matched(__pos, { Statement::Switch(s) }),
+                    Failed => Failed,
+                }
+            }
         }
     }
 }
 
-fn __parse_if_statement<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Statement> {
+fn __parse_if_statement<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<IfStatement> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -11115,7 +11387,7 @@ fn __parse_if_statement<'input>(__input: &'input str, __state: &mut ParseState<'
                                                                                         };
                                                                                         match __seq_res {
                                                                                             Matched(__pos, b) => Matched(__pos, {
-                                                                                                Statement::If {
+                                                                                                IfStatement {
                                                                                                     condition: e,
                                                                                                     then_statement: a,
                                                                                                     else_statement: b,
@@ -11206,7 +11478,7 @@ fn __parse_else_statement<'input>(__input: &'input str, __state: &mut ParseState
     }
 }
 
-fn __parse_switch_statement<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Statement> {
+fn __parse_switch_statement<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<SwitchStatement> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -11263,7 +11535,7 @@ fn __parse_switch_statement<'input>(__input: &'input str, __state: &mut ParseSta
                                                                         let __seq_res = __parse_statement(__input, __state, __pos, env);
                                                                         match __seq_res {
                                                                             Matched(__pos, s) => Matched(__pos, {
-                                                                                Statement::Switch {
+                                                                                SwitchStatement {
                                                                                     expression: e,
                                                                                     statement: s,
                                                                                 }
@@ -11300,21 +11572,93 @@ fn __parse_switch_statement<'input>(__input: &'input str, __state: &mut ParseSta
 fn __parse_iteration_statement<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Statement> {
     #![allow(non_snake_case, unused)]
     {
-        let __choice_res = __parse_while_statement(__input, __state, __pos, env);
+        let __choice_res = {
+            let __seq_res = {
+                let __seq_res = Matched(__pos, __pos);
+                match __seq_res {
+                    Matched(__pos, l) => {
+                        let __seq_res = __parse_while_statement(__input, __state, __pos, env);
+                        match __seq_res {
+                            Matched(__pos, e) => {
+                                let __seq_res = Matched(__pos, __pos);
+                                match __seq_res {
+                                    Matched(__pos, r) => Matched(__pos, { Node::new(e, Span::span(l, r)) }),
+                                    Failed => Failed,
+                                }
+                            }
+                            Failed => Failed,
+                        }
+                    }
+                    Failed => Failed,
+                }
+            };
+            match __seq_res {
+                Matched(__pos, s) => Matched(__pos, { Statement::While(s) }),
+                Failed => Failed,
+            }
+        };
         match __choice_res {
             Matched(__pos, __value) => Matched(__pos, __value),
             Failed => {
-                let __choice_res = __parse_do_while_statement(__input, __state, __pos, env);
+                let __choice_res = {
+                    let __seq_res = {
+                        let __seq_res = Matched(__pos, __pos);
+                        match __seq_res {
+                            Matched(__pos, l) => {
+                                let __seq_res = __parse_do_while_statement(__input, __state, __pos, env);
+                                match __seq_res {
+                                    Matched(__pos, e) => {
+                                        let __seq_res = Matched(__pos, __pos);
+                                        match __seq_res {
+                                            Matched(__pos, r) => Matched(__pos, { Node::new(e, Span::span(l, r)) }),
+                                            Failed => Failed,
+                                        }
+                                    }
+                                    Failed => Failed,
+                                }
+                            }
+                            Failed => Failed,
+                        }
+                    };
+                    match __seq_res {
+                        Matched(__pos, s) => Matched(__pos, { Statement::DoWhile(s) }),
+                        Failed => Failed,
+                    }
+                };
                 match __choice_res {
                     Matched(__pos, __value) => Matched(__pos, __value),
-                    Failed => __parse_for_statement(__input, __state, __pos, env),
+                    Failed => {
+                        let __seq_res = {
+                            let __seq_res = Matched(__pos, __pos);
+                            match __seq_res {
+                                Matched(__pos, l) => {
+                                    let __seq_res = __parse_for_statement(__input, __state, __pos, env);
+                                    match __seq_res {
+                                        Matched(__pos, e) => {
+                                            let __seq_res = Matched(__pos, __pos);
+                                            match __seq_res {
+                                                Matched(__pos, r) => Matched(__pos, { Node::new(e, Span::span(l, r)) }),
+                                                Failed => Failed,
+                                            }
+                                        }
+                                        Failed => Failed,
+                                    }
+                                }
+                                Failed => Failed,
+                            }
+                        };
+                        match __seq_res {
+                            Matched(__pos, s) => Matched(__pos, { Statement::For(s) }),
+                            Failed => Failed,
+                        }
+                    }
                 }
             }
         }
     }
 }
 
-fn __parse_while_statement<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Statement> {
+fn __parse_while_statement<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<WhileStatement> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -11371,7 +11715,7 @@ fn __parse_while_statement<'input>(__input: &'input str, __state: &mut ParseStat
                                                                         let __seq_res = __parse_statement(__input, __state, __pos, env);
                                                                         match __seq_res {
                                                                             Matched(__pos, s) => Matched(__pos, {
-                                                                                Statement::While {
+                                                                                WhileStatement {
                                                                                     expression: e,
                                                                                     statement: s,
                                                                                 }
@@ -11405,7 +11749,7 @@ fn __parse_while_statement<'input>(__input: &'input str, __state: &mut ParseStat
     }
 }
 
-fn __parse_do_while_statement<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Statement> {
+fn __parse_do_while_statement<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<DoWhileStatement> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -11501,7 +11845,7 @@ fn __parse_do_while_statement<'input>(__input: &'input str, __state: &mut ParseS
                                                                                                         let __seq_res = slice_eq(__input, __state, __pos, ";");
                                                                                                         match __seq_res {
                                                                                                             Matched(__pos, _) => Matched(__pos, {
-                                                                                                                Statement::DoWhile {
+                                                                                                                DoWhileStatement {
                                                                                                                     statement: s,
                                                                                                                     expression: e,
                                                                                                                 }
@@ -11547,7 +11891,7 @@ fn __parse_do_while_statement<'input>(__input: &'input str, __state: &mut ParseS
     }
 }
 
-fn __parse_for_statement<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Statement> {
+fn __parse_for_statement<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<ForStatement> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -11646,7 +11990,7 @@ fn __parse_for_statement<'input>(__input: &'input str, __state: &mut ParseState<
                                                                                                                         let __seq_res = __parse_statement(__input, __state, __pos, env);
                                                                                                                         match __seq_res {
                                                                                                                             Matched(__pos, s) => Matched(__pos, {
-                                                                                                                                Statement::For {
+                                                                                                                                ForStatement {
                                                                                                                                     initializer: a,
                                                                                                                                     condition: b,
                                                                                                                                     step: c,
@@ -12590,10 +12934,10 @@ fn __parse_attribute<'input>(__input: &'input str, __state: &mut ParseState<'inp
                         };
                         match __seq_res {
                             Matched(__pos, p) => Matched(__pos, {
-                                Extension::Attribute {
+                                Extension::Attribute(Attribute {
                                     name: n,
                                     arguments: p.unwrap_or_default(),
-                                }
+                                })
                             }),
                             Failed => Failed,
                         }
@@ -13183,13 +13527,13 @@ fn __parse_asm_statement0<'input>(__input: &'input str, __state: &mut ParseState
                                                                                                         match __seq_res {
                                                                                                             Matched(__pos, _) => Matched(__pos, {
                                                                                                                 if let Some((o, (i, (c, ())))) = o {
-                                                                                                                    AsmStatement::GnuExtended {
+                                                                                                                    AsmStatement::GnuExtended(GnuExtendedAsmStatement {
                                                                                                                         qualifier: q,
                                                                                                                         template: a,
                                                                                                                         outputs: o,
                                                                                                                         inputs: i,
                                                                                                                         clobbers: c,
-                                                                                                                    }
+                                                                                                                    })
                                                                                                                 } else {
                                                                                                                     AsmStatement::GnuBasic(a)
                                                                                                                 }

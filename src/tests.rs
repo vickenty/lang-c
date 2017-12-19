@@ -38,6 +38,25 @@ impl<'a> From<&'a str> for Node<String> {
     }
 }
 
+macro_rules! mk_from_inner {
+    ( $( $i:ident => $p:ident :: $v:ident ; )* ) => (
+        $(
+            impl From<$i> for Node<$p> {
+                fn from(i: $i) -> Node<$p> {
+                    $p::$v(i.into()).into()
+                }
+            }
+        )*
+    );
+}
+
+mk_from_inner! {
+    Attribute => Extension::Attribute;
+    StructField => StructDeclaration::Field;
+    FunctionDeclarator => DerivedDeclarator::Function;
+    ArrayDeclarator => DerivedDeclarator::Array;
+}
+
 mod expr {
     use ast::*;
     use span::Node;
@@ -294,7 +313,7 @@ fn test_declaration1() {
     use parser::declaration;
     use ast::DeclarationSpecifier::{StorageClass, TypeSpecifier};
     use ast::DeclaratorKind::Identifier;
-    use ast::DerivedDeclarator::{Array, Pointer};
+    use ast::DerivedDeclarator::{Pointer};
     use ast::TypeSpecifier::Int;
     use ast::TypeQualifier::Const;
     use ast::StorageClassSpecifier::Typedef;
@@ -326,11 +345,11 @@ fn test_declaration1() {
                     declarator: Declarator {
                         kind: Identifier(ident("baz")).into(),
                         derived: vec![
-                            Array {
+                            ArrayDeclarator {
                                 qualifiers: vec![],
                                 size: StaticExpression(cconst(int::dec("10"))),
                             }.into(),
-                            Array {
+                            ArrayDeclarator {
                                 qualifiers: vec![Const.into()],
                                 size: VariableUnknown,
                             }.into(),
@@ -369,19 +388,21 @@ fn test_declaration2() {
             specifiers: vec![
                 StorageClass(Typedef.into()).into(),
                 TypeSpecifier(
-                    Enum {
-                        identifier: None,
-                        enumerators: vec![
-                            Enumerator {
-                                identifier: ident("FOO"),
-                                expression: None,
-                            }.into(),
-                            Enumerator {
-                                identifier: ident("BAR"),
-                                expression: Some(cconst(int::dec("1"))),
-                            }.into(),
-                        ],
-                    }.into(),
+                    Enum(
+                        EnumType {
+                            identifier: None,
+                            enumerators: vec![
+                                Enumerator {
+                                    identifier: ident("FOO"),
+                                    expression: None,
+                                }.into(),
+                                Enumerator {
+                                    identifier: ident("BAR"),
+                                    expression: Some(cconst(int::dec("1"))),
+                                }.into(),
+                            ],
+                        }.into(),
+                    ).into(),
                 ).into(),
             ],
             declarators: vec![
@@ -406,7 +427,6 @@ fn test_declaration3() {
     use ast::DeclarationSpecifier::TypeSpecifier;
     use ast::TypeSpecifier::Struct;
     use ast::TypeSpecifier::{Float, Int};
-    use ast::StructDeclaration::Field;
     use ast::DeclaratorKind::Identifier;
 
     let mut env = Env::new();
@@ -417,52 +437,54 @@ fn test_declaration3() {
         Declaration {
             specifiers: vec![
                 TypeSpecifier(
-                    Struct {
-                        kind: StructType::Struct.into(),
-                        identifier: None,
-                        declarations: vec![
-                            Field {
-                                specifiers: vec![SpecifierQualifier::TypeSpecifier(Int.into()).into()],
-                                declarators: vec![
-                                    StructDeclarator {
-                                        declarator: Some(
-                                            Declarator {
-                                                kind: Identifier(ident("a")).into(),
-                                                derived: vec![],
-                                                extensions: vec![],
-                                            }.into(),
-                                        ),
-                                        bit_width: None,
-                                    }.into(),
-                                    StructDeclarator {
-                                        declarator: Some(
-                                            Declarator {
-                                                kind: Identifier(ident("b")).into(),
-                                                derived: vec![],
-                                                extensions: vec![],
-                                            }.into(),
-                                        ),
-                                        bit_width: None,
-                                    }.into(),
-                                ],
-                            }.into(),
-                            Field {
-                                specifiers: vec![SpecifierQualifier::TypeSpecifier(Float.into()).into()],
-                                declarators: vec![
-                                    StructDeclarator {
-                                        declarator: Some(
-                                            Declarator {
-                                                kind: Identifier(ident("c")).into(),
-                                                derived: vec![],
-                                                extensions: vec![],
-                                            }.into(),
-                                        ),
-                                        bit_width: None,
-                                    }.into(),
-                                ],
-                            }.into(),
-                        ],
-                    }.into(),
+                    Struct(
+                        StructType {
+                            kind: StructKind::Struct.into(),
+                            identifier: None,
+                            declarations: vec![
+                                StructField {
+                                    specifiers: vec![SpecifierQualifier::TypeSpecifier(Int.into()).into()],
+                                    declarators: vec![
+                                        StructDeclarator {
+                                            declarator: Some(
+                                                Declarator {
+                                                    kind: Identifier(ident("a")).into(),
+                                                    derived: vec![],
+                                                    extensions: vec![],
+                                                }.into(),
+                                            ),
+                                            bit_width: None,
+                                        }.into(),
+                                        StructDeclarator {
+                                            declarator: Some(
+                                                Declarator {
+                                                    kind: Identifier(ident("b")).into(),
+                                                    derived: vec![],
+                                                    extensions: vec![],
+                                                }.into(),
+                                            ),
+                                            bit_width: None,
+                                        }.into(),
+                                    ],
+                                }.into(),
+                                StructField {
+                                    specifiers: vec![SpecifierQualifier::TypeSpecifier(Float.into()).into()],
+                                    declarators: vec![
+                                        StructDeclarator {
+                                            declarator: Some(
+                                                Declarator {
+                                                    kind: Identifier(ident("c")).into(),
+                                                    derived: vec![],
+                                                    extensions: vec![],
+                                                }.into(),
+                                            ),
+                                            bit_width: None,
+                                        }.into(),
+                                    ],
+                                }.into(),
+                            ],
+                        }.into(),
+                    ).into(),
                 ).into(),
             ],
             declarators: vec![
@@ -523,7 +545,7 @@ fn test_declaration5() {
     use ast::TypeSpecifier::{Char, Int, TypedefName};
     use ast::TypeQualifier::Const;
     use ast::DeclaratorKind::{Abstract, Identifier};
-    use ast::DerivedDeclarator::{Array, Function, Pointer};
+    use ast::DerivedDeclarator::{Pointer};
     use ast::ArraySize::VariableExpression;
     use self::expr::cconst;
     use self::int::dec;
@@ -546,7 +568,7 @@ fn test_declaration5() {
                         kind: Identifier(ident("fparseln")).into(),
                         derived: vec![
                             Pointer(vec![]).into(),
-                            Function {
+                            FunctionDeclarator {
                                 parameters: vec![
                                     ParameterDeclaration {
                                         specifiers: vec![TypeSpecifier(TypedefName(ident("FILE")).into()).into()],
@@ -590,7 +612,7 @@ fn test_declaration5() {
                                             Declarator {
                                                 kind: Abstract.into(),
                                                 derived: vec![
-                                                    Array {
+                                                    ArrayDeclarator {
                                                         qualifiers: vec![],
                                                         size: VariableExpression(cconst(dec("3"))),
                                                     }.into(),
@@ -625,8 +647,8 @@ fn test_attribute() {
     use ast::TypeSpecifier::{Char, Int, TypedefName};
     use ast::StorageClassSpecifier::Extern;
     use ast::DeclaratorKind::Identifier;
-    use ast::DerivedDeclarator::{Function, Pointer};
-    use ast::Extension::{AsmLabel, Attribute};
+    use ast::DerivedDeclarator::{Pointer};
+    use ast::Extension::{AsmLabel, };
     use self::expr::cconst;
 
     let env = &mut Env::new();
@@ -651,7 +673,7 @@ fn test_attribute() {
                     declarator: Declarator {
                         kind: Identifier(ident("strerror_r")).into(),
                         derived: vec![
-                            Function {
+                            FunctionDeclarator {
                                 parameters: vec![
                                     ParameterDeclaration {
                                         specifiers: vec![TypeSpecifier(Int.into()).into()],
@@ -720,8 +742,7 @@ fn test_attribute2() {
     use ast::TypeSpecifier::{Char, Void};
     use ast::TypeQualifier::Const;
     use ast::DeclaratorKind::{Abstract, Identifier};
-    use ast::DerivedDeclarator::{Function, Pointer};
-    use ast::Extension::Attribute;
+    use ast::DerivedDeclarator::{Pointer};
     use self::expr::*;
     use self::int::dec;
 
@@ -747,7 +768,7 @@ fn test_attribute2() {
                     declarator: Declarator {
                         kind: Identifier(ident("d0")).into(),
                         derived: vec![
-                            Function {
+                            FunctionDeclarator {
                                 parameters: vec![
                                     ParameterDeclaration {
                                         specifiers: vec![TypeSpecifier(Void.into()).into()],
@@ -766,7 +787,7 @@ fn test_attribute2() {
                     declarator: Declarator {
                         kind: Identifier(ident("d1")).into(),
                         derived: vec![
-                            Function {
+                            FunctionDeclarator {
                                 parameters: vec![
                                     ParameterDeclaration {
                                         specifiers: vec![
@@ -799,7 +820,7 @@ fn test_attribute2() {
                     declarator: Declarator {
                         kind: Identifier(ident("d2")).into(),
                         derived: vec![
-                            Function {
+                            FunctionDeclarator {
                                 parameters: vec![
                                     ParameterDeclaration {
                                         specifiers: vec![TypeSpecifier(Void.into()).into()],
@@ -827,7 +848,6 @@ fn test_attribute3() {
     use ast::FunctionSpecifier::Inline;
     use ast::TypeSpecifier::Char;
     use ast::TypeQualifier::{Const, Restrict};
-    use ast::Extension::Attribute;
     use ast::DeclaratorKind::Identifier;
     use ast::DerivedDeclarator::Pointer;
     use ast::Statement::Compound;
@@ -883,7 +903,7 @@ fn test_attribute3() {
                                     }.into(),
                                 ]).into(),
                             ]).into(),
-                            DerivedDeclarator::Function {
+                            DerivedDeclarator::Function(FunctionDeclarator {
                                 parameters: vec![
                                     ParameterDeclaration {
                                         specifiers: vec![
@@ -920,7 +940,7 @@ fn test_attribute3() {
                                     }.into(),
                                 ],
                                 ellipsis: Ellipsis::None,
-                            }.into(),
+                            }.into()).into(),
                         ],
                         extensions: vec![],
                     }.into(),
@@ -1074,7 +1094,7 @@ fn test_gnu_asm() {
             &mut Env::new()
         ),
         Ok(Statement::Asm(
-            AsmStatement::GnuExtended {
+            AsmStatement::GnuExtended(GnuExtendedAsmStatement {
                 qualifier: None,
                 template: cstr(&[r#""pmovmskb %1, %0""#]),
                 outputs: vec![
@@ -1092,7 +1112,7 @@ fn test_gnu_asm() {
                     }.into(),
                 ],
                 clobbers: vec![],
-            }.into()
+            }.into()).into(),
         ).into())
     );
 }
@@ -1102,11 +1122,9 @@ fn test_union() {
     use parser::declaration;
     use ast::SpecifierQualifier::TypeSpecifier;
     use ast::DeclaratorKind::Identifier;
-    use ast::DerivedDeclarator::Array;
     use ast::TypeSpecifier::{Double, Int, Long};
     use ast::ArraySize::VariableExpression;
     use ast::TypeSpecifier::Struct;
-    use ast::StructDeclaration::Field;
     use ast::Initializer::{Expression, List};
     use ast::Designator::Member;
     use self::expr::*;
@@ -1120,50 +1138,52 @@ fn test_union() {
         Ok(Declaration {
             specifiers: vec![
                 DeclarationSpecifier::TypeSpecifier(
-                    Struct {
-                        kind: StructType::Union.into(),
-                        identifier: None,
-                        declarations: vec![
-                            Field {
-                                specifiers: vec![
-                                    TypeSpecifier(Long.into()).into(),
-                                    TypeSpecifier(Double.into()).into(),
-                                ],
-                                declarators: vec![
-                                    StructDeclarator {
-                                        declarator: Some(
-                                            Declarator {
-                                                kind: Identifier(ident("__l")).into(),
-                                                derived: vec![],
-                                                extensions: vec![],
-                                            }.into(),
-                                        ),
-                                        bit_width: None,
-                                    }.into(),
-                                ],
-                            }.into(),
-                            Field {
-                                specifiers: vec![TypeSpecifier(Int.into()).into()],
-                                declarators: vec![
-                                    StructDeclarator {
-                                        declarator: Some(
-                                            Declarator {
-                                                kind: Identifier(ident("__i")).into(),
-                                                derived: vec![
-                                                    Array {
-                                                        qualifiers: vec![],
-                                                        size: VariableExpression(cconst(dec("3"))),
-                                                    }.into(),
-                                                ],
-                                                extensions: vec![],
-                                            }.into(),
-                                        ),
-                                        bit_width: None,
-                                    }.into(),
-                                ],
-                            }.into(),
-                        ],
-                    }.into(),
+                    Struct(
+                        StructType {
+                            kind: StructKind::Union.into(),
+                            identifier: None,
+                            declarations: vec![
+                                StructField {
+                                    specifiers: vec![
+                                        TypeSpecifier(Long.into()).into(),
+                                        TypeSpecifier(Double.into()).into(),
+                                    ],
+                                    declarators: vec![
+                                        StructDeclarator {
+                                            declarator: Some(
+                                                Declarator {
+                                                    kind: Identifier(ident("__l")).into(),
+                                                    derived: vec![],
+                                                    extensions: vec![],
+                                                }.into(),
+                                            ),
+                                            bit_width: None,
+                                        }.into(),
+                                    ],
+                                }.into(),
+                                StructField {
+                                    specifiers: vec![TypeSpecifier(Int.into()).into()],
+                                    declarators: vec![
+                                        StructDeclarator {
+                                            declarator: Some(
+                                                Declarator {
+                                                    kind: Identifier(ident("__i")).into(),
+                                                    derived: vec![
+                                                        ArrayDeclarator {
+                                                            qualifiers: vec![],
+                                                            size: VariableExpression(cconst(dec("3"))),
+                                                        }.into(),
+                                                    ],
+                                                    extensions: vec![],
+                                                }.into(),
+                                            ),
+                                            bit_width: None,
+                                        }.into(),
+                                    ],
+                                }.into(),
+                            ],
+                        }.into(),
+                    ).into(),
                 ).into(),
             ],
             declarators: vec![
@@ -1191,12 +1211,10 @@ fn test_union() {
 fn test_offsetof() {
     use parser::expression;
     use ast::SpecifierQualifier::TypeSpecifier;
-    use ast::DerivedDeclarator::Array;
     use ast::DeclaratorKind::Identifier;
     use ast::TypeSpecifier::Int;
     use ast::ArraySize::VariableExpression;
     use ast::TypeSpecifier::Struct;
-    use ast::StructDeclaration::Field;
     use ast::OffsetMember::IndirectMember;
     use ast::Expression::OffsetOf;
     use self::expr::*;
@@ -1212,56 +1230,60 @@ fn test_offsetof() {
                 type_name: TypeName {
                     specifiers: vec![
                         TypeSpecifier(
-                            Struct {
-                                kind: StructType::Struct.into(),
-                                identifier: None,
-                                declarations: vec![
-                                    Field {
-                                        specifiers: vec![
-                                            TypeSpecifier(
-                                                Struct {
-                                                    kind: StructType::Struct.into(),
-                                                    identifier: None,
-                                                    declarations: vec![
-                                                        Field {
-                                                            specifiers: vec![TypeSpecifier(Int.into()).into()],
-                                                            declarators: vec![
-                                                                StructDeclarator {
-                                                                    declarator: Some(
-                                                                        Declarator {
-                                                                            kind: Identifier(ident("b")).into(),
-                                                                            derived: vec![],
-                                                                            extensions: vec![],
+                            Struct(
+                                StructType {
+                                    kind: StructKind::Struct.into(),
+                                    identifier: None,
+                                    declarations: vec![
+                                        StructField {
+                                            specifiers: vec![
+                                                TypeSpecifier(
+                                                    Struct(
+                                                        StructType {
+                                                            kind: StructKind::Struct.into(),
+                                                            identifier: None,
+                                                            declarations: vec![
+                                                                StructField {
+                                                                    specifiers: vec![TypeSpecifier(Int.into()).into()],
+                                                                    declarators: vec![
+                                                                        StructDeclarator {
+                                                                            declarator: Some(
+                                                                                Declarator {
+                                                                                    kind: Identifier(ident("b")).into(),
+                                                                                    derived: vec![],
+                                                                                    extensions: vec![],
+                                                                                }.into(),
+                                                                            ),
+                                                                            bit_width: None,
                                                                         }.into(),
-                                                                    ),
-                                                                    bit_width: None,
+                                                                    ],
                                                                 }.into(),
                                                             ],
                                                         }.into(),
-                                                    ],
+                                                    ).into(),
+                                                ).into(),
+                                            ],
+                                            declarators: vec![
+                                                StructDeclarator {
+                                                    declarator: Some(
+                                                        Declarator {
+                                                            kind: Identifier(ident("a")).into(),
+                                                            derived: vec![
+                                                                ArrayDeclarator {
+                                                                    qualifiers: vec![],
+                                                                    size: VariableExpression(cconst(dec("2"))),
+                                                                }.into(),
+                                                            ],
+                                                            extensions: vec![],
+                                                        }.into(),
+                                                    ),
+                                                    bit_width: None,
                                                 }.into(),
-                                            ).into(),
-                                        ],
-                                        declarators: vec![
-                                            StructDeclarator {
-                                                declarator: Some(
-                                                    Declarator {
-                                                        kind: Identifier(ident("a")).into(),
-                                                        derived: vec![
-                                                            Array {
-                                                                qualifiers: vec![],
-                                                                size: VariableExpression(cconst(dec("2"))),
-                                                            }.into(),
-                                                        ],
-                                                        extensions: vec![],
-                                                    }.into(),
-                                                ),
-                                                bit_width: None,
-                                            }.into(),
-                                        ],
-                                    }.into(),
-                                ],
-                            }.into(),
+                                            ],
+                                        }.into(),
+                                    ],
+                                }.into(),
+                            ).into(),
                         ).into(),
                     ],
                     declarator: None,
@@ -1355,12 +1377,12 @@ fn test_if() {
     assert_eq!(
         statement("if (x) do {} while(y); else z();", &mut Env::new()),
         Ok(Box::new(
-            If {
+            If(IfStatement {
                 condition: var("x"),
-                then_statement: DoWhile {
+                then_statement: DoWhile(DoWhileStatement {
                     statement: Compound(vec![]).into(),
                     expression: var("y"),
-                }.into(),
+                }.into()).into(),
                 else_statement: Some(
                     Statement::Expression(Some(
                         Call(
@@ -1371,7 +1393,7 @@ fn test_if() {
                         ).into()
                     )).into()
                 ),
-            }.into()
+            }.into()).into(),
         ))
     );
 }
@@ -1389,11 +1411,9 @@ fn test_if() {
 fn test_attribute4() {
     use parser::translation_unit;
     use ast::DeclarationSpecifier::{StorageClass, TypeSpecifier};
-    use ast::Extension::Attribute;
     use ast::TypeSpecifier::Int;
     use ast::Statement::Compound;
     use ast::DeclaratorKind::Identifier;
-    use ast::DerivedDeclarator::Function;
     use ast::StorageClassSpecifier::Typedef;
 
     let env = &mut Env::new();
@@ -1416,7 +1436,7 @@ fn test_attribute4() {
                             declarator: Declarator {
                                 kind: Identifier(ident("foo")).into(),
                                 derived: vec![
-                                    Function {
+                                    FunctionDeclarator {
                                         parameters: vec![
                                             ParameterDeclaration {
                                                 specifiers: vec![TypeSpecifier(Int.into()).into()],
@@ -1463,7 +1483,7 @@ fn test_attribute4() {
                     declarator: Declarator {
                         kind: Identifier(ident("bar")).into(),
                         derived: vec![
-                            Function {
+                            FunctionDeclarator {
                                 parameters: vec![
                                     ParameterDeclaration {
                                         specifiers: vec![TypeSpecifier(Int.into()).into()],
@@ -1494,11 +1514,9 @@ fn test_attribute4() {
 fn test_attribute5() {
     use parser::translation_unit;
     use ast::DeclaratorKind::Identifier;
-    use ast::Extension::Attribute;
     use ast::Statement::Compound;
     use ast::DeclarationSpecifier::TypeSpecifier;
     use ast::TypeSpecifier::Int;
-    use ast::DerivedDeclarator::Function;
 
     assert_eq!(
         translation_unit(
@@ -1512,7 +1530,7 @@ fn test_attribute5() {
                     declarator: Declarator {
                         kind: Identifier(ident("foo")).into(),
                         derived: vec![
-                            Function {
+                            FunctionDeclarator {
                                 parameters: vec![
                                     ParameterDeclaration {
                                         specifiers: vec![TypeSpecifier(Int.into()).into()],
@@ -1564,11 +1582,9 @@ fn test_attribute5() {
 fn test_declaration6() {
     use parser::declaration;
     use ast::Expression::AlignOf;
-    use ast::Extension::Attribute;
     use ast::TypeSpecifier::{Double, Long, Struct};
     use ast::SpecifierQualifier::TypeSpecifier;
     use ast::DeclaratorKind::Identifier;
-    use ast::StructDeclaration::Field;
     use ast::StorageClassSpecifier::Typedef;
 
     assert_eq!(
@@ -1583,78 +1599,80 @@ fn test_declaration6() {
             specifiers: vec![
                 DeclarationSpecifier::StorageClass(Typedef.into()).into(),
                 DeclarationSpecifier::TypeSpecifier(
-                    Struct {
-                        kind: StructType::Struct.into(),
-                        identifier: None,
-                        declarations: vec![
-                            Field {
-                                specifiers: vec![
-                                    TypeSpecifier(Long.into()).into(),
-                                    TypeSpecifier(Long.into()).into(),
-                                ],
-                                declarators: vec![
-                                    StructDeclarator {
-                                        declarator: Some(
-                                            Declarator {
-                                                kind: Identifier(ident("__max_align_ll")).into(),
-                                                derived: vec![],
-                                                extensions: vec![
-                                                    Attribute {
-                                                        name: "__aligned__".into(),
-                                                        arguments: vec![
-                                                            AlignOf(
-                                                                TypeName {
-                                                                    specifiers: vec![
-                                                                        TypeSpecifier(Long.into()).into(),
-                                                                        TypeSpecifier(Long.into()).into(),
-                                                                    ],
-                                                                    declarator: None,
-                                                                }.into(),
-                                                            ).into(),
-                                                        ],
-                                                    }.into(),
-                                                ],
-                                            }.into(),
-                                        ),
-                                        bit_width: None,
-                                    }.into(),
-                                ],
-                            }.into(),
-                            Field {
-                                specifiers: vec![
-                                    TypeSpecifier(Long.into()).into(),
-                                    TypeSpecifier(Double.into()).into(),
-                                ],
-                                declarators: vec![
-                                    StructDeclarator {
-                                        declarator: Some(
-                                            Declarator {
-                                                kind: Identifier(ident("__max_align_ld")).into(),
-                                                derived: vec![],
-                                                extensions: vec![
-                                                    Attribute {
-                                                        name: "__aligned__".into(),
-                                                        arguments: vec![
-                                                            AlignOf(
-                                                                TypeName {
-                                                                    specifiers: vec![
-                                                                        TypeSpecifier(Long.into()).into(),
-                                                                        TypeSpecifier(Double.into()).into(),
-                                                                    ],
-                                                                    declarator: None,
-                                                                }.into(),
-                                                            ).into(),
-                                                        ],
-                                                    }.into(),
-                                                ],
-                                            }.into(),
-                                        ),
-                                        bit_width: None,
-                                    }.into(),
-                                ],
-                            }.into(),
-                        ],
-                    }.into(),
+                    Struct(
+                        StructType {
+                            kind: StructKind::Struct.into(),
+                            identifier: None,
+                            declarations: vec![
+                                StructField {
+                                    specifiers: vec![
+                                        TypeSpecifier(Long.into()).into(),
+                                        TypeSpecifier(Long.into()).into(),
+                                    ],
+                                    declarators: vec![
+                                        StructDeclarator {
+                                            declarator: Some(
+                                                Declarator {
+                                                    kind: Identifier(ident("__max_align_ll")).into(),
+                                                    derived: vec![],
+                                                    extensions: vec![
+                                                        Attribute {
+                                                            name: "__aligned__".into(),
+                                                            arguments: vec![
+                                                                AlignOf(
+                                                                    TypeName {
+                                                                        specifiers: vec![
+                                                                            TypeSpecifier(Long.into()).into(),
+                                                                            TypeSpecifier(Long.into()).into(),
+                                                                        ],
+                                                                        declarator: None,
+                                                                    }.into(),
+                                                                ).into(),
+                                                            ],
+                                                        }.into(),
+                                                    ],
+                                                }.into(),
+                                            ),
+                                            bit_width: None,
+                                        }.into(),
+                                    ],
+                                }.into(),
+                                StructField {
+                                    specifiers: vec![
+                                        TypeSpecifier(Long.into()).into(),
+                                        TypeSpecifier(Double.into()).into(),
+                                    ],
+                                    declarators: vec![
+                                        StructDeclarator {
+                                            declarator: Some(
+                                                Declarator {
+                                                    kind: Identifier(ident("__max_align_ld")).into(),
+                                                    derived: vec![],
+                                                    extensions: vec![
+                                                        Attribute {
+                                                            name: "__aligned__".into(),
+                                                            arguments: vec![
+                                                                AlignOf(
+                                                                    TypeName {
+                                                                        specifiers: vec![
+                                                                            TypeSpecifier(Long.into()).into(),
+                                                                            TypeSpecifier(Double.into()).into(),
+                                                                        ],
+                                                                        declarator: None,
+                                                                    }.into(),
+                                                                ).into(),
+                                                            ],
+                                                        }.into(),
+                                                    ],
+                                                }.into(),
+                                            ),
+                                            bit_width: None,
+                                        }.into(),
+                                    ],
+                                }.into(),
+                            ],
+                        }.into(),
+                    ).into(),
                 ).into(),
             ],
             declarators: vec![

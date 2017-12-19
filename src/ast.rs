@@ -206,11 +206,17 @@ pub struct GenericSelection {
 /// (C11 6.5.1.1)
 #[derive(Debug, PartialEq, Clone)]
 pub enum GenericAssociation {
-    Type {
-        type_name: Node<TypeName>,
-        expression: Box<Node<Expression>>,
-    },
+    Type(Node<GenericAssociationType>),
     Default(Box<Node<Expression>>),
+}
+
+/// Type match case in a generic selection expression
+///
+/// (C11 6.5.1.1)
+#[derive(Debug, PartialEq, Clone)]
+pub struct GenericAssociationType {
+    pub type_name: Node<TypeName>,
+    pub expression: Box<Node<Expression>>,
 }
 
 /// Structure and union members
@@ -520,16 +526,9 @@ pub enum TypeSpecifier {
     /// `struct identifier { … }`
     ///
     /// `union identifier { … }`
-    Struct {
-        kind: Node<StructType>,
-        identifier: Option<Node<Identifier>>,
-        declarations: Vec<Node<StructDeclaration>>,
-    },
+    Struct(Node<StructType>),
     /// `enum identifier { … }`
-    Enum {
-        identifier: Option<Node<Identifier>>,
-        enumerators: Vec<Node<Enumerator>>,
-    },
+    Enum(Node<EnumType>),
     /// Name of a previously defined type
     TypedefName(Node<Identifier>),
     /// Specifies type of another type or expression
@@ -540,11 +539,21 @@ pub enum TypeSpecifier {
 
 // From 6.7.2.1
 
+/// Structure or union type specifier
+///
+/// (C11 6.7.2.1)
+#[derive(Debug, PartialEq, Clone)]
+pub struct StructType {
+    pub kind: Node<StructKind>,
+    pub identifier: Option<Node<Identifier>>,
+    pub declarations: Vec<Node<StructDeclaration>>,
+}
+
 /// The only difference between a `struct` and a `union`
 ///
 /// (C11 6.7.2.1)
 #[derive(Debug, PartialEq, Clone)]
-pub enum StructType {
+pub enum StructKind {
     Struct,
     Union,
 }
@@ -554,11 +563,15 @@ pub enum StructType {
 /// (C11 6.7.2.1)
 #[derive(Debug, PartialEq, Clone)]
 pub enum StructDeclaration {
-    Field {
-        specifiers: Vec<Node<SpecifierQualifier>>,
-        declarators: Vec<Node<StructDeclarator>>,
-    },
+    Field(Node<StructField>),
     StaticAssert(Node<StaticAssert>),
+}
+
+/// Struct field declaration
+#[derive(Debug, PartialEq, Clone)]
+pub struct StructField {
+    pub specifiers: Vec<Node<SpecifierQualifier>>,
+    pub declarators: Vec<Node<StructDeclarator>>,
 }
 
 /// Type and qualifiers for a struct declaration
@@ -582,6 +595,15 @@ pub struct StructDeclarator {
 }
 
 // From 6.7.2.2
+
+/// Enumeration type specifier
+///
+/// (C11 6.7.2.2)
+#[derive(Debug, PartialEq, Clone)]
+pub struct EnumType {
+    pub identifier: Option<Node<Identifier>>,
+    pub enumerators: Vec<Node<Enumerator>>,
+}
 
 /// Single constant inside a `enum` definition
 ///
@@ -688,17 +710,25 @@ pub enum DerivedDeclarator {
     /// `* qualifiers …`
     Pointer(Vec<Node<PointerQualifier>>),
     /// `… []`
-    Array {
-        qualifiers: Vec<Node<TypeQualifier>>,
-        size: ArraySize,
-    },
+    Array(Node<ArrayDeclarator>),
     /// `… ( parameters )`
-    Function {
-        parameters: Vec<Node<ParameterDeclaration>>,
-        ellipsis: Ellipsis,
-    },
+    Function(Node<FunctionDeclarator>),
     /// `… ( identifiers )`
     KRFunction(Vec<Node<Identifier>>),
+}
+
+/// Array part of a declarator
+#[derive(Debug, PartialEq, Clone)]
+pub struct ArrayDeclarator {
+    pub qualifiers: Vec<Node<TypeQualifier>>,
+    pub size: ArraySize,
+}
+
+/// Function parameter part of a declarator
+#[derive(Debug, PartialEq, Clone)]
+pub struct FunctionDeclarator {
+    pub parameters: Vec<Node<ParameterDeclaration>>,
+    pub ellipsis: Ellipsis,
 }
 
 /// List of qualifiers that can follow a `*` in a declaration
@@ -801,14 +831,21 @@ pub enum Designator {
     ///
     /// `{ [from ... to] … }`
     /// ([GNU extension](https://gcc.gnu.org/onlinedocs/gcc/Designated-Inits.html#Designated-Inits))
-    Range {
-        from: Node<Expression>,
-        to: Node<Expression>,
-    },
+    Range(Node<RangeDesignator>),
+}
+
+/// Range array designator in an initializer
+///
+/// `[from ... to]`
+///
+/// ([GNU extension](https://gcc.gnu.org/onlinedocs/gcc/Designated-Inits.html#Designated-Inits))
+#[derive(Debug, PartialEq, Clone)]
+pub struct RangeDesignator {
+    pub from: Node<Expression>,
+    pub to: Node<Expression>,
 }
 
 // From 6.7.10 Static assertions
-
 
 /// Static assertion
 ///
@@ -826,41 +863,77 @@ pub struct StaticAssert {
 /// (C11 6.8)
 #[derive(Debug, PartialEq, Clone)]
 pub enum Statement {
-    Labeled {
-        label: Node<Label>,
-        statement: Box<Node<Statement>>,
-    },
+    Labeled(Node<LabeledStatement>),
     Compound(Vec<Node<BlockItem>>),
     Expression(Option<Box<Node<Expression>>>),
-    If {
-        condition: Box<Node<Expression>>,
-        then_statement: Box<Node<Statement>>,
-        else_statement: Option<Box<Node<Statement>>>,
-    },
-    Switch {
-        expression: Box<Node<Expression>>,
-        statement: Box<Node<Statement>>,
-    },
-    While {
-        expression: Box<Node<Expression>>,
-        statement: Box<Node<Statement>>,
-    },
-    DoWhile {
-        statement: Box<Node<Statement>>,
-        expression: Box<Node<Expression>>,
-    },
-    For {
-        initializer: Node<ForInitializer>,
-        condition: Option<Box<Node<Expression>>>,
-        step: Option<Box<Node<Expression>>>,
-        statement: Box<Node<Statement>>,
-    },
+    If(Node<IfStatement>),
+    Switch(Node<SwitchStatement>),
+    While(Node<WhileStatement>),
+    DoWhile(Node<DoWhileStatement>),
+    For(Node<ForStatement>),
     Goto(Node<Identifier>),
     Continue,
     Break,
     Return(Option<Box<Node<Expression>>>),
     /// Vendor specific inline assembly extensions
     Asm(Node<AsmStatement>),
+}
+
+/// Labeled statement
+///
+/// (C11 6.8.1)
+#[derive(Debug, PartialEq, Clone)]
+pub struct LabeledStatement {
+    pub label: Node<Label>,
+    pub statement: Box<Node<Statement>>,
+}
+
+/// If statement
+///
+/// (C11 6.8.4)
+#[derive(Debug, PartialEq, Clone)]
+pub struct IfStatement {
+    pub condition: Box<Node<Expression>>,
+    pub then_statement: Box<Node<Statement>>,
+    pub else_statement: Option<Box<Node<Statement>>>,
+}
+
+/// Switch statement
+///
+/// (C11 6.8.4)
+#[derive(Debug, PartialEq, Clone)]
+pub struct SwitchStatement {
+    pub expression: Box<Node<Expression>>,
+    pub statement: Box<Node<Statement>>,
+}
+
+/// While statement
+///
+/// (C11 6.8.5)
+#[derive(Debug, PartialEq, Clone)]
+pub struct WhileStatement {
+    pub expression: Box<Node<Expression>>,
+    pub statement: Box<Node<Statement>>,
+}
+
+/// Do statement
+///
+/// (C11 6.8.5)
+#[derive(Debug, PartialEq, Clone)]
+pub struct DoWhileStatement {
+    pub statement: Box<Node<Statement>>,
+    pub expression: Box<Node<Expression>>,
+}
+
+/// For statement
+///
+/// (C11 6.8.5)
+#[derive(Debug, PartialEq, Clone)]
+pub struct ForStatement {
+    pub initializer: Node<ForInitializer>,
+    pub condition: Option<Box<Node<Expression>>>,
+    pub step: Option<Box<Node<Expression>>>,
+    pub statement: Box<Node<Statement>>,
 }
 
 /// Statement labels for `goto` and `switch`
@@ -944,14 +1017,20 @@ pub enum Extension {
     /// Attributes
     ///
     /// [GNU extension](https://gcc.gnu.org/onlinedocs/gcc/Attribute-Syntax.html)
-    Attribute {
-        name: Node<String>,
-        arguments: Vec<Node<Expression>>,
-    },
+    Attribute(Attribute),
     /// Assembler name for an object
     ///
     /// [GNU extension](https://gcc.gnu.org/onlinedocs/gcc/Asm-Labels.html)
     AsmLabel(Node<StringLiteral>),
+}
+
+/// Attributes
+///
+/// [GNU extension](https://gcc.gnu.org/onlinedocs/gcc/Attribute-Syntax.html)
+#[derive(Debug, PartialEq, Clone)]
+pub struct Attribute {
+    pub name: Node<String>,
+    pub arguments: Vec<Node<Expression>>,
 }
 
 /// Inline assembler
@@ -965,13 +1044,19 @@ pub enum AsmStatement {
     /// Extended statement that has access to C variables
     ///
     /// [GNU extension](https://gcc.gnu.org/onlinedocs/gcc/Extended-Asm.html)
-    GnuExtended {
-        qualifier: Option<Node<TypeQualifier>>,
-        template: Node<StringLiteral>,
-        outputs: Vec<Node<GnuAsmOperand>>,
-        inputs: Vec<Node<GnuAsmOperand>>,
-        clobbers: Vec<Node<StringLiteral>>,
-    },
+    GnuExtended(GnuExtendedAsmStatement),
+}
+
+/// Extended statement that has access to C variables
+///
+/// [GNU extension](https://gcc.gnu.org/onlinedocs/gcc/Extended-Asm.html)
+#[derive(Debug, PartialEq, Clone)]
+pub struct GnuExtendedAsmStatement {
+    pub qualifier: Option<Node<TypeQualifier>>,
+    pub template: Node<StringLiteral>,
+    pub outputs: Vec<Node<GnuAsmOperand>>,
+    pub inputs: Vec<Node<GnuAsmOperand>>,
+    pub clobbers: Vec<Node<StringLiteral>>,
 }
 
 /// Single input or output operand specifier for GNU extended asm statement

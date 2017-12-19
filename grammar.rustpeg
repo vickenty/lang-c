@@ -147,10 +147,11 @@ generic_selection -> GenericSelection =
 
 generic_association -> GenericAssociation =
     t:type_name _ ":" _ e:assignment_expression {
-        GenericAssociation::Type {
+        let span = Span::span(t.span.start, e.span.end);
+        GenericAssociation::Type(Node::new(GenericAssociationType {
             type_name: t,
             expression: e,
-        }
+        }, span))
     } /
     K<"default"> _ ":" _ e:assignment_expression {
         GenericAssociation::Default(e)
@@ -465,39 +466,42 @@ type_specifier0 -> TypeSpecifier =
     K<"_Complex" / gnu<"__complex" "__"?>> { TypeSpecifier::Complex } /
     K<"_Atomic"> _ "(" _ t:type_name _ ")" { TypeSpecifier::Atomic(t) } /
     t:typedef_name { TypeSpecifier::TypedefName(t) } /
-    struct_or_union_specifier /
-    enum_specifier /
+    s:node<struct_or_union_specifier> { TypeSpecifier::Struct(s) } /
+    e:node<enum_specifier> { TypeSpecifier::Enum(e) } /
     gnu<typeof_specifier>
 
-struct_or_union_specifier -> TypeSpecifier =
+struct_or_union_specifier -> StructType =
     t:node<struct_or_union> _ i:identifier? _ "{" _ d:list1<node<struct_declaration>> _ "}" {
-        TypeSpecifier::Struct {
+        StructType {
             kind: t,
             identifier: i,
             declarations: d,
         }
     } /
     t:node<struct_or_union> _ i:identifier {
-        TypeSpecifier::Struct {
+        StructType {
             kind: t,
             identifier: Some(i),
             declarations: Vec::new(),
         }
     }
 
-struct_or_union -> StructType =
-    K<"struct"> { StructType::Struct } /
-    K<"union"> { StructType::Union }
+struct_or_union -> StructKind =
+    K<"struct"> { StructKind::Struct } /
+    K<"union"> { StructKind::Union }
 
 struct_declaration -> StructDeclaration =
+    f:node<struct_field> { StructDeclaration::Field(f) } /
+    s:static_assert { StructDeclaration::StaticAssert(s) } /
+    gnu<K<"__extension__">> _ d:struct_declaration { d }
+
+struct_field -> StructField =
     s:list1<specifier_qualifier> _ d:cs0<node<struct_declarator>> _ ";" {
-        StructDeclaration::Field {
+        StructField {
             specifiers: s,
             declarators: d,
         }
-    } /
-    s:static_assert { StructDeclaration::StaticAssert(s) } /
-    gnu<K<"__extension__">> _ d:struct_declaration { d }
+    }
 
 specifier_qualifier -> Node<SpecifierQualifier> = node<specifier_qualifier0>
 
@@ -519,15 +523,15 @@ struct_declarator -> StructDeclarator =
         }
     }
 
-enum_specifier -> TypeSpecifier =
+enum_specifier -> EnumType =
     K<"enum"> _ i:identifier? _ "{" _ e:cs1<node<enumerator>> _ ","? _ "}" {
-        TypeSpecifier::Enum {
+        EnumType {
             identifier: i,
             enumerators: e,
         }
     } /
     K<"enum"> _ i:identifier {
-        TypeSpecifier::Enum {
+        EnumType {
             identifier: Some(i),
             enumerators: Vec::new(),
         }
@@ -600,26 +604,49 @@ direct_declarator -> DeclaratorKind =
     "(" _ d:declarator _ ")" { DeclaratorKind::Declarator(Box::new(d)) }
 
 derived_declarator -> DerivedDeclarator =
-    "[" _ a:array_declarator {
-        DerivedDeclarator::Array {
-            qualifiers: a.0,
-            size: a.1,
+    "[" _ a:node<array_declarator> { DerivedDeclarator::Array(a) } /
+    "(" _ f:node<function_declarator> _ ")" { DerivedDeclarator::Function(f) } /
+    "(" _ p:list0<identifier> _ ")" { DerivedDeclarator::KRFunction(p) }
+
+array_declarator -> ArrayDeclarator =
+    q:list0<type_qualifier> _ "]" {
+        ArrayDeclarator {
+            qualifiers: q,
+            size: ArraySize::Unknown,
         }
     } /
-    "(" _ p:cs1<parameter_declaration> _ e:ellipsis _ ")" {
-        DerivedDeclarator::Function {
+    q:list0<type_qualifier> _ e:assignment_expression _ "]" {
+        ArrayDeclarator {
+            qualifiers: q,
+            size: ArraySize::VariableExpression(e),
+        }
+    } /
+    K<"static"> _ q:list0<type_qualifier> _ e:assignment_expression _ "]" {
+        ArrayDeclarator {
+            qualifiers: q,
+            size: ArraySize::StaticExpression(e),
+        }
+    } /
+    q:list1<type_qualifier> _ K<"static"> _ e:assignment_expression _ "]" {
+        ArrayDeclarator {
+            qualifiers: q,
+            size: ArraySize::StaticExpression(e),
+        }
+    } /
+    q:list0<type_qualifier> _ "*" _ "]" {
+        ArrayDeclarator {
+            qualifiers: q,
+            size: ArraySize::VariableUnknown,
+        }
+    }
+
+function_declarator -> FunctionDeclarator =
+    p:cs1<parameter_declaration> _ e:ellipsis {
+        FunctionDeclarator {
             parameters: p,
             ellipsis: e,
         }
-    } /
-    "(" _ p:list0<identifier> _ ")" { DerivedDeclarator::KRFunction(p) }
-
-array_declarator -> (Vec<Node<TypeQualifier>>, ArraySize) =
-    q:list0<type_qualifier> _ "]" { (q, ArraySize::Unknown) } /
-    q:list0<type_qualifier> _ e:assignment_expression _ "]" { (q, ArraySize::VariableExpression(e)) } /
-    K<"static"> _ q:list0<type_qualifier> _ e:assignment_expression _ "]" { (q, ArraySize::StaticExpression(e)) } /
-    q:list1<type_qualifier> _ K<"static"> _ e:assignment_expression _ "]" { (q, ArraySize::StaticExpression(e)) } /
-    q:list0<type_qualifier> _ "*" _ "]" { (q, ArraySize::VariableUnknown) }
+    }
 
 pointer -> Node<DerivedDeclarator> = node<pointer0>
 
@@ -694,31 +721,55 @@ direct_abstract_declarator -> DeclaratorKind =
 derived_abstract_declarator -> Node<DerivedDeclarator> = node<derived_abstract_declarator0>
 
 derived_abstract_declarator0 -> DerivedDeclarator =
-    "[" _ a:abstract_array_declarator {
-        DerivedDeclarator::Array {
-            qualifiers: a.0,
-            size: a.1,
+    "[" _ a:node<abstract_array_declarator> { DerivedDeclarator::Array(a) } /
+    "(" _ d:node<abstract_function_declarator> _ ")" { DerivedDeclarator::Function(d) }
+
+abstract_array_declarator -> ArrayDeclarator =
+    q:list0<type_qualifier> _ "]" {
+        ArrayDeclarator {
+            qualifiers: q,
+            size: ArraySize::Unknown,
         }
     } /
-    "(" _ p:cs1<parameter_declaration> _ e:ellipsis _ ")" {
-        DerivedDeclarator::Function {
+    q:list0<type_qualifier> _ e:assignment_expression _ "]" {
+        ArrayDeclarator {
+            qualifiers: q,
+            size: ArraySize::VariableExpression(e),
+        }
+    } /
+    K<"static"> _ q:list0<type_qualifier> _ e:assignment_expression _ "]" {
+        ArrayDeclarator {
+            qualifiers: q,
+            size: ArraySize::StaticExpression(e),
+        }
+    } /
+    q:list1<type_qualifier> _ K<"static"> _ e:assignment_expression _ "]" {
+        ArrayDeclarator {
+            qualifiers: q,
+            size: ArraySize::StaticExpression(e),
+        }
+    } /
+    "*" _ "]" {
+        ArrayDeclarator {
+            qualifiers: Vec::new(),
+            size: ArraySize::VariableUnknown,
+        }
+    }
+
+abstract_function_declarator -> FunctionDeclarator =
+    p:cs1<parameter_declaration> _ e:ellipsis {
+        FunctionDeclarator {
             parameters: p,
             ellipsis: e,
         }
     } /
-    "(" _ ")" {
-        DerivedDeclarator::Function {
+    {
+        FunctionDeclarator {
             parameters: Vec::new(),
             ellipsis: Ellipsis::None,
         }
     }
 
-abstract_array_declarator -> (Vec<Node<TypeQualifier>>, ArraySize) =
-    q:list0<type_qualifier> _ "]" { (q, ArraySize::Unknown) } /
-    q:list0<type_qualifier> _ e:assignment_expression _ "]" { (q, ArraySize::VariableExpression(e)) } /
-    K<"static"> _ q:list0<type_qualifier> _ e:assignment_expression _ "]" { (q, ArraySize::StaticExpression(e)) } /
-    q:list1<type_qualifier> _ K<"static"> _ e:assignment_expression _ "]" { (q, ArraySize::StaticExpression(e)) } /
-    "*" _ "]" { (Vec::new(), ArraySize::VariableUnknown) }
 
 ////
 // 6.7.8 Type definitions
@@ -766,7 +817,10 @@ designator -> Designator =
 array_designator -> Designator =
     "[" _ a:node<constant_expression0> _ b:gnu<range_designator_ext>? "]" {
         match b {
-            Some(b) => Designator::Range { from: a, to: b },
+            Some(b) => {
+                let span = Span::span(a.span.start, b.span.end);
+                Designator::Range(Node::new(RangeDesignator { from: a, to: b }, span))
+            }
             None => Designator::Index(a),
         }
     }
@@ -795,7 +849,7 @@ static_assert0 -> StaticAssert =
 pub statement -> Box<Node<Statement>> = box<node<statement0>>
 
 statement0 -> Statement =
-    labeled_statement /
+    s:node<labeled_statement> { Statement::Labeled(s) } /
     compound_statement /
     expression_statement /
     selection_statement /
@@ -807,9 +861,9 @@ statement0 -> Statement =
 // 6.8.1 Labeled statements
 ////
 
-labeled_statement -> Statement =
+labeled_statement -> LabeledStatement =
     l:node<label> _ ":" _ s:statement {
-        Statement::Labeled {
+        LabeledStatement {
             label: l,
             statement: s,
         }
@@ -844,12 +898,12 @@ expression_statement -> Statement =
 ////
 
 selection_statement -> Statement =
-    if_statement /
-    switch_statement
+    s:node<if_statement> { Statement::If(s) } /
+    s:node<switch_statement> { Statement::Switch(s) }
 
-if_statement -> Statement =
+if_statement -> IfStatement =
     K<"if"> _ "(" _ e:expression _ ")" _ a:statement _ b:else_statement? {
-        Statement::If {
+        IfStatement {
             condition: e,
             then_statement: a,
             else_statement: b,
@@ -858,9 +912,9 @@ if_statement -> Statement =
 
 else_statement -> Box<Node<Statement>> = K<"else"> _ s:statement { s }
 
-switch_statement -> Statement =
+switch_statement -> SwitchStatement =
     K<"switch"> _ "(" _ e:expression _ ")" _ s:statement {
-        Statement::Switch {
+        SwitchStatement {
             expression: e,
             statement: s,
         }
@@ -871,29 +925,29 @@ switch_statement -> Statement =
 ////
 
 iteration_statement -> Statement =
-    while_statement /
-    do_while_statement /
-    for_statement
+    s:node<while_statement> { Statement::While(s) } /
+    s:node<do_while_statement> { Statement::DoWhile(s) } /
+    s:node<for_statement> { Statement::For(s) }
 
-while_statement -> Statement =
+while_statement -> WhileStatement =
     K<"while"> _ "(" _ e:expression _ ")" _ s:statement {
-        Statement::While {
+        WhileStatement {
             expression: e,
             statement: s,
         }
     }
 
-do_while_statement -> Statement =
+do_while_statement -> DoWhileStatement =
     K<"do"> _ s:statement _ K<"while"> _ "(" _ e:expression _ ")" _ ";" {
-        Statement::DoWhile {
+        DoWhileStatement {
             statement: s,
             expression: e,
         }
     }
 
-for_statement -> Statement =
+for_statement -> ForStatement =
     K<"for"> _ "(" _ a:node<for_initializer> _ b:expression? _ ";" _ c:expression? _ ")" _ s:statement {
-        Statement::For {
+        ForStatement {
             initializer: a,
             condition: b,
             step: c,
@@ -962,10 +1016,10 @@ attribute_specifier -> Vec<Node<Extension>> =
 
 attribute -> Extension =
     n:node<attribute_name> _ p:attribute_parameters? {
-        Extension::Attribute {
+        Extension::Attribute(Attribute {
             name: n,
             arguments: p.unwrap_or_default(),
-        }
+        })
     }
 
 attribute_name -> String =
@@ -999,13 +1053,13 @@ asm_statement0 -> AsmStatement =
         o:asm_ext<asm_operand_list, asm_ext<asm_operand_list, asm_ext<cs0<string_literal>, ()>>>? _
     ")" _ ";" {
         if let Some((o, (i, (c, ())))) = o {
-            AsmStatement::GnuExtended {
+            AsmStatement::GnuExtended(GnuExtendedAsmStatement {
                 qualifier: q,
                 template: a,
                 outputs: o,
                 inputs: i,
                 clobbers: c,
-            }
+            })
         } else {
             AsmStatement::GnuBasic(a)
         }

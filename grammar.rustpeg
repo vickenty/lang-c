@@ -33,7 +33,7 @@ directive = "#" [^\n]*
 // 6.4.1 Keywords
 ////
 
-K<E> = #quiet<E ![_a-zA-Z0-9]>
+K<E> = #quiet<e:E ![_a-zA-Z0-9] { e }>
 
 ////
 // 6.4.2 Identifiers
@@ -101,7 +101,10 @@ float_hexademical =
 
 float_binary_exp = [pP][+-]?dec+
 
-float_suffix = ([fFlL] / gnu<[iIjJ]>)*
+float_suffix =
+    ts18661_float_suffix /
+    [fFlL] gnu<[iIjJ]>? /
+    gnu<[iIjJ] [fFlL]?>
 
 character_constant -> String =
     c:$([LuU]? "'" character+ "'") { String::from(c) }
@@ -465,6 +468,7 @@ type_specifier0 -> TypeSpecifier =
     K<"_Bool"> { TypeSpecifier::Bool } /
     K<"_Complex" / gnu<"__complex" "__"?>> { TypeSpecifier::Complex } /
     K<"_Atomic"> _ "(" _ t:type_name _ ")" { TypeSpecifier::Atomic(t) } /
+    t:K<ts18661_float_type_specifier> { TypeSpecifier::TS18661Float(t) } /
     t:typedef_name { TypeSpecifier::TypedefName(t) } /
     s:node<struct_or_union_specifier> { TypeSpecifier::Struct(s) } /
     e:node<enum_specifier> { TypeSpecifier::Enum(e) } /
@@ -1149,3 +1153,31 @@ typeof_specifier -> TypeSpecifier =
 typeof_specifier0 -> TypeOf =
     e:node<expression0> { TypeOf::Expression(e) } /
     t:type_name { TypeOf::Type(t) }
+
+////
+// ISO/IEC TS 18661 series floating point extensions
+////
+
+ts18661_float_type_specifier -> TS18661FloatType =
+    ts18661_binary_float /
+    ts18661_decimal_float
+
+ts18661_binary_float -> TS18661FloatType =
+    "_Float" width:$(ts18661_binary_width) extended:"x"? {
+        ts18661_float(true, width.parse().unwrap(), extended.is_some())
+    }
+
+ts18661_binary_width = "16" / "32" / "64" / "128"
+
+ts18661_decimal_float -> TS18661FloatType =
+    "_Decimal" width:$(ts18661_decimal_width) extended:"x"? {
+        ts18661_float(false, width.parse().unwrap(), extended.is_some())
+    }
+
+ts18661_decimal_width = "32" / "64" / "128"
+
+ts18661_float_suffix =
+    "df" / "dd" / "dl" /
+    "DF" / "DD" / "DL" /
+    [fF] ts18661_binary_width "x"? /
+    [dD] ts18661_decimal_width "x"?

@@ -535,6 +535,38 @@ pub enum TypeSpecifier {
     ///
     /// [GNU extension](https://gcc.gnu.org/onlinedocs/gcc/Typeof.html)
     TypeOf(Node<TypeOf>),
+    /// Floating point types with guaranteed width and representation
+    ///
+    /// `_Float16`, `_Float32`, `_Float64`, `_Float128`
+    ///
+    /// `_Float16x`, `_Float32x`, `_Float64x`, `_Float128x`
+    ///
+    /// `_Decimal16`, `_Decimal32`, `_Decimal64`, `_Decimal128`
+    ///
+    /// `_Decimal16x`, `_Decimal32x`, `_Decimal64x`, `_Decimal128x`
+    ///
+    /// [ISO/IEC TS 18661-3:2015](http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1945.pdf)
+    TS18661Float(TS18661FloatType),
+}
+
+/// Floating point type with guaranteed width and format
+///
+/// [ISO/IEC TS 18661-3:2015](http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1945.pdf)
+#[derive(Debug, PartialEq, Clone)]
+pub struct TS18661FloatType {
+    pub format: TS18661FloatFormat,
+    pub width: usize,
+}
+
+/// Floating point formats
+///
+/// [ISO/IEC TS 18661-3:2015](http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1945.pdf)
+#[derive(Debug, PartialEq, Clone)]
+pub enum TS18661FloatFormat {
+    BinaryInterchange,
+    BinaryExtended,
+    DecimalInterchange,
+    DecimalExtended,
 }
 
 // From 6.7.2.1

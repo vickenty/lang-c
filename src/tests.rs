@@ -46,6 +46,12 @@ macro_rules! mk_from_inner {
                     $p::$v(i.into()).into()
                 }
             }
+
+            impl From<$i> for Box<Node<$p>> {
+                fn from(i: $i) -> Box<Node<$p>> {
+                    $p::$v(i.into()).into()
+                }
+            }
         )*
     );
 }
@@ -55,6 +61,17 @@ mk_from_inner! {
     StructField => StructDeclaration::Field;
     FunctionDeclarator => DerivedDeclarator::Function;
     ArrayDeclarator => DerivedDeclarator::Array;
+    TS18661FloatType => TypeSpecifier::TS18661Float;
+    TS18661FloatType => DeclarationSpecifier::TypeSpecifier;
+    Constant => Expression::Constant;
+    TypeSpecifier => DeclarationSpecifier::TypeSpecifier;
+    Identifier => DeclaratorKind::Identifier;
+}
+
+impl From<Constant> for Node<Initializer> {
+    fn from(c: Constant) -> Node<Initializer> {
+        Initializer::Expression(c.into()).into()
+    }
 }
 
 mod expr {
@@ -1713,5 +1730,31 @@ fn test_keyword_expr() {
     assert_eq!(
         expression("__PRETTY_FUNCTION__", &mut Env::new()),
         Ok(Expression::Identifier(ident("__PRETTY_FUNCTION__")).into())
+    );
+}
+
+#[test]
+fn test_ts18661_float() {
+    use parser::declaration;
+    assert_eq!(
+        declaration("_Float64 foo = 1.5f64;", &mut Env::new()),
+        Ok(Declaration {
+            specifiers: vec![
+                TS18661FloatType {
+                    format: TS18661FloatFormat::BinaryInterchange,
+                    width: 64,
+                }.into(),
+            ],
+            declarators: vec![
+                InitDeclarator {
+                    declarator: Declarator {
+                        kind: Identifier { name: "foo".into() }.into(),
+                        derived: vec![],
+                        extensions: vec![],
+                    }.into(),
+                    initializer: Some(float::dec("1.5f64").into()),
+                }.into(),
+            ],
+        }.into())
     );
 }

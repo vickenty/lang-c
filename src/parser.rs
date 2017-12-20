@@ -1166,18 +1166,55 @@ fn __parse_float_binary_exp<'input>(__input: &'input str, __state: &mut ParseSta
 fn __parse_float_suffix<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<()> {
     #![allow(non_snake_case, unused)]
     {
-        let mut __repeat_pos = __pos;
-        loop {
-            let __pos = __repeat_pos;
-            let __step_res = {
-                let __choice_res = if __input.len() > __pos {
-                    let (__ch, __next) = char_range_at(__input, __pos);
-                    match __ch {
-                        'f' | 'F' | 'l' | 'L' => Matched(__next, ()),
-                        _ => __state.mark_failure(__pos, "[fFlL]"),
+        let __choice_res = __parse_ts18661_float_suffix(__input, __state, __pos, env);
+        match __choice_res {
+            Matched(__pos, __value) => Matched(__pos, __value),
+            Failed => {
+                let __choice_res = {
+                    let __seq_res = if __input.len() > __pos {
+                        let (__ch, __next) = char_range_at(__input, __pos);
+                        match __ch {
+                            'f' | 'F' | 'l' | 'L' => Matched(__next, ()),
+                            _ => __state.mark_failure(__pos, "[fFlL]"),
+                        }
+                    } else {
+                        __state.mark_failure(__pos, "[fFlL]")
+                    };
+                    match __seq_res {
+                        Matched(__pos, _) => match {
+                            let __seq_res = {
+                                __state.suppress_fail += 1;
+                                let __assert_res = __parse_gnu_guard(__input, __state, __pos, env);
+                                __state.suppress_fail -= 1;
+                                match __assert_res {
+                                    Matched(_, __value) => Matched(__pos, __value),
+                                    Failed => Failed,
+                                }
+                            };
+                            match __seq_res {
+                                Matched(__pos, _) => {
+                                    let __seq_res = if __input.len() > __pos {
+                                        let (__ch, __next) = char_range_at(__input, __pos);
+                                        match __ch {
+                                            'i' | 'I' | 'j' | 'J' => Matched(__next, ()),
+                                            _ => __state.mark_failure(__pos, "[iIjJ]"),
+                                        }
+                                    } else {
+                                        __state.mark_failure(__pos, "[iIjJ]")
+                                    };
+                                    match __seq_res {
+                                        Matched(__pos, e) => Matched(__pos, { e }),
+                                        Failed => Failed,
+                                    }
+                                }
+                                Failed => Failed,
+                            }
+                        } {
+                            Matched(__newpos, _) => Matched(__newpos, ()),
+                            Failed => Matched(__pos, ()),
+                        },
+                        Failed => Failed,
                     }
-                } else {
-                    __state.mark_failure(__pos, "[fFlL]")
                 };
                 match __choice_res {
                     Matched(__pos, __value) => Matched(__pos, __value),
@@ -1193,14 +1230,31 @@ fn __parse_float_suffix<'input>(__input: &'input str, __state: &mut ParseState<'
                         };
                         match __seq_res {
                             Matched(__pos, _) => {
-                                let __seq_res = if __input.len() > __pos {
-                                    let (__ch, __next) = char_range_at(__input, __pos);
-                                    match __ch {
-                                        'i' | 'I' | 'j' | 'J' => Matched(__next, ()),
-                                        _ => __state.mark_failure(__pos, "[iIjJ]"),
+                                let __seq_res = {
+                                    let __seq_res = if __input.len() > __pos {
+                                        let (__ch, __next) = char_range_at(__input, __pos);
+                                        match __ch {
+                                            'i' | 'I' | 'j' | 'J' => Matched(__next, ()),
+                                            _ => __state.mark_failure(__pos, "[iIjJ]"),
+                                        }
+                                    } else {
+                                        __state.mark_failure(__pos, "[iIjJ]")
+                                    };
+                                    match __seq_res {
+                                        Matched(__pos, _) => match if __input.len() > __pos {
+                                            let (__ch, __next) = char_range_at(__input, __pos);
+                                            match __ch {
+                                                'f' | 'F' | 'l' | 'L' => Matched(__next, ()),
+                                                _ => __state.mark_failure(__pos, "[fFlL]"),
+                                            }
+                                        } else {
+                                            __state.mark_failure(__pos, "[fFlL]")
+                                        } {
+                                            Matched(__newpos, _) => Matched(__newpos, ()),
+                                            Failed => Matched(__pos, ()),
+                                        },
+                                        Failed => Failed,
                                     }
-                                } else {
-                                    __state.mark_failure(__pos, "[iIjJ]")
                                 };
                                 match __seq_res {
                                     Matched(__pos, e) => Matched(__pos, { e }),
@@ -1211,17 +1265,8 @@ fn __parse_float_suffix<'input>(__input: &'input str, __state: &mut ParseState<'
                         }
                     }
                 }
-            };
-            match __step_res {
-                Matched(__newpos, __value) => {
-                    __repeat_pos = __newpos;
-                }
-                Failed => {
-                    break;
-                }
             }
         }
-        Matched(__repeat_pos, ())
     }
 }
 
@@ -1731,21 +1776,27 @@ fn __parse_generic_selection<'input>(__input: &'input str, __state: &mut ParseSt
             let res = {
                 let __seq_res = slice_eq(__input, __state, __pos, "_Generic");
                 match __seq_res {
-                    Matched(__pos, _) => {
-                        __state.suppress_fail += 1;
-                        let __assert_res = if __input.len() > __pos {
-                            let (__ch, __next) = char_range_at(__input, __pos);
-                            match __ch {
-                                '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                    Matched(__pos, e) => {
+                        let __seq_res = {
+                            __state.suppress_fail += 1;
+                            let __assert_res = if __input.len() > __pos {
+                                let (__ch, __next) = char_range_at(__input, __pos);
+                                match __ch {
+                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                }
+                            } else {
+                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                            };
+                            __state.suppress_fail -= 1;
+                            match __assert_res {
+                                Failed => Matched(__pos, ()),
+                                Matched(..) => Failed,
                             }
-                        } else {
-                            __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                         };
-                        __state.suppress_fail -= 1;
-                        match __assert_res {
-                            Failed => Matched(__pos, ()),
-                            Matched(..) => Failed,
+                        match __seq_res {
+                            Matched(__pos, _) => Matched(__pos, { e }),
+                            Failed => Failed,
                         }
                     }
                     Failed => Failed,
@@ -1943,21 +1994,27 @@ fn __parse_generic_association<'input>(__input: &'input str, __state: &mut Parse
                     let res = {
                         let __seq_res = slice_eq(__input, __state, __pos, "default");
                         match __seq_res {
-                            Matched(__pos, _) => {
-                                __state.suppress_fail += 1;
-                                let __assert_res = if __input.len() > __pos {
-                                    let (__ch, __next) = char_range_at(__input, __pos);
-                                    match __ch {
-                                        '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                        _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                            Matched(__pos, e) => {
+                                let __seq_res = {
+                                    __state.suppress_fail += 1;
+                                    let __assert_res = if __input.len() > __pos {
+                                        let (__ch, __next) = char_range_at(__input, __pos);
+                                        match __ch {
+                                            '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                            _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                        }
+                                    } else {
+                                        __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                    };
+                                    __state.suppress_fail -= 1;
+                                    match __assert_res {
+                                        Failed => Matched(__pos, ()),
+                                        Matched(..) => Failed,
                                     }
-                                } else {
-                                    __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                 };
-                                __state.suppress_fail -= 1;
-                                match __assert_res {
-                                    Failed => Matched(__pos, ()),
-                                    Matched(..) => Failed,
+                                match __seq_res {
+                                    Matched(__pos, _) => Matched(__pos, { e }),
+                                    Failed => Failed,
                                 }
                             }
                             Failed => Failed,
@@ -2697,21 +2754,27 @@ fn __parse_unary_expression0<'input>(__input: &'input str, __state: &mut ParseSt
                                                                 let res = {
                                                                     let __seq_res = slice_eq(__input, __state, __pos, "__extension__");
                                                                     match __seq_res {
-                                                                        Matched(__pos, _) => {
-                                                                            __state.suppress_fail += 1;
-                                                                            let __assert_res = if __input.len() > __pos {
-                                                                                let (__ch, __next) = char_range_at(__input, __pos);
-                                                                                match __ch {
-                                                                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                                                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                                        Matched(__pos, e) => {
+                                                                            let __seq_res = {
+                                                                                __state.suppress_fail += 1;
+                                                                                let __assert_res = if __input.len() > __pos {
+                                                                                    let (__ch, __next) = char_range_at(__input, __pos);
+                                                                                    match __ch {
+                                                                                        '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                                                        _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                                                    }
+                                                                                } else {
+                                                                                    __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                                                                };
+                                                                                __state.suppress_fail -= 1;
+                                                                                match __assert_res {
+                                                                                    Failed => Matched(__pos, ()),
+                                                                                    Matched(..) => Failed,
                                                                                 }
-                                                                            } else {
-                                                                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                                                             };
-                                                                            __state.suppress_fail -= 1;
-                                                                            match __assert_res {
-                                                                                Failed => Matched(__pos, ()),
-                                                                                Matched(..) => Failed,
+                                                                            match __seq_res {
+                                                                                Matched(__pos, _) => Matched(__pos, { e }),
+                                                                                Failed => Failed,
                                                                             }
                                                                         }
                                                                         Failed => Failed,
@@ -2860,21 +2923,27 @@ fn __parse_prefix_operator<'input>(__input: &'input str, __state: &mut ParseStat
                             let res = {
                                 let __seq_res = slice_eq(__input, __state, __pos, "sizeof");
                                 match __seq_res {
-                                    Matched(__pos, _) => {
-                                        __state.suppress_fail += 1;
-                                        let __assert_res = if __input.len() > __pos {
-                                            let (__ch, __next) = char_range_at(__input, __pos);
-                                            match __ch {
-                                                '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                                _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                    Matched(__pos, e) => {
+                                        let __seq_res = {
+                                            __state.suppress_fail += 1;
+                                            let __assert_res = if __input.len() > __pos {
+                                                let (__ch, __next) = char_range_at(__input, __pos);
+                                                match __ch {
+                                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                }
+                                            } else {
+                                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                            };
+                                            __state.suppress_fail -= 1;
+                                            match __assert_res {
+                                                Failed => Matched(__pos, ()),
+                                                Matched(..) => Failed,
                                             }
-                                        } else {
-                                            __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                         };
-                                        __state.suppress_fail -= 1;
-                                        match __assert_res {
-                                            Failed => Matched(__pos, ()),
-                                            Matched(..) => Failed,
+                                        match __seq_res {
+                                            Matched(__pos, _) => Matched(__pos, { e }),
+                                            Failed => Failed,
                                         }
                                     }
                                     Failed => Failed,
@@ -3048,21 +3117,27 @@ fn __parse_sizeof_expression<'input>(__input: &'input str, __state: &mut ParseSt
             let res = {
                 let __seq_res = slice_eq(__input, __state, __pos, "sizeof");
                 match __seq_res {
-                    Matched(__pos, _) => {
-                        __state.suppress_fail += 1;
-                        let __assert_res = if __input.len() > __pos {
-                            let (__ch, __next) = char_range_at(__input, __pos);
-                            match __ch {
-                                '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                    Matched(__pos, e) => {
+                        let __seq_res = {
+                            __state.suppress_fail += 1;
+                            let __assert_res = if __input.len() > __pos {
+                                let (__ch, __next) = char_range_at(__input, __pos);
+                                match __ch {
+                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                }
+                            } else {
+                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                            };
+                            __state.suppress_fail -= 1;
+                            match __assert_res {
+                                Failed => Matched(__pos, ()),
+                                Matched(..) => Failed,
                             }
-                        } else {
-                            __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                         };
-                        __state.suppress_fail -= 1;
-                        match __assert_res {
-                            Failed => Matched(__pos, ()),
-                            Matched(..) => Failed,
+                        match __seq_res {
+                            Matched(__pos, _) => Matched(__pos, { e }),
+                            Failed => Failed,
                         }
                     }
                     Failed => Failed,
@@ -3157,21 +3232,27 @@ fn __parse_alignof_expression<'input>(__input: &'input str, __state: &mut ParseS
                     }
                 };
                 match __seq_res {
-                    Matched(__pos, _) => {
-                        __state.suppress_fail += 1;
-                        let __assert_res = if __input.len() > __pos {
-                            let (__ch, __next) = char_range_at(__input, __pos);
-                            match __ch {
-                                '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                    Matched(__pos, e) => {
+                        let __seq_res = {
+                            __state.suppress_fail += 1;
+                            let __assert_res = if __input.len() > __pos {
+                                let (__ch, __next) = char_range_at(__input, __pos);
+                                match __ch {
+                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                }
+                            } else {
+                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                            };
+                            __state.suppress_fail -= 1;
+                            match __assert_res {
+                                Failed => Matched(__pos, ()),
+                                Matched(..) => Failed,
                             }
-                        } else {
-                            __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                         };
-                        __state.suppress_fail -= 1;
-                        match __assert_res {
-                            Failed => Matched(__pos, ()),
-                            Matched(..) => Failed,
+                        match __seq_res {
+                            Matched(__pos, _) => Matched(__pos, { e }),
+                            Failed => Failed,
                         }
                     }
                     Failed => Failed,
@@ -4823,21 +4904,27 @@ fn __parse_declaration0<'input>(__input: &'input str, __state: &mut ParseState<'
                         let res = {
                             let __seq_res = slice_eq(__input, __state, __pos, "__extension__");
                             match __seq_res {
-                                Matched(__pos, _) => {
-                                    __state.suppress_fail += 1;
-                                    let __assert_res = if __input.len() > __pos {
-                                        let (__ch, __next) = char_range_at(__input, __pos);
-                                        match __ch {
-                                            '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                            _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                Matched(__pos, e) => {
+                                    let __seq_res = {
+                                        __state.suppress_fail += 1;
+                                        let __assert_res = if __input.len() > __pos {
+                                            let (__ch, __next) = char_range_at(__input, __pos);
+                                            match __ch {
+                                                '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                            }
+                                        } else {
+                                            __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                        };
+                                        __state.suppress_fail -= 1;
+                                        match __assert_res {
+                                            Failed => Matched(__pos, ()),
+                                            Matched(..) => Failed,
                                         }
-                                    } else {
-                                        __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                     };
-                                    __state.suppress_fail -= 1;
-                                    match __assert_res {
-                                        Failed => Matched(__pos, ()),
-                                        Matched(..) => Failed,
+                                    match __seq_res {
+                                        Matched(__pos, _) => Matched(__pos, { e }),
+                                        Failed => Failed,
                                     }
                                 }
                                 Failed => Failed,
@@ -5276,21 +5363,27 @@ fn __parse_storage_class_specifier0<'input>(__input: &'input str, __state: &mut 
                 let res = {
                     let __seq_res = slice_eq(__input, __state, __pos, "typedef");
                     match __seq_res {
-                        Matched(__pos, _) => {
-                            __state.suppress_fail += 1;
-                            let __assert_res = if __input.len() > __pos {
-                                let (__ch, __next) = char_range_at(__input, __pos);
-                                match __ch {
-                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                        Matched(__pos, e) => {
+                            let __seq_res = {
+                                __state.suppress_fail += 1;
+                                let __assert_res = if __input.len() > __pos {
+                                    let (__ch, __next) = char_range_at(__input, __pos);
+                                    match __ch {
+                                        '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                        _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                    }
+                                } else {
+                                    __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                };
+                                __state.suppress_fail -= 1;
+                                match __assert_res {
+                                    Failed => Matched(__pos, ()),
+                                    Matched(..) => Failed,
                                 }
-                            } else {
-                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                             };
-                            __state.suppress_fail -= 1;
-                            match __assert_res {
-                                Failed => Matched(__pos, ()),
-                                Matched(..) => Failed,
+                            match __seq_res {
+                                Matched(__pos, _) => Matched(__pos, { e }),
+                                Failed => Failed,
                             }
                         }
                         Failed => Failed,
@@ -5313,21 +5406,27 @@ fn __parse_storage_class_specifier0<'input>(__input: &'input str, __state: &mut 
                         let res = {
                             let __seq_res = slice_eq(__input, __state, __pos, "extern");
                             match __seq_res {
-                                Matched(__pos, _) => {
-                                    __state.suppress_fail += 1;
-                                    let __assert_res = if __input.len() > __pos {
-                                        let (__ch, __next) = char_range_at(__input, __pos);
-                                        match __ch {
-                                            '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                            _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                Matched(__pos, e) => {
+                                    let __seq_res = {
+                                        __state.suppress_fail += 1;
+                                        let __assert_res = if __input.len() > __pos {
+                                            let (__ch, __next) = char_range_at(__input, __pos);
+                                            match __ch {
+                                                '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                            }
+                                        } else {
+                                            __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                        };
+                                        __state.suppress_fail -= 1;
+                                        match __assert_res {
+                                            Failed => Matched(__pos, ()),
+                                            Matched(..) => Failed,
                                         }
-                                    } else {
-                                        __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                     };
-                                    __state.suppress_fail -= 1;
-                                    match __assert_res {
-                                        Failed => Matched(__pos, ()),
-                                        Matched(..) => Failed,
+                                    match __seq_res {
+                                        Matched(__pos, _) => Matched(__pos, { e }),
+                                        Failed => Failed,
                                     }
                                 }
                                 Failed => Failed,
@@ -5350,21 +5449,27 @@ fn __parse_storage_class_specifier0<'input>(__input: &'input str, __state: &mut 
                                 let res = {
                                     let __seq_res = slice_eq(__input, __state, __pos, "static");
                                     match __seq_res {
-                                        Matched(__pos, _) => {
-                                            __state.suppress_fail += 1;
-                                            let __assert_res = if __input.len() > __pos {
-                                                let (__ch, __next) = char_range_at(__input, __pos);
-                                                match __ch {
-                                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                        Matched(__pos, e) => {
+                                            let __seq_res = {
+                                                __state.suppress_fail += 1;
+                                                let __assert_res = if __input.len() > __pos {
+                                                    let (__ch, __next) = char_range_at(__input, __pos);
+                                                    match __ch {
+                                                        '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                        _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                    }
+                                                } else {
+                                                    __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                                };
+                                                __state.suppress_fail -= 1;
+                                                match __assert_res {
+                                                    Failed => Matched(__pos, ()),
+                                                    Matched(..) => Failed,
                                                 }
-                                            } else {
-                                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                             };
-                                            __state.suppress_fail -= 1;
-                                            match __assert_res {
-                                                Failed => Matched(__pos, ()),
-                                                Matched(..) => Failed,
+                                            match __seq_res {
+                                                Matched(__pos, _) => Matched(__pos, { e }),
+                                                Failed => Failed,
                                             }
                                         }
                                         Failed => Failed,
@@ -5387,21 +5492,27 @@ fn __parse_storage_class_specifier0<'input>(__input: &'input str, __state: &mut 
                                         let res = {
                                             let __seq_res = slice_eq(__input, __state, __pos, "_Thread_local");
                                             match __seq_res {
-                                                Matched(__pos, _) => {
-                                                    __state.suppress_fail += 1;
-                                                    let __assert_res = if __input.len() > __pos {
-                                                        let (__ch, __next) = char_range_at(__input, __pos);
-                                                        match __ch {
-                                                            '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                                            _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                Matched(__pos, e) => {
+                                                    let __seq_res = {
+                                                        __state.suppress_fail += 1;
+                                                        let __assert_res = if __input.len() > __pos {
+                                                            let (__ch, __next) = char_range_at(__input, __pos);
+                                                            match __ch {
+                                                                '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                                _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                            }
+                                                        } else {
+                                                            __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                                        };
+                                                        __state.suppress_fail -= 1;
+                                                        match __assert_res {
+                                                            Failed => Matched(__pos, ()),
+                                                            Matched(..) => Failed,
                                                         }
-                                                    } else {
-                                                        __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                                     };
-                                                    __state.suppress_fail -= 1;
-                                                    match __assert_res {
-                                                        Failed => Matched(__pos, ()),
-                                                        Matched(..) => Failed,
+                                                    match __seq_res {
+                                                        Matched(__pos, _) => Matched(__pos, { e }),
+                                                        Failed => Failed,
                                                     }
                                                 }
                                                 Failed => Failed,
@@ -5424,21 +5535,27 @@ fn __parse_storage_class_specifier0<'input>(__input: &'input str, __state: &mut 
                                                 let res = {
                                                     let __seq_res = slice_eq(__input, __state, __pos, "auto");
                                                     match __seq_res {
-                                                        Matched(__pos, _) => {
-                                                            __state.suppress_fail += 1;
-                                                            let __assert_res = if __input.len() > __pos {
-                                                                let (__ch, __next) = char_range_at(__input, __pos);
-                                                                match __ch {
-                                                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                        Matched(__pos, e) => {
+                                                            let __seq_res = {
+                                                                __state.suppress_fail += 1;
+                                                                let __assert_res = if __input.len() > __pos {
+                                                                    let (__ch, __next) = char_range_at(__input, __pos);
+                                                                    match __ch {
+                                                                        '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                                        _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                                    }
+                                                                } else {
+                                                                    __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                                                };
+                                                                __state.suppress_fail -= 1;
+                                                                match __assert_res {
+                                                                    Failed => Matched(__pos, ()),
+                                                                    Matched(..) => Failed,
                                                                 }
-                                                            } else {
-                                                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                                             };
-                                                            __state.suppress_fail -= 1;
-                                                            match __assert_res {
-                                                                Failed => Matched(__pos, ()),
-                                                                Matched(..) => Failed,
+                                                            match __seq_res {
+                                                                Matched(__pos, _) => Matched(__pos, { e }),
+                                                                Failed => Failed,
                                                             }
                                                         }
                                                         Failed => Failed,
@@ -5460,21 +5577,27 @@ fn __parse_storage_class_specifier0<'input>(__input: &'input str, __state: &mut 
                                                     let res = {
                                                         let __seq_res = slice_eq(__input, __state, __pos, "register");
                                                         match __seq_res {
-                                                            Matched(__pos, _) => {
-                                                                __state.suppress_fail += 1;
-                                                                let __assert_res = if __input.len() > __pos {
-                                                                    let (__ch, __next) = char_range_at(__input, __pos);
-                                                                    match __ch {
-                                                                        '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                                                        _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                            Matched(__pos, e) => {
+                                                                let __seq_res = {
+                                                                    __state.suppress_fail += 1;
+                                                                    let __assert_res = if __input.len() > __pos {
+                                                                        let (__ch, __next) = char_range_at(__input, __pos);
+                                                                        match __ch {
+                                                                            '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                                            _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                                        }
+                                                                    } else {
+                                                                        __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                                                    };
+                                                                    __state.suppress_fail -= 1;
+                                                                    match __assert_res {
+                                                                        Failed => Matched(__pos, ()),
+                                                                        Matched(..) => Failed,
                                                                     }
-                                                                } else {
-                                                                    __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                                                 };
-                                                                __state.suppress_fail -= 1;
-                                                                match __assert_res {
-                                                                    Failed => Matched(__pos, ()),
-                                                                    Matched(..) => Failed,
+                                                                match __seq_res {
+                                                                    Matched(__pos, _) => Matched(__pos, { e }),
+                                                                    Failed => Failed,
                                                                 }
                                                             }
                                                             Failed => Failed,
@@ -5532,21 +5655,27 @@ fn __parse_type_specifier0<'input>(__input: &'input str, __state: &mut ParseStat
                 let res = {
                     let __seq_res = slice_eq(__input, __state, __pos, "void");
                     match __seq_res {
-                        Matched(__pos, _) => {
-                            __state.suppress_fail += 1;
-                            let __assert_res = if __input.len() > __pos {
-                                let (__ch, __next) = char_range_at(__input, __pos);
-                                match __ch {
-                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                        Matched(__pos, e) => {
+                            let __seq_res = {
+                                __state.suppress_fail += 1;
+                                let __assert_res = if __input.len() > __pos {
+                                    let (__ch, __next) = char_range_at(__input, __pos);
+                                    match __ch {
+                                        '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                        _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                    }
+                                } else {
+                                    __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                };
+                                __state.suppress_fail -= 1;
+                                match __assert_res {
+                                    Failed => Matched(__pos, ()),
+                                    Matched(..) => Failed,
                                 }
-                            } else {
-                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                             };
-                            __state.suppress_fail -= 1;
-                            match __assert_res {
-                                Failed => Matched(__pos, ()),
-                                Matched(..) => Failed,
+                            match __seq_res {
+                                Matched(__pos, _) => Matched(__pos, { e }),
+                                Failed => Failed,
                             }
                         }
                         Failed => Failed,
@@ -5569,21 +5698,27 @@ fn __parse_type_specifier0<'input>(__input: &'input str, __state: &mut ParseStat
                         let res = {
                             let __seq_res = slice_eq(__input, __state, __pos, "char");
                             match __seq_res {
-                                Matched(__pos, _) => {
-                                    __state.suppress_fail += 1;
-                                    let __assert_res = if __input.len() > __pos {
-                                        let (__ch, __next) = char_range_at(__input, __pos);
-                                        match __ch {
-                                            '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                            _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                Matched(__pos, e) => {
+                                    let __seq_res = {
+                                        __state.suppress_fail += 1;
+                                        let __assert_res = if __input.len() > __pos {
+                                            let (__ch, __next) = char_range_at(__input, __pos);
+                                            match __ch {
+                                                '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                            }
+                                        } else {
+                                            __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                        };
+                                        __state.suppress_fail -= 1;
+                                        match __assert_res {
+                                            Failed => Matched(__pos, ()),
+                                            Matched(..) => Failed,
                                         }
-                                    } else {
-                                        __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                     };
-                                    __state.suppress_fail -= 1;
-                                    match __assert_res {
-                                        Failed => Matched(__pos, ()),
-                                        Matched(..) => Failed,
+                                    match __seq_res {
+                                        Matched(__pos, _) => Matched(__pos, { e }),
+                                        Failed => Failed,
                                     }
                                 }
                                 Failed => Failed,
@@ -5606,21 +5741,27 @@ fn __parse_type_specifier0<'input>(__input: &'input str, __state: &mut ParseStat
                                 let res = {
                                     let __seq_res = slice_eq(__input, __state, __pos, "short");
                                     match __seq_res {
-                                        Matched(__pos, _) => {
-                                            __state.suppress_fail += 1;
-                                            let __assert_res = if __input.len() > __pos {
-                                                let (__ch, __next) = char_range_at(__input, __pos);
-                                                match __ch {
-                                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                        Matched(__pos, e) => {
+                                            let __seq_res = {
+                                                __state.suppress_fail += 1;
+                                                let __assert_res = if __input.len() > __pos {
+                                                    let (__ch, __next) = char_range_at(__input, __pos);
+                                                    match __ch {
+                                                        '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                        _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                    }
+                                                } else {
+                                                    __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                                };
+                                                __state.suppress_fail -= 1;
+                                                match __assert_res {
+                                                    Failed => Matched(__pos, ()),
+                                                    Matched(..) => Failed,
                                                 }
-                                            } else {
-                                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                             };
-                                            __state.suppress_fail -= 1;
-                                            match __assert_res {
-                                                Failed => Matched(__pos, ()),
-                                                Matched(..) => Failed,
+                                            match __seq_res {
+                                                Matched(__pos, _) => Matched(__pos, { e }),
+                                                Failed => Failed,
                                             }
                                         }
                                         Failed => Failed,
@@ -5643,21 +5784,27 @@ fn __parse_type_specifier0<'input>(__input: &'input str, __state: &mut ParseStat
                                         let res = {
                                             let __seq_res = slice_eq(__input, __state, __pos, "int");
                                             match __seq_res {
-                                                Matched(__pos, _) => {
-                                                    __state.suppress_fail += 1;
-                                                    let __assert_res = if __input.len() > __pos {
-                                                        let (__ch, __next) = char_range_at(__input, __pos);
-                                                        match __ch {
-                                                            '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                                            _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                Matched(__pos, e) => {
+                                                    let __seq_res = {
+                                                        __state.suppress_fail += 1;
+                                                        let __assert_res = if __input.len() > __pos {
+                                                            let (__ch, __next) = char_range_at(__input, __pos);
+                                                            match __ch {
+                                                                '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                                _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                            }
+                                                        } else {
+                                                            __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                                        };
+                                                        __state.suppress_fail -= 1;
+                                                        match __assert_res {
+                                                            Failed => Matched(__pos, ()),
+                                                            Matched(..) => Failed,
                                                         }
-                                                    } else {
-                                                        __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                                     };
-                                                    __state.suppress_fail -= 1;
-                                                    match __assert_res {
-                                                        Failed => Matched(__pos, ()),
-                                                        Matched(..) => Failed,
+                                                    match __seq_res {
+                                                        Matched(__pos, _) => Matched(__pos, { e }),
+                                                        Failed => Failed,
                                                     }
                                                 }
                                                 Failed => Failed,
@@ -5680,21 +5827,27 @@ fn __parse_type_specifier0<'input>(__input: &'input str, __state: &mut ParseStat
                                                 let res = {
                                                     let __seq_res = slice_eq(__input, __state, __pos, "long");
                                                     match __seq_res {
-                                                        Matched(__pos, _) => {
-                                                            __state.suppress_fail += 1;
-                                                            let __assert_res = if __input.len() > __pos {
-                                                                let (__ch, __next) = char_range_at(__input, __pos);
-                                                                match __ch {
-                                                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                        Matched(__pos, e) => {
+                                                            let __seq_res = {
+                                                                __state.suppress_fail += 1;
+                                                                let __assert_res = if __input.len() > __pos {
+                                                                    let (__ch, __next) = char_range_at(__input, __pos);
+                                                                    match __ch {
+                                                                        '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                                        _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                                    }
+                                                                } else {
+                                                                    __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                                                };
+                                                                __state.suppress_fail -= 1;
+                                                                match __assert_res {
+                                                                    Failed => Matched(__pos, ()),
+                                                                    Matched(..) => Failed,
                                                                 }
-                                                            } else {
-                                                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                                             };
-                                                            __state.suppress_fail -= 1;
-                                                            match __assert_res {
-                                                                Failed => Matched(__pos, ()),
-                                                                Matched(..) => Failed,
+                                                            match __seq_res {
+                                                                Matched(__pos, _) => Matched(__pos, { e }),
+                                                                Failed => Failed,
                                                             }
                                                         }
                                                         Failed => Failed,
@@ -5717,21 +5870,27 @@ fn __parse_type_specifier0<'input>(__input: &'input str, __state: &mut ParseStat
                                                         let res = {
                                                             let __seq_res = slice_eq(__input, __state, __pos, "float");
                                                             match __seq_res {
-                                                                Matched(__pos, _) => {
-                                                                    __state.suppress_fail += 1;
-                                                                    let __assert_res = if __input.len() > __pos {
-                                                                        let (__ch, __next) = char_range_at(__input, __pos);
-                                                                        match __ch {
-                                                                            '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                                                            _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                                Matched(__pos, e) => {
+                                                                    let __seq_res = {
+                                                                        __state.suppress_fail += 1;
+                                                                        let __assert_res = if __input.len() > __pos {
+                                                                            let (__ch, __next) = char_range_at(__input, __pos);
+                                                                            match __ch {
+                                                                                '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                                                _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                                            }
+                                                                        } else {
+                                                                            __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                                                        };
+                                                                        __state.suppress_fail -= 1;
+                                                                        match __assert_res {
+                                                                            Failed => Matched(__pos, ()),
+                                                                            Matched(..) => Failed,
                                                                         }
-                                                                    } else {
-                                                                        __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                                                     };
-                                                                    __state.suppress_fail -= 1;
-                                                                    match __assert_res {
-                                                                        Failed => Matched(__pos, ()),
-                                                                        Matched(..) => Failed,
+                                                                    match __seq_res {
+                                                                        Matched(__pos, _) => Matched(__pos, { e }),
+                                                                        Failed => Failed,
                                                                     }
                                                                 }
                                                                 Failed => Failed,
@@ -5754,21 +5913,27 @@ fn __parse_type_specifier0<'input>(__input: &'input str, __state: &mut ParseStat
                                                                 let res = {
                                                                     let __seq_res = slice_eq(__input, __state, __pos, "double");
                                                                     match __seq_res {
-                                                                        Matched(__pos, _) => {
-                                                                            __state.suppress_fail += 1;
-                                                                            let __assert_res = if __input.len() > __pos {
-                                                                                let (__ch, __next) = char_range_at(__input, __pos);
-                                                                                match __ch {
-                                                                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                                                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                                        Matched(__pos, e) => {
+                                                                            let __seq_res = {
+                                                                                __state.suppress_fail += 1;
+                                                                                let __assert_res = if __input.len() > __pos {
+                                                                                    let (__ch, __next) = char_range_at(__input, __pos);
+                                                                                    match __ch {
+                                                                                        '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                                                        _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                                                    }
+                                                                                } else {
+                                                                                    __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                                                                };
+                                                                                __state.suppress_fail -= 1;
+                                                                                match __assert_res {
+                                                                                    Failed => Matched(__pos, ()),
+                                                                                    Matched(..) => Failed,
                                                                                 }
-                                                                            } else {
-                                                                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                                                             };
-                                                                            __state.suppress_fail -= 1;
-                                                                            match __assert_res {
-                                                                                Failed => Matched(__pos, ()),
-                                                                                Matched(..) => Failed,
+                                                                            match __seq_res {
+                                                                                Matched(__pos, _) => Matched(__pos, { e }),
+                                                                                Failed => Failed,
                                                                             }
                                                                         }
                                                                         Failed => Failed,
@@ -5826,21 +5991,27 @@ fn __parse_type_specifier0<'input>(__input: &'input str, __state: &mut ParseStat
                                                                                 }
                                                                             };
                                                                             match __seq_res {
-                                                                                Matched(__pos, _) => {
-                                                                                    __state.suppress_fail += 1;
-                                                                                    let __assert_res = if __input.len() > __pos {
-                                                                                        let (__ch, __next) = char_range_at(__input, __pos);
-                                                                                        match __ch {
-                                                                                            '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                                                                            _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                                                Matched(__pos, e) => {
+                                                                                    let __seq_res = {
+                                                                                        __state.suppress_fail += 1;
+                                                                                        let __assert_res = if __input.len() > __pos {
+                                                                                            let (__ch, __next) = char_range_at(__input, __pos);
+                                                                                            match __ch {
+                                                                                                '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                                                                _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                                                            }
+                                                                                        } else {
+                                                                                            __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                                                                        };
+                                                                                        __state.suppress_fail -= 1;
+                                                                                        match __assert_res {
+                                                                                            Failed => Matched(__pos, ()),
+                                                                                            Matched(..) => Failed,
                                                                                         }
-                                                                                    } else {
-                                                                                        __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                                                                     };
-                                                                                    __state.suppress_fail -= 1;
-                                                                                    match __assert_res {
-                                                                                        Failed => Matched(__pos, ()),
-                                                                                        Matched(..) => Failed,
+                                                                                    match __seq_res {
+                                                                                        Matched(__pos, _) => Matched(__pos, { e }),
+                                                                                        Failed => Failed,
                                                                                     }
                                                                                 }
                                                                                 Failed => Failed,
@@ -5863,21 +6034,27 @@ fn __parse_type_specifier0<'input>(__input: &'input str, __state: &mut ParseStat
                                                                                 let res = {
                                                                                     let __seq_res = slice_eq(__input, __state, __pos, "unsigned");
                                                                                     match __seq_res {
-                                                                                        Matched(__pos, _) => {
-                                                                                            __state.suppress_fail += 1;
-                                                                                            let __assert_res = if __input.len() > __pos {
-                                                                                                let (__ch, __next) = char_range_at(__input, __pos);
-                                                                                                match __ch {
-                                                                                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                                                                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                                                        Matched(__pos, e) => {
+                                                                                            let __seq_res = {
+                                                                                                __state.suppress_fail += 1;
+                                                                                                let __assert_res = if __input.len() > __pos {
+                                                                                                    let (__ch, __next) = char_range_at(__input, __pos);
+                                                                                                    match __ch {
+                                                                                                        '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                                                                        _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                                                                    }
+                                                                                                } else {
+                                                                                                    __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                                                                                };
+                                                                                                __state.suppress_fail -= 1;
+                                                                                                match __assert_res {
+                                                                                                    Failed => Matched(__pos, ()),
+                                                                                                    Matched(..) => Failed,
                                                                                                 }
-                                                                                            } else {
-                                                                                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                                                                             };
-                                                                                            __state.suppress_fail -= 1;
-                                                                                            match __assert_res {
-                                                                                                Failed => Matched(__pos, ()),
-                                                                                                Matched(..) => Failed,
+                                                                                            match __seq_res {
+                                                                                                Matched(__pos, _) => Matched(__pos, { e }),
+                                                                                                Failed => Failed,
                                                                                             }
                                                                                         }
                                                                                         Failed => Failed,
@@ -5900,21 +6077,27 @@ fn __parse_type_specifier0<'input>(__input: &'input str, __state: &mut ParseStat
                                                                                         let res = {
                                                                                             let __seq_res = slice_eq(__input, __state, __pos, "_Bool");
                                                                                             match __seq_res {
-                                                                                                Matched(__pos, _) => {
-                                                                                                    __state.suppress_fail += 1;
-                                                                                                    let __assert_res = if __input.len() > __pos {
-                                                                                                        let (__ch, __next) = char_range_at(__input, __pos);
-                                                                                                        match __ch {
-                                                                                                            '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                                                                                            _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                                                                Matched(__pos, e) => {
+                                                                                                    let __seq_res = {
+                                                                                                        __state.suppress_fail += 1;
+                                                                                                        let __assert_res = if __input.len() > __pos {
+                                                                                                            let (__ch, __next) = char_range_at(__input, __pos);
+                                                                                                            match __ch {
+                                                                                                                '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                                                                                _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                                                                            }
+                                                                                                        } else {
+                                                                                                            __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                                                                                        };
+                                                                                                        __state.suppress_fail -= 1;
+                                                                                                        match __assert_res {
+                                                                                                            Failed => Matched(__pos, ()),
+                                                                                                            Matched(..) => Failed,
                                                                                                         }
-                                                                                                    } else {
-                                                                                                        __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                                                                                     };
-                                                                                                    __state.suppress_fail -= 1;
-                                                                                                    match __assert_res {
-                                                                                                        Failed => Matched(__pos, ()),
-                                                                                                        Matched(..) => Failed,
+                                                                                                    match __seq_res {
+                                                                                                        Matched(__pos, _) => Matched(__pos, { e }),
+                                                                                                        Failed => Failed,
                                                                                                     }
                                                                                                 }
                                                                                                 Failed => Failed,
@@ -5972,21 +6155,27 @@ fn __parse_type_specifier0<'input>(__input: &'input str, __state: &mut ParseStat
                                                                                                         }
                                                                                                     };
                                                                                                     match __seq_res {
-                                                                                                        Matched(__pos, _) => {
-                                                                                                            __state.suppress_fail += 1;
-                                                                                                            let __assert_res = if __input.len() > __pos {
-                                                                                                                let (__ch, __next) = char_range_at(__input, __pos);
-                                                                                                                match __ch {
-                                                                                                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                                                                                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                                                                        Matched(__pos, e) => {
+                                                                                                            let __seq_res = {
+                                                                                                                __state.suppress_fail += 1;
+                                                                                                                let __assert_res = if __input.len() > __pos {
+                                                                                                                    let (__ch, __next) = char_range_at(__input, __pos);
+                                                                                                                    match __ch {
+                                                                                                                        '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                                                                                        _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                                                                                    }
+                                                                                                                } else {
+                                                                                                                    __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                                                                                                };
+                                                                                                                __state.suppress_fail -= 1;
+                                                                                                                match __assert_res {
+                                                                                                                    Failed => Matched(__pos, ()),
+                                                                                                                    Matched(..) => Failed,
                                                                                                                 }
-                                                                                                            } else {
-                                                                                                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                                                                                             };
-                                                                                                            __state.suppress_fail -= 1;
-                                                                                                            match __assert_res {
-                                                                                                                Failed => Matched(__pos, ()),
-                                                                                                                Matched(..) => Failed,
+                                                                                                            match __seq_res {
+                                                                                                                Matched(__pos, _) => Matched(__pos, { e }),
+                                                                                                                Failed => Failed,
                                                                                                             }
                                                                                                         }
                                                                                                         Failed => Failed,
@@ -6009,21 +6198,27 @@ fn __parse_type_specifier0<'input>(__input: &'input str, __state: &mut ParseStat
                                                                                                         let res = {
                                                                                                             let __seq_res = slice_eq(__input, __state, __pos, "_Atomic");
                                                                                                             match __seq_res {
-                                                                                                                Matched(__pos, _) => {
-                                                                                                                    __state.suppress_fail += 1;
-                                                                                                                    let __assert_res = if __input.len() > __pos {
-                                                                                                                        let (__ch, __next) = char_range_at(__input, __pos);
-                                                                                                                        match __ch {
-                                                                                                                            '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                                                                                                            _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                                                                                Matched(__pos, e) => {
+                                                                                                                    let __seq_res = {
+                                                                                                                        __state.suppress_fail += 1;
+                                                                                                                        let __assert_res = if __input.len() > __pos {
+                                                                                                                            let (__ch, __next) = char_range_at(__input, __pos);
+                                                                                                                            match __ch {
+                                                                                                                                '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                                                                                                _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                                                                                            }
+                                                                                                                        } else {
+                                                                                                                            __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                                                                                                        };
+                                                                                                                        __state.suppress_fail -= 1;
+                                                                                                                        match __assert_res {
+                                                                                                                            Failed => Matched(__pos, ()),
+                                                                                                                            Matched(..) => Failed,
                                                                                                                         }
-                                                                                                                    } else {
-                                                                                                                        __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                                                                                                     };
-                                                                                                                    __state.suppress_fail -= 1;
-                                                                                                                    match __assert_res {
-                                                                                                                        Failed => Matched(__pos, ()),
-                                                                                                                        Matched(..) => Failed,
+                                                                                                                    match __seq_res {
+                                                                                                                        Matched(__pos, _) => Matched(__pos, { e }),
+                                                                                                                        Failed => Failed,
                                                                                                                     }
                                                                                                                 }
                                                                                                                 Failed => Failed,
@@ -6077,9 +6272,42 @@ fn __parse_type_specifier0<'input>(__input: &'input str, __state: &mut ParseStat
                                                                                                     Matched(__pos, __value) => Matched(__pos, __value),
                                                                                                     Failed => {
                                                                                                         let __choice_res = {
-                                                                                                            let __seq_res = __parse_typedef_name(__input, __state, __pos, env);
+                                                                                                            let __seq_res = {
+                                                                                                                __state.suppress_fail += 1;
+                                                                                                                let res = {
+                                                                                                                    let __seq_res = __parse_ts18661_float_type_specifier(__input, __state, __pos, env);
+                                                                                                                    match __seq_res {
+                                                                                                                        Matched(__pos, e) => {
+                                                                                                                            let __seq_res = {
+                                                                                                                                __state.suppress_fail += 1;
+                                                                                                                                let __assert_res = if __input.len() > __pos {
+                                                                                                                                    let (__ch, __next) = char_range_at(__input, __pos);
+                                                                                                                                    match __ch {
+                                                                                                                                        '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                                                                                                        _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                                                                                                    }
+                                                                                                                                } else {
+                                                                                                                                    __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                                                                                                                };
+                                                                                                                                __state.suppress_fail -= 1;
+                                                                                                                                match __assert_res {
+                                                                                                                                    Failed => Matched(__pos, ()),
+                                                                                                                                    Matched(..) => Failed,
+                                                                                                                                }
+                                                                                                                            };
+                                                                                                                            match __seq_res {
+                                                                                                                                Matched(__pos, _) => Matched(__pos, { e }),
+                                                                                                                                Failed => Failed,
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                        Failed => Failed,
+                                                                                                                    }
+                                                                                                                };
+                                                                                                                __state.suppress_fail -= 1;
+                                                                                                                res
+                                                                                                            };
                                                                                                             match __seq_res {
-                                                                                                                Matched(__pos, t) => Matched(__pos, { TypeSpecifier::TypedefName(t) }),
+                                                                                                                Matched(__pos, t) => Matched(__pos, { TypeSpecifier::TS18661Float(t) }),
                                                                                                                 Failed => Failed,
                                                                                                             }
                                                                                                         };
@@ -6087,27 +6315,9 @@ fn __parse_type_specifier0<'input>(__input: &'input str, __state: &mut ParseStat
                                                                                                             Matched(__pos, __value) => Matched(__pos, __value),
                                                                                                             Failed => {
                                                                                                                 let __choice_res = {
-                                                                                                                    let __seq_res = {
-                                                                                                                        let __seq_res = Matched(__pos, __pos);
-                                                                                                                        match __seq_res {
-                                                                                                                            Matched(__pos, l) => {
-                                                                                                                                let __seq_res = __parse_struct_or_union_specifier(__input, __state, __pos, env);
-                                                                                                                                match __seq_res {
-                                                                                                                                    Matched(__pos, e) => {
-                                                                                                                                        let __seq_res = Matched(__pos, __pos);
-                                                                                                                                        match __seq_res {
-                                                                                                                                            Matched(__pos, r) => Matched(__pos, { Node::new(e, Span::span(l, r)) }),
-                                                                                                                                            Failed => Failed,
-                                                                                                                                        }
-                                                                                                                                    }
-                                                                                                                                    Failed => Failed,
-                                                                                                                                }
-                                                                                                                            }
-                                                                                                                            Failed => Failed,
-                                                                                                                        }
-                                                                                                                    };
+                                                                                                                    let __seq_res = __parse_typedef_name(__input, __state, __pos, env);
                                                                                                                     match __seq_res {
-                                                                                                                        Matched(__pos, s) => Matched(__pos, { TypeSpecifier::Struct(s) }),
+                                                                                                                        Matched(__pos, t) => Matched(__pos, { TypeSpecifier::TypedefName(t) }),
                                                                                                                         Failed => Failed,
                                                                                                                     }
                                                                                                                 };
@@ -6119,7 +6329,7 @@ fn __parse_type_specifier0<'input>(__input: &'input str, __state: &mut ParseStat
                                                                                                                                 let __seq_res = Matched(__pos, __pos);
                                                                                                                                 match __seq_res {
                                                                                                                                     Matched(__pos, l) => {
-                                                                                                                                        let __seq_res = __parse_enum_specifier(__input, __state, __pos, env);
+                                                                                                                                        let __seq_res = __parse_struct_or_union_specifier(__input, __state, __pos, env);
                                                                                                                                         match __seq_res {
                                                                                                                                             Matched(__pos, e) => {
                                                                                                                                                 let __seq_res = Matched(__pos, __pos);
@@ -6135,31 +6345,61 @@ fn __parse_type_specifier0<'input>(__input: &'input str, __state: &mut ParseStat
                                                                                                                                 }
                                                                                                                             };
                                                                                                                             match __seq_res {
-                                                                                                                                Matched(__pos, e) => Matched(__pos, { TypeSpecifier::Enum(e) }),
+                                                                                                                                Matched(__pos, s) => Matched(__pos, { TypeSpecifier::Struct(s) }),
                                                                                                                                 Failed => Failed,
                                                                                                                             }
                                                                                                                         };
                                                                                                                         match __choice_res {
                                                                                                                             Matched(__pos, __value) => Matched(__pos, __value),
                                                                                                                             Failed => {
-                                                                                                                                let __seq_res = {
-                                                                                                                                    __state.suppress_fail += 1;
-                                                                                                                                    let __assert_res = __parse_gnu_guard(__input, __state, __pos, env);
-                                                                                                                                    __state.suppress_fail -= 1;
-                                                                                                                                    match __assert_res {
-                                                                                                                                        Matched(_, __value) => Matched(__pos, __value),
+                                                                                                                                let __choice_res = {
+                                                                                                                                    let __seq_res = {
+                                                                                                                                        let __seq_res = Matched(__pos, __pos);
+                                                                                                                                        match __seq_res {
+                                                                                                                                            Matched(__pos, l) => {
+                                                                                                                                                let __seq_res = __parse_enum_specifier(__input, __state, __pos, env);
+                                                                                                                                                match __seq_res {
+                                                                                                                                                    Matched(__pos, e) => {
+                                                                                                                                                        let __seq_res = Matched(__pos, __pos);
+                                                                                                                                                        match __seq_res {
+                                                                                                                                                            Matched(__pos, r) => Matched(__pos, { Node::new(e, Span::span(l, r)) }),
+                                                                                                                                                            Failed => Failed,
+                                                                                                                                                        }
+                                                                                                                                                    }
+                                                                                                                                                    Failed => Failed,
+                                                                                                                                                }
+                                                                                                                                            }
+                                                                                                                                            Failed => Failed,
+                                                                                                                                        }
+                                                                                                                                    };
+                                                                                                                                    match __seq_res {
+                                                                                                                                        Matched(__pos, e) => Matched(__pos, { TypeSpecifier::Enum(e) }),
                                                                                                                                         Failed => Failed,
                                                                                                                                     }
                                                                                                                                 };
-                                                                                                                                match __seq_res {
-                                                                                                                                    Matched(__pos, _) => {
-                                                                                                                                        let __seq_res = __parse_typeof_specifier(__input, __state, __pos, env);
+                                                                                                                                match __choice_res {
+                                                                                                                                    Matched(__pos, __value) => Matched(__pos, __value),
+                                                                                                                                    Failed => {
+                                                                                                                                        let __seq_res = {
+                                                                                                                                            __state.suppress_fail += 1;
+                                                                                                                                            let __assert_res = __parse_gnu_guard(__input, __state, __pos, env);
+                                                                                                                                            __state.suppress_fail -= 1;
+                                                                                                                                            match __assert_res {
+                                                                                                                                                Matched(_, __value) => Matched(__pos, __value),
+                                                                                                                                                Failed => Failed,
+                                                                                                                                            }
+                                                                                                                                        };
                                                                                                                                         match __seq_res {
-                                                                                                                                            Matched(__pos, e) => Matched(__pos, { e }),
+                                                                                                                                            Matched(__pos, _) => {
+                                                                                                                                                let __seq_res = __parse_typeof_specifier(__input, __state, __pos, env);
+                                                                                                                                                match __seq_res {
+                                                                                                                                                    Matched(__pos, e) => Matched(__pos, { e }),
+                                                                                                                                                    Failed => Failed,
+                                                                                                                                                }
+                                                                                                                                            }
                                                                                                                                             Failed => Failed,
                                                                                                                                         }
                                                                                                                                     }
-                                                                                                                                    Failed => Failed,
                                                                                                                                 }
                                                                                                                             }
                                                                                                                         }
@@ -6391,21 +6631,27 @@ fn __parse_struct_or_union<'input>(__input: &'input str, __state: &mut ParseStat
                 let res = {
                     let __seq_res = slice_eq(__input, __state, __pos, "struct");
                     match __seq_res {
-                        Matched(__pos, _) => {
-                            __state.suppress_fail += 1;
-                            let __assert_res = if __input.len() > __pos {
-                                let (__ch, __next) = char_range_at(__input, __pos);
-                                match __ch {
-                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                        Matched(__pos, e) => {
+                            let __seq_res = {
+                                __state.suppress_fail += 1;
+                                let __assert_res = if __input.len() > __pos {
+                                    let (__ch, __next) = char_range_at(__input, __pos);
+                                    match __ch {
+                                        '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                        _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                    }
+                                } else {
+                                    __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                };
+                                __state.suppress_fail -= 1;
+                                match __assert_res {
+                                    Failed => Matched(__pos, ()),
+                                    Matched(..) => Failed,
                                 }
-                            } else {
-                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                             };
-                            __state.suppress_fail -= 1;
-                            match __assert_res {
-                                Failed => Matched(__pos, ()),
-                                Matched(..) => Failed,
+                            match __seq_res {
+                                Matched(__pos, _) => Matched(__pos, { e }),
+                                Failed => Failed,
                             }
                         }
                         Failed => Failed,
@@ -6427,21 +6673,27 @@ fn __parse_struct_or_union<'input>(__input: &'input str, __state: &mut ParseStat
                     let res = {
                         let __seq_res = slice_eq(__input, __state, __pos, "union");
                         match __seq_res {
-                            Matched(__pos, _) => {
-                                __state.suppress_fail += 1;
-                                let __assert_res = if __input.len() > __pos {
-                                    let (__ch, __next) = char_range_at(__input, __pos);
-                                    match __ch {
-                                        '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                        _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                            Matched(__pos, e) => {
+                                let __seq_res = {
+                                    __state.suppress_fail += 1;
+                                    let __assert_res = if __input.len() > __pos {
+                                        let (__ch, __next) = char_range_at(__input, __pos);
+                                        match __ch {
+                                            '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                            _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                        }
+                                    } else {
+                                        __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                    };
+                                    __state.suppress_fail -= 1;
+                                    match __assert_res {
+                                        Failed => Matched(__pos, ()),
+                                        Matched(..) => Failed,
                                     }
-                                } else {
-                                    __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                 };
-                                __state.suppress_fail -= 1;
-                                match __assert_res {
-                                    Failed => Matched(__pos, ()),
-                                    Matched(..) => Failed,
+                                match __seq_res {
+                                    Matched(__pos, _) => Matched(__pos, { e }),
+                                    Failed => Failed,
                                 }
                             }
                             Failed => Failed,
@@ -6517,21 +6769,27 @@ fn __parse_struct_declaration<'input>(__input: &'input str, __state: &mut ParseS
                                         let res = {
                                             let __seq_res = slice_eq(__input, __state, __pos, "__extension__");
                                             match __seq_res {
-                                                Matched(__pos, _) => {
-                                                    __state.suppress_fail += 1;
-                                                    let __assert_res = if __input.len() > __pos {
-                                                        let (__ch, __next) = char_range_at(__input, __pos);
-                                                        match __ch {
-                                                            '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                                            _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                Matched(__pos, e) => {
+                                                    let __seq_res = {
+                                                        __state.suppress_fail += 1;
+                                                        let __assert_res = if __input.len() > __pos {
+                                                            let (__ch, __next) = char_range_at(__input, __pos);
+                                                            match __ch {
+                                                                '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                                _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                            }
+                                                        } else {
+                                                            __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                                        };
+                                                        __state.suppress_fail -= 1;
+                                                        match __assert_res {
+                                                            Failed => Matched(__pos, ()),
+                                                            Matched(..) => Failed,
                                                         }
-                                                    } else {
-                                                        __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                                     };
-                                                    __state.suppress_fail -= 1;
-                                                    match __assert_res {
-                                                        Failed => Matched(__pos, ()),
-                                                        Matched(..) => Failed,
+                                                    match __seq_res {
+                                                        Matched(__pos, _) => Matched(__pos, { e }),
+                                                        Failed => Failed,
                                                     }
                                                 }
                                                 Failed => Failed,
@@ -6882,21 +7140,27 @@ fn __parse_enum_specifier<'input>(__input: &'input str, __state: &mut ParseState
                 let res = {
                     let __seq_res = slice_eq(__input, __state, __pos, "enum");
                     match __seq_res {
-                        Matched(__pos, _) => {
-                            __state.suppress_fail += 1;
-                            let __assert_res = if __input.len() > __pos {
-                                let (__ch, __next) = char_range_at(__input, __pos);
-                                match __ch {
-                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                        Matched(__pos, e) => {
+                            let __seq_res = {
+                                __state.suppress_fail += 1;
+                                let __assert_res = if __input.len() > __pos {
+                                    let (__ch, __next) = char_range_at(__input, __pos);
+                                    match __ch {
+                                        '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                        _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                    }
+                                } else {
+                                    __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                };
+                                __state.suppress_fail -= 1;
+                                match __assert_res {
+                                    Failed => Matched(__pos, ()),
+                                    Matched(..) => Failed,
                                 }
-                            } else {
-                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                             };
-                            __state.suppress_fail -= 1;
-                            match __assert_res {
-                                Failed => Matched(__pos, ()),
-                                Matched(..) => Failed,
+                            match __seq_res {
+                                Matched(__pos, _) => Matched(__pos, { e }),
+                                Failed => Failed,
                             }
                         }
                         Failed => Failed,
@@ -7055,21 +7319,27 @@ fn __parse_enum_specifier<'input>(__input: &'input str, __state: &mut ParseState
                     let res = {
                         let __seq_res = slice_eq(__input, __state, __pos, "enum");
                         match __seq_res {
-                            Matched(__pos, _) => {
-                                __state.suppress_fail += 1;
-                                let __assert_res = if __input.len() > __pos {
-                                    let (__ch, __next) = char_range_at(__input, __pos);
-                                    match __ch {
-                                        '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                        _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                            Matched(__pos, e) => {
+                                let __seq_res = {
+                                    __state.suppress_fail += 1;
+                                    let __assert_res = if __input.len() > __pos {
+                                        let (__ch, __next) = char_range_at(__input, __pos);
+                                        match __ch {
+                                            '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                            _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                        }
+                                    } else {
+                                        __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                    };
+                                    __state.suppress_fail -= 1;
+                                    match __assert_res {
+                                        Failed => Matched(__pos, ()),
+                                        Matched(..) => Failed,
                                     }
-                                } else {
-                                    __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                 };
-                                __state.suppress_fail -= 1;
-                                match __assert_res {
-                                    Failed => Matched(__pos, ()),
-                                    Matched(..) => Failed,
+                                match __seq_res {
+                                    Matched(__pos, _) => Matched(__pos, { e }),
+                                    Failed => Failed,
                                 }
                             }
                             Failed => Failed,
@@ -7216,21 +7486,27 @@ fn __parse_type_qualifier0<'input>(__input: &'input str, __state: &mut ParseStat
                         }
                     };
                     match __seq_res {
-                        Matched(__pos, _) => {
-                            __state.suppress_fail += 1;
-                            let __assert_res = if __input.len() > __pos {
-                                let (__ch, __next) = char_range_at(__input, __pos);
-                                match __ch {
-                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                        Matched(__pos, e) => {
+                            let __seq_res = {
+                                __state.suppress_fail += 1;
+                                let __assert_res = if __input.len() > __pos {
+                                    let (__ch, __next) = char_range_at(__input, __pos);
+                                    match __ch {
+                                        '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                        _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                    }
+                                } else {
+                                    __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                };
+                                __state.suppress_fail -= 1;
+                                match __assert_res {
+                                    Failed => Matched(__pos, ()),
+                                    Matched(..) => Failed,
                                 }
-                            } else {
-                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                             };
-                            __state.suppress_fail -= 1;
-                            match __assert_res {
-                                Failed => Matched(__pos, ()),
-                                Matched(..) => Failed,
+                            match __seq_res {
+                                Matched(__pos, _) => Matched(__pos, { e }),
+                                Failed => Failed,
                             }
                         }
                         Failed => Failed,
@@ -7288,21 +7564,27 @@ fn __parse_type_qualifier0<'input>(__input: &'input str, __state: &mut ParseStat
                                 }
                             };
                             match __seq_res {
-                                Matched(__pos, _) => {
-                                    __state.suppress_fail += 1;
-                                    let __assert_res = if __input.len() > __pos {
-                                        let (__ch, __next) = char_range_at(__input, __pos);
-                                        match __ch {
-                                            '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                            _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                Matched(__pos, e) => {
+                                    let __seq_res = {
+                                        __state.suppress_fail += 1;
+                                        let __assert_res = if __input.len() > __pos {
+                                            let (__ch, __next) = char_range_at(__input, __pos);
+                                            match __ch {
+                                                '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                            }
+                                        } else {
+                                            __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                        };
+                                        __state.suppress_fail -= 1;
+                                        match __assert_res {
+                                            Failed => Matched(__pos, ()),
+                                            Matched(..) => Failed,
                                         }
-                                    } else {
-                                        __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                     };
-                                    __state.suppress_fail -= 1;
-                                    match __assert_res {
-                                        Failed => Matched(__pos, ()),
-                                        Matched(..) => Failed,
+                                    match __seq_res {
+                                        Matched(__pos, _) => Matched(__pos, { e }),
+                                        Failed => Failed,
                                     }
                                 }
                                 Failed => Failed,
@@ -7360,21 +7642,27 @@ fn __parse_type_qualifier0<'input>(__input: &'input str, __state: &mut ParseStat
                                         }
                                     };
                                     match __seq_res {
-                                        Matched(__pos, _) => {
-                                            __state.suppress_fail += 1;
-                                            let __assert_res = if __input.len() > __pos {
-                                                let (__ch, __next) = char_range_at(__input, __pos);
-                                                match __ch {
-                                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                        Matched(__pos, e) => {
+                                            let __seq_res = {
+                                                __state.suppress_fail += 1;
+                                                let __assert_res = if __input.len() > __pos {
+                                                    let (__ch, __next) = char_range_at(__input, __pos);
+                                                    match __ch {
+                                                        '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                        _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                    }
+                                                } else {
+                                                    __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                                };
+                                                __state.suppress_fail -= 1;
+                                                match __assert_res {
+                                                    Failed => Matched(__pos, ()),
+                                                    Matched(..) => Failed,
                                                 }
-                                            } else {
-                                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                             };
-                                            __state.suppress_fail -= 1;
-                                            match __assert_res {
-                                                Failed => Matched(__pos, ()),
-                                                Matched(..) => Failed,
+                                            match __seq_res {
+                                                Matched(__pos, _) => Matched(__pos, { e }),
+                                                Failed => Failed,
                                             }
                                         }
                                         Failed => Failed,
@@ -7396,21 +7684,27 @@ fn __parse_type_qualifier0<'input>(__input: &'input str, __state: &mut ParseStat
                                     let res = {
                                         let __seq_res = slice_eq(__input, __state, __pos, "_Atomic");
                                         match __seq_res {
-                                            Matched(__pos, _) => {
-                                                __state.suppress_fail += 1;
-                                                let __assert_res = if __input.len() > __pos {
-                                                    let (__ch, __next) = char_range_at(__input, __pos);
-                                                    match __ch {
-                                                        '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                                        _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                            Matched(__pos, e) => {
+                                                let __seq_res = {
+                                                    __state.suppress_fail += 1;
+                                                    let __assert_res = if __input.len() > __pos {
+                                                        let (__ch, __next) = char_range_at(__input, __pos);
+                                                        match __ch {
+                                                            '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                            _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                        }
+                                                    } else {
+                                                        __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                                    };
+                                                    __state.suppress_fail -= 1;
+                                                    match __assert_res {
+                                                        Failed => Matched(__pos, ()),
+                                                        Matched(..) => Failed,
                                                     }
-                                                } else {
-                                                    __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                                 };
-                                                __state.suppress_fail -= 1;
-                                                match __assert_res {
-                                                    Failed => Matched(__pos, ()),
-                                                    Matched(..) => Failed,
+                                                match __seq_res {
+                                                    Matched(__pos, _) => Matched(__pos, { e }),
+                                                    Failed => Failed,
                                                 }
                                             }
                                             Failed => Failed,
@@ -7499,21 +7793,27 @@ fn __parse_function_specifier0<'input>(__input: &'input str, __state: &mut Parse
                         }
                     };
                     match __seq_res {
-                        Matched(__pos, _) => {
-                            __state.suppress_fail += 1;
-                            let __assert_res = if __input.len() > __pos {
-                                let (__ch, __next) = char_range_at(__input, __pos);
-                                match __ch {
-                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                        Matched(__pos, e) => {
+                            let __seq_res = {
+                                __state.suppress_fail += 1;
+                                let __assert_res = if __input.len() > __pos {
+                                    let (__ch, __next) = char_range_at(__input, __pos);
+                                    match __ch {
+                                        '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                        _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                    }
+                                } else {
+                                    __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                };
+                                __state.suppress_fail -= 1;
+                                match __assert_res {
+                                    Failed => Matched(__pos, ()),
+                                    Matched(..) => Failed,
                                 }
-                            } else {
-                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                             };
-                            __state.suppress_fail -= 1;
-                            match __assert_res {
-                                Failed => Matched(__pos, ()),
-                                Matched(..) => Failed,
+                            match __seq_res {
+                                Matched(__pos, _) => Matched(__pos, { e }),
+                                Failed => Failed,
                             }
                         }
                         Failed => Failed,
@@ -7535,21 +7835,27 @@ fn __parse_function_specifier0<'input>(__input: &'input str, __state: &mut Parse
                     let res = {
                         let __seq_res = slice_eq(__input, __state, __pos, "_Noreturn");
                         match __seq_res {
-                            Matched(__pos, _) => {
-                                __state.suppress_fail += 1;
-                                let __assert_res = if __input.len() > __pos {
-                                    let (__ch, __next) = char_range_at(__input, __pos);
-                                    match __ch {
-                                        '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                        _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                            Matched(__pos, e) => {
+                                let __seq_res = {
+                                    __state.suppress_fail += 1;
+                                    let __assert_res = if __input.len() > __pos {
+                                        let (__ch, __next) = char_range_at(__input, __pos);
+                                        match __ch {
+                                            '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                            _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                        }
+                                    } else {
+                                        __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                    };
+                                    __state.suppress_fail -= 1;
+                                    match __assert_res {
+                                        Failed => Matched(__pos, ()),
+                                        Matched(..) => Failed,
                                     }
-                                } else {
-                                    __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                 };
-                                __state.suppress_fail -= 1;
-                                match __assert_res {
-                                    Failed => Matched(__pos, ()),
-                                    Matched(..) => Failed,
+                                match __seq_res {
+                                    Matched(__pos, _) => Matched(__pos, { e }),
+                                    Failed => Failed,
                                 }
                             }
                             Failed => Failed,
@@ -7599,21 +7905,27 @@ fn __parse_alignment_specifier0<'input>(__input: &'input str, __state: &mut Pars
                 let res = {
                     let __seq_res = slice_eq(__input, __state, __pos, "_Alignas");
                     match __seq_res {
-                        Matched(__pos, _) => {
-                            __state.suppress_fail += 1;
-                            let __assert_res = if __input.len() > __pos {
-                                let (__ch, __next) = char_range_at(__input, __pos);
-                                match __ch {
-                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                        Matched(__pos, e) => {
+                            let __seq_res = {
+                                __state.suppress_fail += 1;
+                                let __assert_res = if __input.len() > __pos {
+                                    let (__ch, __next) = char_range_at(__input, __pos);
+                                    match __ch {
+                                        '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                        _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                    }
+                                } else {
+                                    __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                };
+                                __state.suppress_fail -= 1;
+                                match __assert_res {
+                                    Failed => Matched(__pos, ()),
+                                    Matched(..) => Failed,
                                 }
-                            } else {
-                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                             };
-                            __state.suppress_fail -= 1;
-                            match __assert_res {
-                                Failed => Matched(__pos, ()),
-                                Matched(..) => Failed,
+                            match __seq_res {
+                                Matched(__pos, _) => Matched(__pos, { e }),
+                                Failed => Failed,
                             }
                         }
                         Failed => Failed,
@@ -7671,21 +7983,27 @@ fn __parse_alignment_specifier0<'input>(__input: &'input str, __state: &mut Pars
                     let res = {
                         let __seq_res = slice_eq(__input, __state, __pos, "_Alignas");
                         match __seq_res {
-                            Matched(__pos, _) => {
-                                __state.suppress_fail += 1;
-                                let __assert_res = if __input.len() > __pos {
-                                    let (__ch, __next) = char_range_at(__input, __pos);
-                                    match __ch {
-                                        '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                        _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                            Matched(__pos, e) => {
+                                let __seq_res = {
+                                    __state.suppress_fail += 1;
+                                    let __assert_res = if __input.len() > __pos {
+                                        let (__ch, __next) = char_range_at(__input, __pos);
+                                        match __ch {
+                                            '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                            _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                        }
+                                    } else {
+                                        __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                    };
+                                    __state.suppress_fail -= 1;
+                                    match __assert_res {
+                                        Failed => Matched(__pos, ()),
+                                        Matched(..) => Failed,
                                     }
-                                } else {
-                                    __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                 };
-                                __state.suppress_fail -= 1;
-                                match __assert_res {
-                                    Failed => Matched(__pos, ()),
-                                    Matched(..) => Failed,
+                                match __seq_res {
+                                    Matched(__pos, _) => Matched(__pos, { e }),
+                                    Failed => Failed,
                                 }
                             }
                             Failed => Failed,
@@ -8281,21 +8599,27 @@ fn __parse_array_declarator<'input>(__input: &'input str, __state: &mut ParseSta
                                 let res = {
                                     let __seq_res = slice_eq(__input, __state, __pos, "static");
                                     match __seq_res {
-                                        Matched(__pos, _) => {
-                                            __state.suppress_fail += 1;
-                                            let __assert_res = if __input.len() > __pos {
-                                                let (__ch, __next) = char_range_at(__input, __pos);
-                                                match __ch {
-                                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                        Matched(__pos, e) => {
+                                            let __seq_res = {
+                                                __state.suppress_fail += 1;
+                                                let __assert_res = if __input.len() > __pos {
+                                                    let (__ch, __next) = char_range_at(__input, __pos);
+                                                    match __ch {
+                                                        '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                        _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                    }
+                                                } else {
+                                                    __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                                };
+                                                __state.suppress_fail -= 1;
+                                                match __assert_res {
+                                                    Failed => Matched(__pos, ()),
+                                                    Matched(..) => Failed,
                                                 }
-                                            } else {
-                                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                             };
-                                            __state.suppress_fail -= 1;
-                                            match __assert_res {
-                                                Failed => Matched(__pos, ()),
-                                                Matched(..) => Failed,
+                                            match __seq_res {
+                                                Matched(__pos, _) => Matched(__pos, { e }),
+                                                Failed => Failed,
                                             }
                                         }
                                         Failed => Failed,
@@ -8433,21 +8757,27 @@ fn __parse_array_declarator<'input>(__input: &'input str, __state: &mut ParseSta
                                                         let res = {
                                                             let __seq_res = slice_eq(__input, __state, __pos, "static");
                                                             match __seq_res {
-                                                                Matched(__pos, _) => {
-                                                                    __state.suppress_fail += 1;
-                                                                    let __assert_res = if __input.len() > __pos {
-                                                                        let (__ch, __next) = char_range_at(__input, __pos);
-                                                                        match __ch {
-                                                                            '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                                                            _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                                Matched(__pos, e) => {
+                                                                    let __seq_res = {
+                                                                        __state.suppress_fail += 1;
+                                                                        let __assert_res = if __input.len() > __pos {
+                                                                            let (__ch, __next) = char_range_at(__input, __pos);
+                                                                            match __ch {
+                                                                                '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                                                _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                                            }
+                                                                        } else {
+                                                                            __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                                                        };
+                                                                        __state.suppress_fail -= 1;
+                                                                        match __assert_res {
+                                                                            Failed => Matched(__pos, ()),
+                                                                            Matched(..) => Failed,
                                                                         }
-                                                                    } else {
-                                                                        __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                                                     };
-                                                                    __state.suppress_fail -= 1;
-                                                                    match __assert_res {
-                                                                        Failed => Matched(__pos, ()),
-                                                                        Matched(..) => Failed,
+                                                                    match __seq_res {
+                                                                        Matched(__pos, _) => Matched(__pos, { e }),
+                                                                        Failed => Failed,
                                                                     }
                                                                 }
                                                                 Failed => Failed,
@@ -9664,21 +9994,27 @@ fn __parse_abstract_array_declarator<'input>(__input: &'input str, __state: &mut
                                 let res = {
                                     let __seq_res = slice_eq(__input, __state, __pos, "static");
                                     match __seq_res {
-                                        Matched(__pos, _) => {
-                                            __state.suppress_fail += 1;
-                                            let __assert_res = if __input.len() > __pos {
-                                                let (__ch, __next) = char_range_at(__input, __pos);
-                                                match __ch {
-                                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                        Matched(__pos, e) => {
+                                            let __seq_res = {
+                                                __state.suppress_fail += 1;
+                                                let __assert_res = if __input.len() > __pos {
+                                                    let (__ch, __next) = char_range_at(__input, __pos);
+                                                    match __ch {
+                                                        '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                        _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                    }
+                                                } else {
+                                                    __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                                };
+                                                __state.suppress_fail -= 1;
+                                                match __assert_res {
+                                                    Failed => Matched(__pos, ()),
+                                                    Matched(..) => Failed,
                                                 }
-                                            } else {
-                                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                             };
-                                            __state.suppress_fail -= 1;
-                                            match __assert_res {
-                                                Failed => Matched(__pos, ()),
-                                                Matched(..) => Failed,
+                                            match __seq_res {
+                                                Matched(__pos, _) => Matched(__pos, { e }),
+                                                Failed => Failed,
                                             }
                                         }
                                         Failed => Failed,
@@ -9816,21 +10152,27 @@ fn __parse_abstract_array_declarator<'input>(__input: &'input str, __state: &mut
                                                         let res = {
                                                             let __seq_res = slice_eq(__input, __state, __pos, "static");
                                                             match __seq_res {
-                                                                Matched(__pos, _) => {
-                                                                    __state.suppress_fail += 1;
-                                                                    let __assert_res = if __input.len() > __pos {
-                                                                        let (__ch, __next) = char_range_at(__input, __pos);
-                                                                        match __ch {
-                                                                            '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                                                            _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                                Matched(__pos, e) => {
+                                                                    let __seq_res = {
+                                                                        __state.suppress_fail += 1;
+                                                                        let __assert_res = if __input.len() > __pos {
+                                                                            let (__ch, __next) = char_range_at(__input, __pos);
+                                                                            match __ch {
+                                                                                '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                                                _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                                            }
+                                                                        } else {
+                                                                            __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                                                        };
+                                                                        __state.suppress_fail -= 1;
+                                                                        match __assert_res {
+                                                                            Failed => Matched(__pos, ()),
+                                                                            Matched(..) => Failed,
                                                                         }
-                                                                    } else {
-                                                                        __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                                                     };
-                                                                    __state.suppress_fail -= 1;
-                                                                    match __assert_res {
-                                                                        Failed => Matched(__pos, ()),
-                                                                        Matched(..) => Failed,
+                                                                    match __seq_res {
+                                                                        Matched(__pos, _) => Matched(__pos, { e }),
+                                                                        Failed => Failed,
                                                                     }
                                                                 }
                                                                 Failed => Failed,
@@ -10674,21 +11016,27 @@ fn __parse_static_assert0<'input>(__input: &'input str, __state: &mut ParseState
                         let res = {
                             let __seq_res = slice_eq(__input, __state, __pos, "__extension__");
                             match __seq_res {
-                                Matched(__pos, _) => {
-                                    __state.suppress_fail += 1;
-                                    let __assert_res = if __input.len() > __pos {
-                                        let (__ch, __next) = char_range_at(__input, __pos);
-                                        match __ch {
-                                            '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                            _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                Matched(__pos, e) => {
+                                    let __seq_res = {
+                                        __state.suppress_fail += 1;
+                                        let __assert_res = if __input.len() > __pos {
+                                            let (__ch, __next) = char_range_at(__input, __pos);
+                                            match __ch {
+                                                '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                            }
+                                        } else {
+                                            __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                        };
+                                        __state.suppress_fail -= 1;
+                                        match __assert_res {
+                                            Failed => Matched(__pos, ()),
+                                            Matched(..) => Failed,
                                         }
-                                    } else {
-                                        __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                     };
-                                    __state.suppress_fail -= 1;
-                                    match __assert_res {
-                                        Failed => Matched(__pos, ()),
-                                        Matched(..) => Failed,
+                                    match __seq_res {
+                                        Matched(__pos, _) => Matched(__pos, { e }),
+                                        Failed => Failed,
                                     }
                                 }
                                 Failed => Failed,
@@ -10715,21 +11063,27 @@ fn __parse_static_assert0<'input>(__input: &'input str, __state: &mut ParseState
                     let res = {
                         let __seq_res = slice_eq(__input, __state, __pos, "_Static_assert");
                         match __seq_res {
-                            Matched(__pos, _) => {
-                                __state.suppress_fail += 1;
-                                let __assert_res = if __input.len() > __pos {
-                                    let (__ch, __next) = char_range_at(__input, __pos);
-                                    match __ch {
-                                        '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                        _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                            Matched(__pos, e) => {
+                                let __seq_res = {
+                                    __state.suppress_fail += 1;
+                                    let __assert_res = if __input.len() > __pos {
+                                        let (__ch, __next) = char_range_at(__input, __pos);
+                                        match __ch {
+                                            '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                            _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                        }
+                                    } else {
+                                        __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                    };
+                                    __state.suppress_fail -= 1;
+                                    match __assert_res {
+                                        Failed => Matched(__pos, ()),
+                                        Matched(..) => Failed,
                                     }
-                                } else {
-                                    __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                 };
-                                __state.suppress_fail -= 1;
-                                match __assert_res {
-                                    Failed => Matched(__pos, ()),
-                                    Matched(..) => Failed,
+                                match __seq_res {
+                                    Matched(__pos, _) => Matched(__pos, { e }),
+                                    Failed => Failed,
                                 }
                             }
                             Failed => Failed,
@@ -11016,21 +11370,27 @@ fn __parse_label<'input>(__input: &'input str, __state: &mut ParseState<'input>,
                         let res = {
                             let __seq_res = slice_eq(__input, __state, __pos, "case");
                             match __seq_res {
-                                Matched(__pos, _) => {
-                                    __state.suppress_fail += 1;
-                                    let __assert_res = if __input.len() > __pos {
-                                        let (__ch, __next) = char_range_at(__input, __pos);
-                                        match __ch {
-                                            '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                            _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                Matched(__pos, e) => {
+                                    let __seq_res = {
+                                        __state.suppress_fail += 1;
+                                        let __assert_res = if __input.len() > __pos {
+                                            let (__ch, __next) = char_range_at(__input, __pos);
+                                            match __ch {
+                                                '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                            }
+                                        } else {
+                                            __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                        };
+                                        __state.suppress_fail -= 1;
+                                        match __assert_res {
+                                            Failed => Matched(__pos, ()),
+                                            Matched(..) => Failed,
                                         }
-                                    } else {
-                                        __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                     };
-                                    __state.suppress_fail -= 1;
-                                    match __assert_res {
-                                        Failed => Matched(__pos, ()),
-                                        Matched(..) => Failed,
+                                    match __seq_res {
+                                        Matched(__pos, _) => Matched(__pos, { e }),
+                                        Failed => Failed,
                                     }
                                 }
                                 Failed => Failed,
@@ -11064,21 +11424,27 @@ fn __parse_label<'input>(__input: &'input str, __state: &mut ParseState<'input>,
                             let res = {
                                 let __seq_res = slice_eq(__input, __state, __pos, "default");
                                 match __seq_res {
-                                    Matched(__pos, _) => {
-                                        __state.suppress_fail += 1;
-                                        let __assert_res = if __input.len() > __pos {
-                                            let (__ch, __next) = char_range_at(__input, __pos);
-                                            match __ch {
-                                                '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                                _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                    Matched(__pos, e) => {
+                                        let __seq_res = {
+                                            __state.suppress_fail += 1;
+                                            let __assert_res = if __input.len() > __pos {
+                                                let (__ch, __next) = char_range_at(__input, __pos);
+                                                match __ch {
+                                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                }
+                                            } else {
+                                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                            };
+                                            __state.suppress_fail -= 1;
+                                            match __assert_res {
+                                                Failed => Matched(__pos, ()),
+                                                Matched(..) => Failed,
                                             }
-                                        } else {
-                                            __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                         };
-                                        __state.suppress_fail -= 1;
-                                        match __assert_res {
-                                            Failed => Matched(__pos, ()),
-                                            Matched(..) => Failed,
+                                        match __seq_res {
+                                            Matched(__pos, _) => Matched(__pos, { e }),
+                                            Failed => Failed,
                                         }
                                     }
                                     Failed => Failed,
@@ -11329,21 +11695,27 @@ fn __parse_if_statement<'input>(__input: &'input str, __state: &mut ParseState<'
             let res = {
                 let __seq_res = slice_eq(__input, __state, __pos, "if");
                 match __seq_res {
-                    Matched(__pos, _) => {
-                        __state.suppress_fail += 1;
-                        let __assert_res = if __input.len() > __pos {
-                            let (__ch, __next) = char_range_at(__input, __pos);
-                            match __ch {
-                                '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                    Matched(__pos, e) => {
+                        let __seq_res = {
+                            __state.suppress_fail += 1;
+                            let __assert_res = if __input.len() > __pos {
+                                let (__ch, __next) = char_range_at(__input, __pos);
+                                match __ch {
+                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                }
+                            } else {
+                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                            };
+                            __state.suppress_fail -= 1;
+                            match __assert_res {
+                                Failed => Matched(__pos, ()),
+                                Matched(..) => Failed,
                             }
-                        } else {
-                            __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                         };
-                        __state.suppress_fail -= 1;
-                        match __assert_res {
-                            Failed => Matched(__pos, ()),
-                            Matched(..) => Failed,
+                        match __seq_res {
+                            Matched(__pos, _) => Matched(__pos, { e }),
+                            Failed => Failed,
                         }
                     }
                     Failed => Failed,
@@ -11436,21 +11808,27 @@ fn __parse_else_statement<'input>(__input: &'input str, __state: &mut ParseState
             let res = {
                 let __seq_res = slice_eq(__input, __state, __pos, "else");
                 match __seq_res {
-                    Matched(__pos, _) => {
-                        __state.suppress_fail += 1;
-                        let __assert_res = if __input.len() > __pos {
-                            let (__ch, __next) = char_range_at(__input, __pos);
-                            match __ch {
-                                '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                    Matched(__pos, e) => {
+                        let __seq_res = {
+                            __state.suppress_fail += 1;
+                            let __assert_res = if __input.len() > __pos {
+                                let (__ch, __next) = char_range_at(__input, __pos);
+                                match __ch {
+                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                }
+                            } else {
+                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                            };
+                            __state.suppress_fail -= 1;
+                            match __assert_res {
+                                Failed => Matched(__pos, ()),
+                                Matched(..) => Failed,
                             }
-                        } else {
-                            __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                         };
-                        __state.suppress_fail -= 1;
-                        match __assert_res {
-                            Failed => Matched(__pos, ()),
-                            Matched(..) => Failed,
+                        match __seq_res {
+                            Matched(__pos, _) => Matched(__pos, { e }),
+                            Failed => Failed,
                         }
                     }
                     Failed => Failed,
@@ -11486,21 +11864,27 @@ fn __parse_switch_statement<'input>(__input: &'input str, __state: &mut ParseSta
             let res = {
                 let __seq_res = slice_eq(__input, __state, __pos, "switch");
                 match __seq_res {
-                    Matched(__pos, _) => {
-                        __state.suppress_fail += 1;
-                        let __assert_res = if __input.len() > __pos {
-                            let (__ch, __next) = char_range_at(__input, __pos);
-                            match __ch {
-                                '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                    Matched(__pos, e) => {
+                        let __seq_res = {
+                            __state.suppress_fail += 1;
+                            let __assert_res = if __input.len() > __pos {
+                                let (__ch, __next) = char_range_at(__input, __pos);
+                                match __ch {
+                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                }
+                            } else {
+                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                            };
+                            __state.suppress_fail -= 1;
+                            match __assert_res {
+                                Failed => Matched(__pos, ()),
+                                Matched(..) => Failed,
                             }
-                        } else {
-                            __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                         };
-                        __state.suppress_fail -= 1;
-                        match __assert_res {
-                            Failed => Matched(__pos, ()),
-                            Matched(..) => Failed,
+                        match __seq_res {
+                            Matched(__pos, _) => Matched(__pos, { e }),
+                            Failed => Failed,
                         }
                     }
                     Failed => Failed,
@@ -11666,21 +12050,27 @@ fn __parse_while_statement<'input>(__input: &'input str, __state: &mut ParseStat
             let res = {
                 let __seq_res = slice_eq(__input, __state, __pos, "while");
                 match __seq_res {
-                    Matched(__pos, _) => {
-                        __state.suppress_fail += 1;
-                        let __assert_res = if __input.len() > __pos {
-                            let (__ch, __next) = char_range_at(__input, __pos);
-                            match __ch {
-                                '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                    Matched(__pos, e) => {
+                        let __seq_res = {
+                            __state.suppress_fail += 1;
+                            let __assert_res = if __input.len() > __pos {
+                                let (__ch, __next) = char_range_at(__input, __pos);
+                                match __ch {
+                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                }
+                            } else {
+                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                            };
+                            __state.suppress_fail -= 1;
+                            match __assert_res {
+                                Failed => Matched(__pos, ()),
+                                Matched(..) => Failed,
                             }
-                        } else {
-                            __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                         };
-                        __state.suppress_fail -= 1;
-                        match __assert_res {
-                            Failed => Matched(__pos, ()),
-                            Matched(..) => Failed,
+                        match __seq_res {
+                            Matched(__pos, _) => Matched(__pos, { e }),
+                            Failed => Failed,
                         }
                     }
                     Failed => Failed,
@@ -11757,21 +12147,27 @@ fn __parse_do_while_statement<'input>(__input: &'input str, __state: &mut ParseS
             let res = {
                 let __seq_res = slice_eq(__input, __state, __pos, "do");
                 match __seq_res {
-                    Matched(__pos, _) => {
-                        __state.suppress_fail += 1;
-                        let __assert_res = if __input.len() > __pos {
-                            let (__ch, __next) = char_range_at(__input, __pos);
-                            match __ch {
-                                '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                    Matched(__pos, e) => {
+                        let __seq_res = {
+                            __state.suppress_fail += 1;
+                            let __assert_res = if __input.len() > __pos {
+                                let (__ch, __next) = char_range_at(__input, __pos);
+                                match __ch {
+                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                }
+                            } else {
+                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                            };
+                            __state.suppress_fail -= 1;
+                            match __assert_res {
+                                Failed => Matched(__pos, ()),
+                                Matched(..) => Failed,
                             }
-                        } else {
-                            __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                         };
-                        __state.suppress_fail -= 1;
-                        match __assert_res {
-                            Failed => Matched(__pos, ()),
-                            Matched(..) => Failed,
+                        match __seq_res {
+                            Matched(__pos, _) => Matched(__pos, { e }),
+                            Failed => Failed,
                         }
                     }
                     Failed => Failed,
@@ -11796,21 +12192,27 @@ fn __parse_do_while_statement<'input>(__input: &'input str, __state: &mut ParseS
                                             let res = {
                                                 let __seq_res = slice_eq(__input, __state, __pos, "while");
                                                 match __seq_res {
-                                                    Matched(__pos, _) => {
-                                                        __state.suppress_fail += 1;
-                                                        let __assert_res = if __input.len() > __pos {
-                                                            let (__ch, __next) = char_range_at(__input, __pos);
-                                                            match __ch {
-                                                                '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                                                _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                    Matched(__pos, e) => {
+                                                        let __seq_res = {
+                                                            __state.suppress_fail += 1;
+                                                            let __assert_res = if __input.len() > __pos {
+                                                                let (__ch, __next) = char_range_at(__input, __pos);
+                                                                match __ch {
+                                                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                                }
+                                                            } else {
+                                                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                                            };
+                                                            __state.suppress_fail -= 1;
+                                                            match __assert_res {
+                                                                Failed => Matched(__pos, ()),
+                                                                Matched(..) => Failed,
                                                             }
-                                                        } else {
-                                                            __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                                         };
-                                                        __state.suppress_fail -= 1;
-                                                        match __assert_res {
-                                                            Failed => Matched(__pos, ()),
-                                                            Matched(..) => Failed,
+                                                        match __seq_res {
+                                                            Matched(__pos, _) => Matched(__pos, { e }),
+                                                            Failed => Failed,
                                                         }
                                                     }
                                                     Failed => Failed,
@@ -11899,21 +12301,27 @@ fn __parse_for_statement<'input>(__input: &'input str, __state: &mut ParseState<
             let res = {
                 let __seq_res = slice_eq(__input, __state, __pos, "for");
                 match __seq_res {
-                    Matched(__pos, _) => {
-                        __state.suppress_fail += 1;
-                        let __assert_res = if __input.len() > __pos {
-                            let (__ch, __next) = char_range_at(__input, __pos);
-                            match __ch {
-                                '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                    Matched(__pos, e) => {
+                        let __seq_res = {
+                            __state.suppress_fail += 1;
+                            let __assert_res = if __input.len() > __pos {
+                                let (__ch, __next) = char_range_at(__input, __pos);
+                                match __ch {
+                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                }
+                            } else {
+                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                            };
+                            __state.suppress_fail -= 1;
+                            match __assert_res {
+                                Failed => Matched(__pos, ()),
+                                Matched(..) => Failed,
                             }
-                        } else {
-                            __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                         };
-                        __state.suppress_fail -= 1;
-                        match __assert_res {
-                            Failed => Matched(__pos, ()),
-                            Matched(..) => Failed,
+                        match __seq_res {
+                            Matched(__pos, _) => Matched(__pos, { e }),
+                            Failed => Failed,
                         }
                     }
                     Failed => Failed,
@@ -12112,21 +12520,27 @@ fn __parse_jump_statement<'input>(__input: &'input str, __state: &mut ParseState
                 let res = {
                     let __seq_res = slice_eq(__input, __state, __pos, "goto");
                     match __seq_res {
-                        Matched(__pos, _) => {
-                            __state.suppress_fail += 1;
-                            let __assert_res = if __input.len() > __pos {
-                                let (__ch, __next) = char_range_at(__input, __pos);
-                                match __ch {
-                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                        Matched(__pos, e) => {
+                            let __seq_res = {
+                                __state.suppress_fail += 1;
+                                let __assert_res = if __input.len() > __pos {
+                                    let (__ch, __next) = char_range_at(__input, __pos);
+                                    match __ch {
+                                        '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                        _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                    }
+                                } else {
+                                    __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                };
+                                __state.suppress_fail -= 1;
+                                match __assert_res {
+                                    Failed => Matched(__pos, ()),
+                                    Matched(..) => Failed,
                                 }
-                            } else {
-                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                             };
-                            __state.suppress_fail -= 1;
-                            match __assert_res {
-                                Failed => Matched(__pos, ()),
-                                Matched(..) => Failed,
+                            match __seq_res {
+                                Matched(__pos, _) => Matched(__pos, { e }),
+                                Failed => Failed,
                             }
                         }
                         Failed => Failed,
@@ -12173,21 +12587,27 @@ fn __parse_jump_statement<'input>(__input: &'input str, __state: &mut ParseState
                         let res = {
                             let __seq_res = slice_eq(__input, __state, __pos, "continue");
                             match __seq_res {
-                                Matched(__pos, _) => {
-                                    __state.suppress_fail += 1;
-                                    let __assert_res = if __input.len() > __pos {
-                                        let (__ch, __next) = char_range_at(__input, __pos);
-                                        match __ch {
-                                            '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                            _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                Matched(__pos, e) => {
+                                    let __seq_res = {
+                                        __state.suppress_fail += 1;
+                                        let __assert_res = if __input.len() > __pos {
+                                            let (__ch, __next) = char_range_at(__input, __pos);
+                                            match __ch {
+                                                '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                            }
+                                        } else {
+                                            __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                        };
+                                        __state.suppress_fail -= 1;
+                                        match __assert_res {
+                                            Failed => Matched(__pos, ()),
+                                            Matched(..) => Failed,
                                         }
-                                    } else {
-                                        __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                     };
-                                    __state.suppress_fail -= 1;
-                                    match __assert_res {
-                                        Failed => Matched(__pos, ()),
-                                        Matched(..) => Failed,
+                                    match __seq_res {
+                                        Matched(__pos, _) => Matched(__pos, { e }),
+                                        Failed => Failed,
                                     }
                                 }
                                 Failed => Failed,
@@ -12222,21 +12642,27 @@ fn __parse_jump_statement<'input>(__input: &'input str, __state: &mut ParseState
                                 let res = {
                                     let __seq_res = slice_eq(__input, __state, __pos, "break");
                                     match __seq_res {
-                                        Matched(__pos, _) => {
-                                            __state.suppress_fail += 1;
-                                            let __assert_res = if __input.len() > __pos {
-                                                let (__ch, __next) = char_range_at(__input, __pos);
-                                                match __ch {
-                                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                        Matched(__pos, e) => {
+                                            let __seq_res = {
+                                                __state.suppress_fail += 1;
+                                                let __assert_res = if __input.len() > __pos {
+                                                    let (__ch, __next) = char_range_at(__input, __pos);
+                                                    match __ch {
+                                                        '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                        _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                    }
+                                                } else {
+                                                    __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                                };
+                                                __state.suppress_fail -= 1;
+                                                match __assert_res {
+                                                    Failed => Matched(__pos, ()),
+                                                    Matched(..) => Failed,
                                                 }
-                                            } else {
-                                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                             };
-                                            __state.suppress_fail -= 1;
-                                            match __assert_res {
-                                                Failed => Matched(__pos, ()),
-                                                Matched(..) => Failed,
+                                            match __seq_res {
+                                                Matched(__pos, _) => Matched(__pos, { e }),
+                                                Failed => Failed,
                                             }
                                         }
                                         Failed => Failed,
@@ -12270,21 +12696,27 @@ fn __parse_jump_statement<'input>(__input: &'input str, __state: &mut ParseState
                                     let res = {
                                         let __seq_res = slice_eq(__input, __state, __pos, "return");
                                         match __seq_res {
-                                            Matched(__pos, _) => {
-                                                __state.suppress_fail += 1;
-                                                let __assert_res = if __input.len() > __pos {
-                                                    let (__ch, __next) = char_range_at(__input, __pos);
-                                                    match __ch {
-                                                        '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                                        _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                            Matched(__pos, e) => {
+                                                let __seq_res = {
+                                                    __state.suppress_fail += 1;
+                                                    let __assert_res = if __input.len() > __pos {
+                                                        let (__ch, __next) = char_range_at(__input, __pos);
+                                                        match __ch {
+                                                            '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                            _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                        }
+                                                    } else {
+                                                        __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                                    };
+                                                    __state.suppress_fail -= 1;
+                                                    match __assert_res {
+                                                        Failed => Matched(__pos, ()),
+                                                        Matched(..) => Failed,
                                                     }
-                                                } else {
-                                                    __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                                 };
-                                                __state.suppress_fail -= 1;
-                                                match __assert_res {
-                                                    Failed => Matched(__pos, ()),
-                                                    Matched(..) => Failed,
+                                                match __seq_res {
+                                                    Matched(__pos, _) => Matched(__pos, { e }),
+                                                    Failed => Failed,
                                                 }
                                             }
                                             Failed => Failed,
@@ -12509,21 +12941,27 @@ fn __parse_external_declaration<'input>(__input: &'input str, __state: &mut Pars
                                                 let res = {
                                                     let __seq_res = slice_eq(__input, __state, __pos, "__extension__");
                                                     match __seq_res {
-                                                        Matched(__pos, _) => {
-                                                            __state.suppress_fail += 1;
-                                                            let __assert_res = if __input.len() > __pos {
-                                                                let (__ch, __next) = char_range_at(__input, __pos);
-                                                                match __ch {
-                                                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                        Matched(__pos, e) => {
+                                                            let __seq_res = {
+                                                                __state.suppress_fail += 1;
+                                                                let __assert_res = if __input.len() > __pos {
+                                                                    let (__ch, __next) = char_range_at(__input, __pos);
+                                                                    match __ch {
+                                                                        '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                                        _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                                                    }
+                                                                } else {
+                                                                    __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                                                };
+                                                                __state.suppress_fail -= 1;
+                                                                match __assert_res {
+                                                                    Failed => Matched(__pos, ()),
+                                                                    Matched(..) => Failed,
                                                                 }
-                                                            } else {
-                                                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                                             };
-                                                            __state.suppress_fail -= 1;
-                                                            match __assert_res {
-                                                                Failed => Matched(__pos, ()),
-                                                                Matched(..) => Failed,
+                                                            match __seq_res {
+                                                                Matched(__pos, _) => Matched(__pos, { e }),
+                                                                Failed => Failed,
                                                             }
                                                         }
                                                         Failed => Failed,
@@ -12773,21 +13211,27 @@ fn __parse_attribute_specifier<'input>(__input: &'input str, __state: &mut Parse
             let res = {
                 let __seq_res = slice_eq(__input, __state, __pos, "__attribute__");
                 match __seq_res {
-                    Matched(__pos, _) => {
-                        __state.suppress_fail += 1;
-                        let __assert_res = if __input.len() > __pos {
-                            let (__ch, __next) = char_range_at(__input, __pos);
-                            match __ch {
-                                '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                    Matched(__pos, e) => {
+                        let __seq_res = {
+                            __state.suppress_fail += 1;
+                            let __assert_res = if __input.len() > __pos {
+                                let (__ch, __next) = char_range_at(__input, __pos);
+                                match __ch {
+                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                }
+                            } else {
+                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                            };
+                            __state.suppress_fail -= 1;
+                            match __assert_res {
+                                Failed => Matched(__pos, ()),
+                                Matched(..) => Failed,
                             }
-                        } else {
-                            __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                         };
-                        __state.suppress_fail -= 1;
-                        match __assert_res {
-                            Failed => Matched(__pos, ()),
-                            Matched(..) => Failed,
+                        match __seq_res {
+                            Matched(__pos, _) => Matched(__pos, { e }),
+                            Failed => Failed,
                         }
                     }
                     Failed => Failed,
@@ -13187,21 +13631,27 @@ fn __parse_asm_label_keyword<'input>(__input: &'input str, __state: &mut ParseSt
                     let res = {
                         let __seq_res = slice_eq(__input, __state, __pos, "asm");
                         match __seq_res {
-                            Matched(__pos, _) => {
-                                __state.suppress_fail += 1;
-                                let __assert_res = if __input.len() > __pos {
-                                    let (__ch, __next) = char_range_at(__input, __pos);
-                                    match __ch {
-                                        '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                        _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                            Matched(__pos, e) => {
+                                let __seq_res = {
+                                    __state.suppress_fail += 1;
+                                    let __assert_res = if __input.len() > __pos {
+                                        let (__ch, __next) = char_range_at(__input, __pos);
+                                        match __ch {
+                                            '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                            _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                        }
+                                    } else {
+                                        __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                    };
+                                    __state.suppress_fail -= 1;
+                                    match __assert_res {
+                                        Failed => Matched(__pos, ()),
+                                        Matched(..) => Failed,
                                     }
-                                } else {
-                                    __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                 };
-                                __state.suppress_fail -= 1;
-                                match __assert_res {
-                                    Failed => Matched(__pos, ()),
-                                    Matched(..) => Failed,
+                                match __seq_res {
+                                    Matched(__pos, _) => Matched(__pos, { e }),
+                                    Failed => Failed,
                                 }
                             }
                             Failed => Failed,
@@ -13226,21 +13676,27 @@ fn __parse_asm_label_keyword<'input>(__input: &'input str, __state: &mut ParseSt
                                 }
                             };
                             match __seq_res {
-                                Matched(__pos, _) => {
-                                    __state.suppress_fail += 1;
-                                    let __assert_res = if __input.len() > __pos {
-                                        let (__ch, __next) = char_range_at(__input, __pos);
-                                        match __ch {
-                                            '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                            _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                Matched(__pos, e) => {
+                                    let __seq_res = {
+                                        __state.suppress_fail += 1;
+                                        let __assert_res = if __input.len() > __pos {
+                                            let (__ch, __next) = char_range_at(__input, __pos);
+                                            match __ch {
+                                                '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                            }
+                                        } else {
+                                            __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                        };
+                                        __state.suppress_fail -= 1;
+                                        match __assert_res {
+                                            Failed => Matched(__pos, ()),
+                                            Matched(..) => Failed,
                                         }
-                                    } else {
-                                        __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                     };
-                                    __state.suppress_fail -= 1;
-                                    match __assert_res {
-                                        Failed => Matched(__pos, ()),
-                                        Matched(..) => Failed,
+                                    match __seq_res {
+                                        Matched(__pos, _) => Matched(__pos, { e }),
+                                        Failed => Failed,
                                     }
                                 }
                                 Failed => Failed,
@@ -13316,21 +13772,27 @@ fn __parse_asm_statement0<'input>(__input: &'input str, __state: &mut ParseState
                     }
                 };
                 match __seq_res {
-                    Matched(__pos, _) => {
-                        __state.suppress_fail += 1;
-                        let __assert_res = if __input.len() > __pos {
-                            let (__ch, __next) = char_range_at(__input, __pos);
-                            match __ch {
-                                '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                    Matched(__pos, e) => {
+                        let __seq_res = {
+                            __state.suppress_fail += 1;
+                            let __assert_res = if __input.len() > __pos {
+                                let (__ch, __next) = char_range_at(__input, __pos);
+                                match __ch {
+                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                }
+                            } else {
+                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                            };
+                            __state.suppress_fail -= 1;
+                            match __assert_res {
+                                Failed => Matched(__pos, ()),
+                                Matched(..) => Failed,
                             }
-                        } else {
-                            __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                         };
-                        __state.suppress_fail -= 1;
-                        match __assert_res {
-                            Failed => Matched(__pos, ()),
-                            Matched(..) => Failed,
+                        match __seq_res {
+                            Matched(__pos, _) => Matched(__pos, { e }),
+                            Failed => Failed,
                         }
                     }
                     Failed => Failed,
@@ -13901,21 +14363,27 @@ fn __parse_va_arg_expression_inner<'input>(__input: &'input str, __state: &mut P
             let res = {
                 let __seq_res = slice_eq(__input, __state, __pos, "__builtin_va_arg");
                 match __seq_res {
-                    Matched(__pos, _) => {
-                        __state.suppress_fail += 1;
-                        let __assert_res = if __input.len() > __pos {
-                            let (__ch, __next) = char_range_at(__input, __pos);
-                            match __ch {
-                                '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                    Matched(__pos, e) => {
+                        let __seq_res = {
+                            __state.suppress_fail += 1;
+                            let __assert_res = if __input.len() > __pos {
+                                let (__ch, __next) = char_range_at(__input, __pos);
+                                match __ch {
+                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                }
+                            } else {
+                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                            };
+                            __state.suppress_fail -= 1;
+                            match __assert_res {
+                                Failed => Matched(__pos, ()),
+                                Matched(..) => Failed,
                             }
-                        } else {
-                            __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                         };
-                        __state.suppress_fail -= 1;
-                        match __assert_res {
-                            Failed => Matched(__pos, ()),
-                            Matched(..) => Failed,
+                        match __seq_res {
+                            Matched(__pos, _) => Matched(__pos, { e }),
+                            Failed => Failed,
                         }
                     }
                     Failed => Failed,
@@ -14044,21 +14512,27 @@ fn __parse_keyword_expression0<'input>(__input: &'input str, __state: &mut Parse
             let res = {
                 let __seq_res = slice_eq(__input, __state, __pos, "__func__");
                 match __seq_res {
-                    Matched(__pos, _) => {
-                        __state.suppress_fail += 1;
-                        let __assert_res = if __input.len() > __pos {
-                            let (__ch, __next) = char_range_at(__input, __pos);
-                            match __ch {
-                                '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                    Matched(__pos, e) => {
+                        let __seq_res = {
+                            __state.suppress_fail += 1;
+                            let __assert_res = if __input.len() > __pos {
+                                let (__ch, __next) = char_range_at(__input, __pos);
+                                match __ch {
+                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                }
+                            } else {
+                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                            };
+                            __state.suppress_fail -= 1;
+                            match __assert_res {
+                                Failed => Matched(__pos, ()),
+                                Matched(..) => Failed,
                             }
-                        } else {
-                            __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                         };
-                        __state.suppress_fail -= 1;
-                        match __assert_res {
-                            Failed => Matched(__pos, ()),
-                            Matched(..) => Failed,
+                        match __seq_res {
+                            Matched(__pos, _) => Matched(__pos, { e }),
+                            Failed => Failed,
                         }
                     }
                     Failed => Failed,
@@ -14075,21 +14549,27 @@ fn __parse_keyword_expression0<'input>(__input: &'input str, __state: &mut Parse
                     let res = {
                         let __seq_res = slice_eq(__input, __state, __pos, "__FUNCTION__");
                         match __seq_res {
-                            Matched(__pos, _) => {
-                                __state.suppress_fail += 1;
-                                let __assert_res = if __input.len() > __pos {
-                                    let (__ch, __next) = char_range_at(__input, __pos);
-                                    match __ch {
-                                        '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                        _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                            Matched(__pos, e) => {
+                                let __seq_res = {
+                                    __state.suppress_fail += 1;
+                                    let __assert_res = if __input.len() > __pos {
+                                        let (__ch, __next) = char_range_at(__input, __pos);
+                                        match __ch {
+                                            '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                            _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                        }
+                                    } else {
+                                        __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                    };
+                                    __state.suppress_fail -= 1;
+                                    match __assert_res {
+                                        Failed => Matched(__pos, ()),
+                                        Matched(..) => Failed,
                                     }
-                                } else {
-                                    __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                 };
-                                __state.suppress_fail -= 1;
-                                match __assert_res {
-                                    Failed => Matched(__pos, ()),
-                                    Matched(..) => Failed,
+                                match __seq_res {
+                                    Matched(__pos, _) => Matched(__pos, { e }),
+                                    Failed => Failed,
                                 }
                             }
                             Failed => Failed,
@@ -14105,21 +14585,27 @@ fn __parse_keyword_expression0<'input>(__input: &'input str, __state: &mut Parse
                         let res = {
                             let __seq_res = slice_eq(__input, __state, __pos, "__PRETTY_FUNCTION__");
                             match __seq_res {
-                                Matched(__pos, _) => {
-                                    __state.suppress_fail += 1;
-                                    let __assert_res = if __input.len() > __pos {
-                                        let (__ch, __next) = char_range_at(__input, __pos);
-                                        match __ch {
-                                            '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                            _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                Matched(__pos, e) => {
+                                    let __seq_res = {
+                                        __state.suppress_fail += 1;
+                                        let __assert_res = if __input.len() > __pos {
+                                            let (__ch, __next) = char_range_at(__input, __pos);
+                                            match __ch {
+                                                '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                                _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                            }
+                                        } else {
+                                            __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                                        };
+                                        __state.suppress_fail -= 1;
+                                        match __assert_res {
+                                            Failed => Matched(__pos, ()),
+                                            Matched(..) => Failed,
                                         }
-                                    } else {
-                                        __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                                     };
-                                    __state.suppress_fail -= 1;
-                                    match __assert_res {
-                                        Failed => Matched(__pos, ()),
-                                        Matched(..) => Failed,
+                                    match __seq_res {
+                                        Matched(__pos, _) => Matched(__pos, { e }),
+                                        Failed => Failed,
                                     }
                                 }
                                 Failed => Failed,
@@ -14171,21 +14657,27 @@ fn __parse_offsetof_expression_inner<'input>(__input: &'input str, __state: &mut
             let res = {
                 let __seq_res = slice_eq(__input, __state, __pos, "__builtin_offsetof");
                 match __seq_res {
-                    Matched(__pos, _) => {
-                        __state.suppress_fail += 1;
-                        let __assert_res = if __input.len() > __pos {
-                            let (__ch, __next) = char_range_at(__input, __pos);
-                            match __ch {
-                                '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                    Matched(__pos, e) => {
+                        let __seq_res = {
+                            __state.suppress_fail += 1;
+                            let __assert_res = if __input.len() > __pos {
+                                let (__ch, __next) = char_range_at(__input, __pos);
+                                match __ch {
+                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                }
+                            } else {
+                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                            };
+                            __state.suppress_fail -= 1;
+                            match __assert_res {
+                                Failed => Matched(__pos, ()),
+                                Matched(..) => Failed,
                             }
-                        } else {
-                            __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                         };
-                        __state.suppress_fail -= 1;
-                        match __assert_res {
-                            Failed => Matched(__pos, ()),
-                            Matched(..) => Failed,
+                        match __seq_res {
+                            Matched(__pos, _) => Matched(__pos, { e }),
+                            Failed => Failed,
                         }
                     }
                     Failed => Failed,
@@ -14486,21 +14978,27 @@ fn __parse_typeof_specifier<'input>(__input: &'input str, __state: &mut ParseSta
                     }
                 };
                 match __seq_res {
-                    Matched(__pos, _) => {
-                        __state.suppress_fail += 1;
-                        let __assert_res = if __input.len() > __pos {
-                            let (__ch, __next) = char_range_at(__input, __pos);
-                            match __ch {
-                                '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                    Matched(__pos, e) => {
+                        let __seq_res = {
+                            __state.suppress_fail += 1;
+                            let __assert_res = if __input.len() > __pos {
+                                let (__ch, __next) = char_range_at(__input, __pos);
+                                match __ch {
+                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                }
+                            } else {
+                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                            };
+                            __state.suppress_fail -= 1;
+                            match __assert_res {
+                                Failed => Matched(__pos, ()),
+                                Matched(..) => Failed,
                             }
-                        } else {
-                            __state.mark_failure(__pos, "[_a-zA-Z0-9]")
                         };
-                        __state.suppress_fail -= 1;
-                        match __assert_res {
-                            Failed => Matched(__pos, ()),
-                            Matched(..) => Failed,
+                        match __seq_res {
+                            Matched(__pos, _) => Matched(__pos, { e }),
+                            Failed => Failed,
                         }
                     }
                     Failed => Failed,
@@ -14605,6 +15103,218 @@ fn __parse_typeof_specifier0<'input>(__input: &'input str, __state: &mut ParseSt
                 match __seq_res {
                     Matched(__pos, t) => Matched(__pos, { TypeOf::Type(t) }),
                     Failed => Failed,
+                }
+            }
+        }
+    }
+}
+
+fn __parse_ts18661_float_type_specifier<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<TS18661FloatType> {
+    #![allow(non_snake_case, unused)]
+    {
+        let __choice_res = __parse_ts18661_binary_float(__input, __state, __pos, env);
+        match __choice_res {
+            Matched(__pos, __value) => Matched(__pos, __value),
+            Failed => __parse_ts18661_decimal_float(__input, __state, __pos, env),
+        }
+    }
+}
+
+fn __parse_ts18661_binary_float<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<TS18661FloatType> {
+    #![allow(non_snake_case, unused)]
+    {
+        let __seq_res = slice_eq(__input, __state, __pos, "_Float");
+        match __seq_res {
+            Matched(__pos, _) => {
+                let __seq_res = {
+                    let str_start = __pos;
+                    match __parse_ts18661_binary_width(__input, __state, __pos, env) {
+                        Matched(__newpos, _) => Matched(__newpos, &__input[str_start..__newpos]),
+                        Failed => Failed,
+                    }
+                };
+                match __seq_res {
+                    Matched(__pos, width) => {
+                        let __seq_res = match slice_eq(__input, __state, __pos, "x") {
+                            Matched(__newpos, __value) => Matched(__newpos, Some(__value)),
+                            Failed => Matched(__pos, None),
+                        };
+                        match __seq_res {
+                            Matched(__pos, extended) => Matched(__pos, {
+                                ts18661_float(true, width.parse().unwrap(), extended.is_some())
+                            }),
+                            Failed => Failed,
+                        }
+                    }
+                    Failed => Failed,
+                }
+            }
+            Failed => Failed,
+        }
+    }
+}
+
+fn __parse_ts18661_binary_width<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<()> {
+    #![allow(non_snake_case, unused)]
+    {
+        let __choice_res = slice_eq(__input, __state, __pos, "16");
+        match __choice_res {
+            Matched(__pos, __value) => Matched(__pos, __value),
+            Failed => {
+                let __choice_res = slice_eq(__input, __state, __pos, "32");
+                match __choice_res {
+                    Matched(__pos, __value) => Matched(__pos, __value),
+                    Failed => {
+                        let __choice_res = slice_eq(__input, __state, __pos, "64");
+                        match __choice_res {
+                            Matched(__pos, __value) => Matched(__pos, __value),
+                            Failed => slice_eq(__input, __state, __pos, "128"),
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn __parse_ts18661_decimal_float<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<TS18661FloatType> {
+    #![allow(non_snake_case, unused)]
+    {
+        let __seq_res = slice_eq(__input, __state, __pos, "_Decimal");
+        match __seq_res {
+            Matched(__pos, _) => {
+                let __seq_res = {
+                    let str_start = __pos;
+                    match __parse_ts18661_decimal_width(__input, __state, __pos, env) {
+                        Matched(__newpos, _) => Matched(__newpos, &__input[str_start..__newpos]),
+                        Failed => Failed,
+                    }
+                };
+                match __seq_res {
+                    Matched(__pos, width) => {
+                        let __seq_res = match slice_eq(__input, __state, __pos, "x") {
+                            Matched(__newpos, __value) => Matched(__newpos, Some(__value)),
+                            Failed => Matched(__pos, None),
+                        };
+                        match __seq_res {
+                            Matched(__pos, extended) => Matched(__pos, {
+                                ts18661_float(false, width.parse().unwrap(), extended.is_some())
+                            }),
+                            Failed => Failed,
+                        }
+                    }
+                    Failed => Failed,
+                }
+            }
+            Failed => Failed,
+        }
+    }
+}
+
+fn __parse_ts18661_decimal_width<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<()> {
+    #![allow(non_snake_case, unused)]
+    {
+        let __choice_res = slice_eq(__input, __state, __pos, "32");
+        match __choice_res {
+            Matched(__pos, __value) => Matched(__pos, __value),
+            Failed => {
+                let __choice_res = slice_eq(__input, __state, __pos, "64");
+                match __choice_res {
+                    Matched(__pos, __value) => Matched(__pos, __value),
+                    Failed => slice_eq(__input, __state, __pos, "128"),
+                }
+            }
+        }
+    }
+}
+
+fn __parse_ts18661_float_suffix<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<()> {
+    #![allow(non_snake_case, unused)]
+    {
+        let __choice_res = slice_eq(__input, __state, __pos, "df");
+        match __choice_res {
+            Matched(__pos, __value) => Matched(__pos, __value),
+            Failed => {
+                let __choice_res = slice_eq(__input, __state, __pos, "dd");
+                match __choice_res {
+                    Matched(__pos, __value) => Matched(__pos, __value),
+                    Failed => {
+                        let __choice_res = slice_eq(__input, __state, __pos, "dl");
+                        match __choice_res {
+                            Matched(__pos, __value) => Matched(__pos, __value),
+                            Failed => {
+                                let __choice_res = slice_eq(__input, __state, __pos, "DF");
+                                match __choice_res {
+                                    Matched(__pos, __value) => Matched(__pos, __value),
+                                    Failed => {
+                                        let __choice_res = slice_eq(__input, __state, __pos, "DD");
+                                        match __choice_res {
+                                            Matched(__pos, __value) => Matched(__pos, __value),
+                                            Failed => {
+                                                let __choice_res = slice_eq(__input, __state, __pos, "DL");
+                                                match __choice_res {
+                                                    Matched(__pos, __value) => Matched(__pos, __value),
+                                                    Failed => {
+                                                        let __choice_res = {
+                                                            let __seq_res = if __input.len() > __pos {
+                                                                let (__ch, __next) = char_range_at(__input, __pos);
+                                                                match __ch {
+                                                                    'f' | 'F' => Matched(__next, ()),
+                                                                    _ => __state.mark_failure(__pos, "[fF]"),
+                                                                }
+                                                            } else {
+                                                                __state.mark_failure(__pos, "[fF]")
+                                                            };
+                                                            match __seq_res {
+                                                                Matched(__pos, _) => {
+                                                                    let __seq_res = __parse_ts18661_binary_width(__input, __state, __pos, env);
+                                                                    match __seq_res {
+                                                                        Matched(__pos, _) => match slice_eq(__input, __state, __pos, "x") {
+                                                                            Matched(__newpos, _) => Matched(__newpos, ()),
+                                                                            Failed => Matched(__pos, ()),
+                                                                        },
+                                                                        Failed => Failed,
+                                                                    }
+                                                                }
+                                                                Failed => Failed,
+                                                            }
+                                                        };
+                                                        match __choice_res {
+                                                            Matched(__pos, __value) => Matched(__pos, __value),
+                                                            Failed => {
+                                                                let __seq_res = if __input.len() > __pos {
+                                                                    let (__ch, __next) = char_range_at(__input, __pos);
+                                                                    match __ch {
+                                                                        'd' | 'D' => Matched(__next, ()),
+                                                                        _ => __state.mark_failure(__pos, "[dD]"),
+                                                                    }
+                                                                } else {
+                                                                    __state.mark_failure(__pos, "[dD]")
+                                                                };
+                                                                match __seq_res {
+                                                                    Matched(__pos, _) => {
+                                                                        let __seq_res = __parse_ts18661_decimal_width(__input, __state, __pos, env);
+                                                                        match __seq_res {
+                                                                            Matched(__pos, _) => match slice_eq(__input, __state, __pos, "x") {
+                                                                                Matched(__newpos, _) => Matched(__newpos, ()),
+                                                                                Failed => Matched(__pos, ()),
+                                                                            },
+                                                                            Failed => Failed,
+                                                                        }
+                                                                    }
+                                                                    Failed => Failed,
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

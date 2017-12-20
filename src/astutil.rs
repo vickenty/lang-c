@@ -77,3 +77,15 @@ pub fn with_ext(mut d: Node<Declarator>, e: Option<Vec<Node<Extension>>>) -> Nod
     }
     d
 }
+
+pub fn ts18661_float(binary: bool, width: usize, extended: bool) -> TS18661FloatType {
+    TS18661FloatType {
+        format: match (binary, extended) {
+            (true, false) => TS18661FloatFormat::BinaryInterchange,
+            (true, true) => TS18661FloatFormat::BinaryExtended,
+            (false, false) => TS18661FloatFormat::DecimalInterchange,
+            (false, true) => TS18661FloatFormat::DecimalExtended,
+        },
+        width: width,
+    }
+}

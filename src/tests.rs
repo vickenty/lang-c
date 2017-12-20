@@ -1783,7 +1783,7 @@ fn test_gnu_extension() {
                 ],
                 declarators: vec![],
             }.into(),
-        ]).into()),
+        ]).into())
     );
 
     assert_eq!(
@@ -1793,6 +1793,6 @@ fn test_gnu_extension() {
                 expression: int::dec("1").into(),
                 message: cstr(&[r#""ERR""#]),
             }.into(),
-        ]).into()),
+        ]).into())
     );
 }

@@ -65,7 +65,12 @@ mk_from_inner! {
     TS18661FloatType => DeclarationSpecifier::TypeSpecifier;
     Constant => Expression::Constant;
     TypeSpecifier => DeclarationSpecifier::TypeSpecifier;
+    TypeSpecifier => SpecifierQualifier::TypeSpecifier;
     Identifier => DeclaratorKind::Identifier;
+    StructType => TypeSpecifier::Struct;
+    StructType => DeclarationSpecifier::TypeSpecifier;
+    Declaration => ExternalDeclaration::Declaration;
+    StaticAssert => ExternalDeclaration::StaticAssert;
 }
 
 impl From<Constant> for Node<Initializer> {
@@ -124,7 +129,7 @@ mod int {
     use ast::*;
 
     pub fn dec(i: &str) -> Constant {
-        Constant::Integer(Integer::Decimal(i.to_string()))
+        Constant::Integer(Integer::Decimal(i.to_string())).into()
     }
 
     pub fn oct(i: &str) -> Constant {
@@ -1743,5 +1748,51 @@ fn test_ts18661_float() {
                 }.into(),
             ],
         }.into())
+    );
+}
+
+#[test]
+fn test_gnu_extension() {
+    use parser::translation_unit;
+    assert_eq!(
+        translation_unit("__extension__ union { long l; };", &mut Env::with_gnu(true)),
+        Ok(TranslationUnit(vec![
+            Declaration {
+                specifiers: vec![
+                    StructType {
+                        kind: StructKind::Union.into(),
+                        identifier: None,
+                        declarations: vec![
+                            StructField {
+                                specifiers: vec![TypeSpecifier::Long.into()],
+                                declarators: vec![
+                                    StructDeclarator {
+                                        declarator: Some(
+                                            Declarator {
+                                                kind: ident("l"),
+                                                derived: vec![],
+                                                extensions: vec![],
+                                            }.into(),
+                                        ),
+                                        bit_width: None,
+                                    }.into(),
+                                ],
+                            }.into(),
+                        ],
+                    }.into(),
+                ],
+                declarators: vec![],
+            }.into(),
+        ]).into()),
+    );
+
+    assert_eq!(
+        translation_unit(r#"__extension__ _Static_assert(1,"ERR");"#, &mut Env::new()),
+        Ok(TranslationUnit(vec![
+            StaticAssert {
+                expression: int::dec("1").into(),
+                message: cstr(&[r#""ERR""#]),
+            }.into(),
+        ]).into()),
     );
 }

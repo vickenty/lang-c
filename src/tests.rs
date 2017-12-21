@@ -303,7 +303,7 @@ fn test_comma() {
     assert_eq!(expression("a", env), Ok(ident("a")));
     assert_eq!(
         expression("a, a, a,a\n,a", env),
-        Ok(Comma(vec![ident("a"); 5]).into())
+        Ok(Comma(vec![ident("a"); 5].into()).into())
     );
 }
 

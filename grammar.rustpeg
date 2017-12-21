@@ -133,11 +133,11 @@ string_char = [^"\\\n] / escape_sequence
 primary_expression -> Box<Node<Expression>> = box<node<primary_expression0>>
 
 primary_expression0 -> Expression =
-    a:identifier { Expression::Identifier(a) } /
-    a:node<constant> { Expression::Constant(a) } /
-    a:string_literal { Expression::StringLiteral(a) } /
+    a:identifier { Expression::Identifier(Box::new(a)) } /
+    a:node<constant> { Expression::Constant(Box::new(a)) } /
+    a:string_literal { Expression::StringLiteral(Box::new(a)) } /
     "(" _ a:expression0 _ ")" { a } /
-    a:node<generic_selection> { Expression::GenericSelection(a) } /
+    a:node<generic_selection> { Expression::GenericSelection(Box::new(a)) } /
     gnu<gnu_primary_expression>
 
 generic_selection -> GenericSelection =
@@ -193,7 +193,7 @@ postfix_operator -> UnaryOperator =
     "--" { UnaryOperator::PostDecrement }
 
 compound_literal -> Expression =
-    n:node<compound_literal_inner> { Expression::CompoundLiteral(n) }
+    n:node<compound_literal_inner> { Expression::CompoundLiteral(Box::new(n)) }
 
 compound_literal_inner -> CompoundLiteral =
     "(" _ t:type_name _ ")" _ "{" _ i:cs1<node<initializer>> _ ","? _ "}" {
@@ -218,7 +218,7 @@ unary_expression0 -> Expression =
     gnu<K<"__extension__">> _ e:unary_expression0 { e }
 
 unary_prefix -> Expression =
-    n:node<unary_prefix_inner> { Expression::UnaryOperator(n) }
+    n:node<unary_prefix_inner> { Expression::UnaryOperator(Box::new(n)) }
 
 unary_prefix_inner -> UnaryOperatorExpression =
     op:node<prefix_operator> _ e:unary_expression {
@@ -234,7 +234,7 @@ prefix_operator -> UnaryOperator =
     K<"sizeof"> { UnaryOperator::SizeOf }
 
 unary_cast -> Expression =
-    n:node<unary_cast_inner> { Expression::UnaryOperator(n) }
+    n:node<unary_cast_inner> { Expression::UnaryOperator(Box::new(n)) }
 
 unary_cast_inner -> UnaryOperatorExpression =
     op:node<unary_operator> _ e:cast_expression {
@@ -254,12 +254,12 @@ unary_operator -> UnaryOperator =
 
 sizeof_expression -> Expression =
     K<"sizeof"> _ "(" _ t:type_name _ ")" {
-        Expression::SizeOf(t)
+        Expression::SizeOf(Box::new(t))
     }
 
 alignof_expression -> Expression =
     K<"_Alignof" / gnu<"__alignof" "__"?>> _ "(" _ t:type_name _ ")" {
-        Expression::AlignOf(t)
+        Expression::AlignOf(Box::new(t))
     }
 
 ////
@@ -269,7 +269,7 @@ alignof_expression -> Expression =
 cast_expression -> Box<Node<Expression>> = box<node<cast_expression0>>
 
 cast_expression0 -> Expression =
-    c:node<cast_expression_inner> { Expression::Cast(c) } /
+    c:node<cast_expression_inner> { Expression::Cast(Box::new(c)) } /
     unary_expression0
 
 cast_expression_inner -> CastExpression =
@@ -321,11 +321,11 @@ conditional_expression0 -> Expression =
     a:binary_expression0 _ t:conditional_expressionT? {
         if let Some((b, c)) = t {
             let span = Span::span(a.span.start, c.span.end);
-            Expression::Conditional(Node::new(ConditionalExpression {
+            Expression::Conditional(Box::new(Node::new(ConditionalExpression {
                 condition: Box::new(a),
                 then_expression: b,
                 else_expression: c,
-            }, span))
+            }, span)))
         } else {
             a.node
         }
@@ -341,7 +341,7 @@ conditional_expressionT -> (Box<Node<Expression>>, Box<Node<Expression>>) =
 assignment_expression -> Box<Node<Expression>> = box<node<assignment_expression0>>
 
 assignment_expression0 -> Expression =
-    n:node<assignment_expression_inner> { Expression::BinaryOperator(n) } /
+    n:node<assignment_expression_inner> { Expression::BinaryOperator(Box::new(n)) } /
     conditional_expression0
 
 assignment_expression_inner -> BinaryOperatorExpression =
@@ -377,7 +377,7 @@ expression0 -> Expression =
         if t.len() > 0 {
             let mut t  = t;
             t.insert(0, e);
-            Expression::Comma(t)
+            Expression::Comma(Box::new(t))
         } else {
             e.node
         }
@@ -1095,10 +1095,10 @@ gnu_primary_expression -> Expression =
     keyword_expression
 
 statement_expression -> Expression =
-    "(" _ s:scoped<node<compound_statement>> _ ")" { Expression::Statement(s) }
+    "(" _ s:scoped<node<compound_statement>> _ ")" { Expression::Statement(Box::new(s)) }
 
 va_arg_expression -> Expression =
-    n:node<va_arg_expression_inner> { Expression::VaArg(n) }
+    n:node<va_arg_expression_inner> { Expression::VaArg(Box::new(n)) }
 
 va_arg_expression_inner -> VaArgExpression =
     K<"__builtin_va_arg"> _ "(" _ e:assignment_expression _ "," _ t:type_name _ ")" {
@@ -1113,7 +1113,7 @@ keyword_expression -> Expression =
         let ident = Identifier {
             name: k.node.to_string(),
         };
-        Expression::Identifier(Node::new(ident, k.span))
+        Expression::Identifier(Box::new(Node::new(ident, k.span)))
     }
 
 keyword_expression0 =
@@ -1122,7 +1122,7 @@ keyword_expression0 =
     K<"__PRETTY_FUNCTION__">
 
 offsetof_expression -> Expression =
-    n:node<offsetof_expression_inner> { Expression::OffsetOf(n) }
+    n:node<offsetof_expression_inner> { Expression::OffsetOf(Box::new(n)) }
 
 offsetof_expression_inner -> OffsetOfExpression =
     K<"__builtin_offsetof"> _ "(" _ t:type_name _ "," _ d:node<offsetof_designator> _ ")" {

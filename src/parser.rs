@@ -1629,7 +1629,7 @@ fn __parse_primary_expression0<'input>(__input: &'input str, __state: &mut Parse
         let __choice_res = {
             let __seq_res = __parse_identifier(__input, __state, __pos, env);
             match __seq_res {
-                Matched(__pos, a) => Matched(__pos, { Expression::Identifier(a) }),
+                Matched(__pos, a) => Matched(__pos, { Expression::Identifier(Box::new(a)) }),
                 Failed => Failed,
             }
         };
@@ -1657,7 +1657,7 @@ fn __parse_primary_expression0<'input>(__input: &'input str, __state: &mut Parse
                         }
                     };
                     match __seq_res {
-                        Matched(__pos, a) => Matched(__pos, { Expression::Constant(a) }),
+                        Matched(__pos, a) => Matched(__pos, { Expression::Constant(Box::new(a)) }),
                         Failed => Failed,
                     }
                 };
@@ -1667,7 +1667,7 @@ fn __parse_primary_expression0<'input>(__input: &'input str, __state: &mut Parse
                         let __choice_res = {
                             let __seq_res = __parse_string_literal(__input, __state, __pos, env);
                             match __seq_res {
-                                Matched(__pos, a) => Matched(__pos, { Expression::StringLiteral(a) }),
+                                Matched(__pos, a) => Matched(__pos, { Expression::StringLiteral(Box::new(a)) }),
                                 Failed => Failed,
                             }
                         };
@@ -1729,7 +1729,7 @@ fn __parse_primary_expression0<'input>(__input: &'input str, __state: &mut Parse
                                                 }
                                             };
                                             match __seq_res {
-                                                Matched(__pos, a) => Matched(__pos, { Expression::GenericSelection(a) }),
+                                                Matched(__pos, a) => Matched(__pos, { Expression::GenericSelection(Box::new(a)) }),
                                                 Failed => Failed,
                                             }
                                         };
@@ -2522,7 +2522,7 @@ fn __parse_compound_literal<'input>(__input: &'input str, __state: &mut ParseSta
             }
         };
         match __seq_res {
-            Matched(__pos, n) => Matched(__pos, { Expression::CompoundLiteral(n) }),
+            Matched(__pos, n) => Matched(__pos, { Expression::CompoundLiteral(Box::new(n)) }),
             Failed => Failed,
         }
     }
@@ -2843,7 +2843,7 @@ fn __parse_unary_prefix<'input>(__input: &'input str, __state: &mut ParseState<'
             }
         };
         match __seq_res {
-            Matched(__pos, n) => Matched(__pos, { Expression::UnaryOperator(n) }),
+            Matched(__pos, n) => Matched(__pos, { Expression::UnaryOperator(Box::new(n)) }),
             Failed => Failed,
         }
     }
@@ -2986,7 +2986,7 @@ fn __parse_unary_cast<'input>(__input: &'input str, __state: &mut ParseState<'in
             }
         };
         match __seq_res {
-            Matched(__pos, n) => Matched(__pos, { Expression::UnaryOperator(n) }),
+            Matched(__pos, n) => Matched(__pos, { Expression::UnaryOperator(Box::new(n)) }),
             Failed => Failed,
         }
     }
@@ -3165,7 +3165,7 @@ fn __parse_sizeof_expression<'input>(__input: &'input str, __state: &mut ParseSt
                                                     Matched(__pos, _) => {
                                                         let __seq_res = slice_eq(__input, __state, __pos, ")");
                                                         match __seq_res {
-                                                            Matched(__pos, _) => Matched(__pos, { Expression::SizeOf(t) }),
+                                                            Matched(__pos, _) => Matched(__pos, { Expression::SizeOf(Box::new(t)) }),
                                                             Failed => Failed,
                                                         }
                                                     }
@@ -3280,7 +3280,7 @@ fn __parse_alignof_expression<'input>(__input: &'input str, __state: &mut ParseS
                                                     Matched(__pos, _) => {
                                                         let __seq_res = slice_eq(__input, __state, __pos, ")");
                                                         match __seq_res {
-                                                            Matched(__pos, _) => Matched(__pos, { Expression::AlignOf(t) }),
+                                                            Matched(__pos, _) => Matched(__pos, { Expression::AlignOf(Box::new(t)) }),
                                                             Failed => Failed,
                                                         }
                                                     }
@@ -3357,7 +3357,7 @@ fn __parse_cast_expression0<'input>(__input: &'input str, __state: &mut ParseSta
                 }
             };
             match __seq_res {
-                Matched(__pos, c) => Matched(__pos, { Expression::Cast(c) }),
+                Matched(__pos, c) => Matched(__pos, { Expression::Cast(Box::new(c)) }),
                 Failed => Failed,
             }
         };
@@ -4331,14 +4331,14 @@ fn __parse_conditional_expression0<'input>(__input: &'input str, __state: &mut P
                             Matched(__pos, t) => Matched(__pos, {
                                 if let Some((b, c)) = t {
                                     let span = Span::span(a.span.start, c.span.end);
-                                    Expression::Conditional(Node::new(
+                                    Expression::Conditional(Box::new(Node::new(
                                         ConditionalExpression {
                                             condition: Box::new(a),
                                             then_expression: b,
                                             else_expression: c,
                                         },
                                         span,
-                                    ))
+                                    )))
                                 } else {
                                     a.node
                                 }
@@ -4490,7 +4490,7 @@ fn __parse_assignment_expression0<'input>(__input: &'input str, __state: &mut Pa
                 }
             };
             match __seq_res {
-                Matched(__pos, n) => Matched(__pos, { Expression::BinaryOperator(n) }),
+                Matched(__pos, n) => Matched(__pos, { Expression::BinaryOperator(Box::new(n)) }),
                 Failed => Failed,
             }
         };
@@ -4785,7 +4785,7 @@ fn __parse_expression0<'input>(__input: &'input str, __state: &mut ParseState<'i
                                 if t.len() > 0 {
                                     let mut t = t;
                                     t.insert(0, e);
-                                    Expression::Comma(t)
+                                    Expression::Comma(Box::new(t))
                                 } else {
                                     e.node
                                 }
@@ -14311,7 +14311,7 @@ fn __parse_statement_expression<'input>(__input: &'input str, __state: &mut Pars
                                     Matched(__pos, _) => {
                                         let __seq_res = slice_eq(__input, __state, __pos, ")");
                                         match __seq_res {
-                                            Matched(__pos, _) => Matched(__pos, { Expression::Statement(s) }),
+                                            Matched(__pos, _) => Matched(__pos, { Expression::Statement(Box::new(s)) }),
                                             Failed => Failed,
                                         }
                                     }
@@ -14352,7 +14352,7 @@ fn __parse_va_arg_expression<'input>(__input: &'input str, __state: &mut ParseSt
             }
         };
         match __seq_res {
-            Matched(__pos, n) => Matched(__pos, { Expression::VaArg(n) }),
+            Matched(__pos, n) => Matched(__pos, { Expression::VaArg(Box::new(n)) }),
             Failed => Failed,
         }
     }
@@ -14500,7 +14500,7 @@ fn __parse_keyword_expression<'input>(__input: &'input str, __state: &mut ParseS
                 let ident = Identifier {
                     name: k.node.to_string(),
                 };
-                Expression::Identifier(Node::new(ident, k.span))
+                Expression::Identifier(Box::new(Node::new(ident, k.span)))
             }),
             Failed => Failed,
         }
@@ -14646,7 +14646,7 @@ fn __parse_offsetof_expression<'input>(__input: &'input str, __state: &mut Parse
             }
         };
         match __seq_res {
-            Matched(__pos, n) => Matched(__pos, { Expression::OffsetOf(n) }),
+            Matched(__pos, n) => Matched(__pos, { Expression::OffsetOf(Box::new(n)) }),
             Failed => Failed,
         }
     }

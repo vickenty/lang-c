@@ -83,53 +83,53 @@ pub enum Expression {
     /// as constants.
     ///
     /// (C11 6.5.1)
-    Identifier(Node<Identifier>),
+    Identifier(Box<Node<Identifier>>),
     /// Numeric and character constants
     ///
     /// Enumerator constants, being valid identifiers, are reprented
     /// as `Identifier` in this enum.
     ///
     /// (C11 6.5.1)
-    Constant(Node<Constant>),
+    Constant(Box<Node<Constant>>),
 
     /// String literal
     ///
     /// (C11 6.5.1)
-    StringLiteral(Node<StringLiteral>),
+    StringLiteral(Box<Node<StringLiteral>>),
 
     /// Generic selection
     ///
     /// (C11 6.5.1.1)
-    GenericSelection(Node<GenericSelection>),
+    GenericSelection(Box<Node<GenericSelection>>),
 
     /// Structure and union members
     ///
     /// Both direct (`.`) and indirect (`->`) access.
     ///
     /// (C11 6.5.2)
-    Member(Node<MemberExpression>),
+    Member(Box<Node<MemberExpression>>),
 
     /// Function call expression
     ///
     /// (C11 6.5.2)
-    Call(Node<CallExpression>),
+    Call(Box<Node<CallExpression>>),
 
     /// Compound literal
     ///
     /// (C11 6.5.2)
-    CompoundLiteral(Node<CompoundLiteral>),
+    CompoundLiteral(Box<Node<CompoundLiteral>>),
 
     /// Size of a type
     ///
     /// Note: size of an expression is represented with `UnaryOperator::SizeOf`.
     ///
     /// (C11 6.5.3)
-    SizeOf(Node<TypeName>),
+    SizeOf(Box<Node<TypeName>>),
 
     /// Alignment of a type
     ///
     /// (C11 6.5.3)
-    AlignOf(Node<TypeName>),
+    AlignOf(Box<Node<TypeName>>),
 
     /// Unary operators
     ///
@@ -137,50 +137,50 @@ pub enum Expression {
     /// additional operands are represented by a separate entry in this enum.
     ///
     /// (C11 6.5.2, c11 6.5.3)
-    UnaryOperator(Node<UnaryOperatorExpression>),
+    UnaryOperator(Box<Node<UnaryOperatorExpression>>),
 
     /// Cast expression
     ///
     /// `(type) expr`
     ///
     /// (C11 6.5.4)
-    Cast(Node<CastExpression>),
+    Cast(Box<Node<CastExpression>>),
 
     /// Binary operators
     ///
     /// All of C binary operators that can be applied to two expressions.
     ///
     /// (C11 6.5.5 -- 6.5.16)
-    BinaryOperator(Node<BinaryOperatorExpression>),
+    BinaryOperator(Box<Node<BinaryOperatorExpression>>),
 
     /// Conditional operator
     ///
     /// (C11 6.5.15)
-    Conditional(Node<ConditionalExpression>),
+    Conditional(Box<Node<ConditionalExpression>>),
 
     /// Comma operator
     ///
     /// (C11 6.5.17)
-    Comma(Vec<Node<Expression>>),
+    Comma(Box<Vec<Node<Expression>>>),
 
     /// Member offset expression
     ///
     /// Result of expansion of `offsetof` macro.
     ///
     /// (C11 7.19 §3).
-    OffsetOf(Node<OffsetOfExpression>),
+    OffsetOf(Box<Node<OffsetOfExpression>>),
 
     /// Variable argument list access
     ///
     /// Result of expansion of `va_arg` macro.
     ///
     /// (C11 7.16.1.1).
-    VaArg(Node<VaArgExpression>),
+    VaArg(Box<Node<VaArgExpression>>),
 
     /// Statement expression
     ///
     /// [GNU extension](https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html)
-    Statement(Node<Statement>),
+    Statement(Box<Node<Statement>>),
 }
 
 /// Struct or union member access

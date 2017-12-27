@@ -4,8 +4,8 @@ pub mod ast;
 pub mod driver;
 pub mod span;
 
-mod env;
-mod parser;
+pub mod env;
+pub mod parser;
 mod astutil;
 mod strings;
 

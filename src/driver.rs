@@ -51,6 +51,12 @@ pub enum Error {
     SyntaxError(SyntaxError),
 }
 
+impl From<SyntaxError> for Error {
+    fn from(e: SyntaxError) -> Error {
+        Error::SyntaxError(e)
+    }
+}
+
 impl fmt::Display for Error {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -118,23 +124,27 @@ pub fn parse<P: AsRef<Path>>(config: &Config, source: &P) -> Result<Parse, Error
         Err(e) => return Err(Error::PreprocessorError(e)),
     };
 
+    Ok(parse_preprocessed(config, processed)?)
+}
+
+pub fn parse_preprocessed(config: &Config, source: String) -> Result<Parse, SyntaxError> {
     let mut env = match config.flavor {
         Flavor::StdC11 => Env::with_gnu(false),
         Flavor::GnuC11 => Env::with_gnu(true),
     };
 
-    match translation_unit(&processed, &mut env) {
+    match translation_unit(&source, &mut env) {
         Ok(unit) => Ok(Parse {
-            source: processed,
+            source: source,
             unit: unit,
         }),
-        Err(err) => Err(Error::SyntaxError(SyntaxError {
-            source: processed,
+        Err(err) => Err(SyntaxError {
+            source: source,
             line: err.line,
             column: err.column,
             offset: err.offset,
             expected: err.expected,
-        })),
+        }),
     }
 }
 

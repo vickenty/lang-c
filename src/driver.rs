@@ -159,7 +159,7 @@ fn preprocess(config: &Config, source: &Path) -> io::Result<String> {
             Ok(s) => Err(io::Error::new(io::ErrorKind::Other, s)),
             Err(_) => Err(io::Error::new(
                 io::ErrorKind::Other,
-                "cpp error contains ivalid utf-8",
+                "cpp error contains invalid utf-8",
             )),
         }
     }

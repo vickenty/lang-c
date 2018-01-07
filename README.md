@@ -6,10 +6,6 @@
 Ligtweight parser of C language for Rust users. Almost full support for C11 revision of the language.
 Several GNU extensions are supported as an option (and enabled by default).
 
-This crate's raison d'être is to be used in tools supporting C development. Thus it does not aim to provide a complete
-C environment (which would include things like standard header files and libraries), instead focusing on integaration
-with the existing compilers.
-
 ```rust
 extern crate lang_c;
 use lang_c::driver::{Config, parse}; 

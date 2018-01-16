@@ -1,6 +1,6 @@
 extern crate lang_c;
-use std::mem::size_of;
 use lang_c::ast::*;
+use std::mem::size_of;
 
 macro_rules! ps {
     ($( $i:ident )+) => ($(println!("{:3}  {}", size_of::<$i>(), stringify!($i));)+)

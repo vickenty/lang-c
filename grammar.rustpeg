@@ -77,27 +77,47 @@ numeric_constant -> Constant =
     c:integer_constant { Constant::Integer(c) }
 
 integer_constant -> Integer =
-    n:$([1-9] dec* integer_suffix?) { Integer::Decimal(String::from(n)) } /
-    n:$(ohx hex+ integer_suffix?) { Integer::Hexademical(String::from(n)) } /
-    n:$("0" oct* integer_suffix?) { Integer::Octal(String::from(n)) }
+    n:integer_number suffix:$(integer_suffix?) {
+        let (base, number) = n;
+        Integer {
+            base: base,
+            number: number.into(),
+            suffix: suffix.into(),
+        }
+    }
+
+integer_number -> (IntegerBase, &'input str) =
+    n:$([1-9] dec*) { (IntegerBase::Decimal, n) } /
+    ohx n:$(hex+) { (IntegerBase::Hexademical, n) } /
+    "0" n:$(oct*) { (IntegerBase::Octal, n) }
 
 integer_suffix = ([uUlL] / gnu<[iIjJ]>)*
 
 float_constant -> Float =
-    n:$(float_decimal) { Float::Decimal(String::from(n)) } /
-    n:$(float_hexademical) { Float::Hexademical(String::from(n)) }
+    n:float_number suffix:$(float_suffix?) {
+        let (base, number) = n;
+        Float {
+            base: base,
+            number: number.into(),
+            suffix: suffix.into(),
+        }
+    }
+
+float_number -> (FloatBase, &'input str) =
+    n:$(float_decimal) { (FloatBase::Decimal, n) } /
+    ohx n:$(float_hexademical) { (FloatBase::Hexademical, n) }
 
 float_decimal =
-    dec* "." dec+ float_decimal_exp? float_suffix? /
-    dec+ "." float_decimal_exp? float_suffix? /
-    dec+ float_decimal_exp float_suffix?
+    dec* "." dec+ float_decimal_exp? /
+    dec+ "." float_decimal_exp? /
+    dec+ float_decimal_exp
 
 float_decimal_exp = [eE][+-]?dec+
 
 float_hexademical =
-    ohx hex* "." hex+ float_binary_exp float_suffix? /
-    ohx hex+ "." float_binary_exp float_suffix? /
-    ohx hex+ float_binary_exp float_suffix?
+    hex* "." hex+ float_binary_exp /
+    hex+ "." float_binary_exp /
+    hex+ float_binary_exp
 
 float_binary_exp = [pP][+-]?dec+
 

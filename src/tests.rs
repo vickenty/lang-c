@@ -131,28 +131,44 @@ mod expr {
 mod int {
     use ast::*;
 
-    pub fn dec<T: From<Constant>>(i: &str) -> T {
-        Constant::Integer(Integer::Decimal(i.to_string())).into()
+    fn num<T: From<Constant>>(base: IntegerBase, number: &str, suffix: &str) -> T {
+        Constant::Integer(Integer {
+            base: base,
+            number: number.into(),
+            suffix: suffix.into(),
+        }).into()
     }
 
-    pub fn oct<T: From<Constant>>(i: &str) -> T {
-        Constant::Integer(Integer::Octal(i.to_string())).into()
+    pub fn dec<T: From<Constant>>(n: &str, s: &str) -> T {
+        num(IntegerBase::Decimal, n, s)
     }
 
-    pub fn hex<T: From<Constant>>(i: &str) -> T {
-        Constant::Integer(Integer::Hexademical(i.to_string())).into()
+    pub fn oct<T: From<Constant>>(n: &str, s: &str) -> T {
+        num(IntegerBase::Octal, n, s)
+    }
+
+    pub fn hex<T: From<Constant>>(n: &str, s: &str) -> T {
+        num(IntegerBase::Hexademical, n, s)
     }
 }
 
 mod float {
     use ast::*;
 
-    pub fn dec<T: From<Constant>>(i: &str) -> T {
-        Constant::Float(Float::Decimal(i.to_string())).into()
+    fn num<T: From<Constant>>(base: FloatBase, number: &str, suffix: &str) -> T {
+        Constant::Float(Float {
+            base: base,
+            number: number.into(),
+            suffix: suffix.into(),
+        }).into()
     }
 
-    pub fn hex<T: From<Constant>>(i: &str) -> T {
-        Constant::Float(Float::Hexademical(i.to_string())).into()
+    pub fn dec<T: From<Constant>>(n: &str, s: &str) -> T {
+        num(FloatBase::Decimal, n, s)
+    }
+
+    pub fn hex<T: From<Constant>>(n: &str, s: &str) -> T {
+        num(FloatBase::Hexademical, n, s)
     }
 }
 
@@ -174,15 +190,15 @@ fn test_integer() {
 
     let env = &mut Env::new();
 
-    assert_eq!(constant("0", env), Ok(oct("0")));
-    assert_eq!(constant("1", env), Ok(dec("1")));
-    assert_eq!(constant("1234567890", env), Ok(dec("1234567890")));
-    assert_eq!(constant("01234567", env), Ok(oct("01234567")));
+    assert_eq!(constant("0", env), Ok(oct("", "")));
+    assert_eq!(constant("1", env), Ok(dec("1", "")));
+    assert_eq!(constant("1234567890", env), Ok(dec("1234567890", "")));
+    assert_eq!(constant("01234567", env), Ok(oct("1234567", "")));
     assert_eq!(
         constant("0x1234567890abdefABCDEF", env),
-        Ok(hex("0x1234567890abdefABCDEF"))
+        Ok(hex("1234567890abdefABCDEF", ""))
     );
-    assert_eq!(constant("042lu", env), Ok(oct("042lu")));
+    assert_eq!(constant("042lu", env), Ok(oct("42", "lu")));
 
     assert!(constant("1a", env).is_err());
     assert!(constant("08", env).is_err());
@@ -196,21 +212,21 @@ fn test_floating() {
 
     let env = &mut Env::new();
 
-    assert_eq!(constant("2.", env), Ok(dec("2.")));
-    assert_eq!(constant("2.e2", env), Ok(dec("2.e2")));
-    assert_eq!(constant(".2", env), Ok(dec(".2")));
-    assert_eq!(constant(".2e2", env), Ok(dec(".2e2")));
-    assert_eq!(constant("2.0", env), Ok(dec("2.0")));
+    assert_eq!(constant("2.", env), Ok(dec("2.", "")));
+    assert_eq!(constant("2.e2", env), Ok(dec("2.e2", "")));
+    assert_eq!(constant(".2", env), Ok(dec(".2", "")));
+    assert_eq!(constant(".2e2", env), Ok(dec(".2e2", "")));
+    assert_eq!(constant("2.0", env), Ok(dec("2.0", "")));
 
-    assert_eq!(constant("24.01e100", env), Ok(dec("24.01e100")));
-    assert_eq!(constant("24.01e+100", env), Ok(dec("24.01e+100")));
-    assert_eq!(constant("24.01e-100", env), Ok(dec("24.01e-100")));
-    assert_eq!(constant("24.01e100f", env), Ok(dec("24.01e100f")));
+    assert_eq!(constant("24.01e100", env), Ok(dec("24.01e100", "")));
+    assert_eq!(constant("24.01e+100", env), Ok(dec("24.01e+100", "")));
+    assert_eq!(constant("24.01e-100", env), Ok(dec("24.01e-100", "")));
+    assert_eq!(constant("24.01e100f", env), Ok(dec("24.01e100", "f")));
 
-    assert_eq!(constant("0x2Ap19L", env), Ok(hex("0x2Ap19L")));
-    assert_eq!(constant("0x2A.p19L", env), Ok(hex("0x2A.p19L")));
-    assert_eq!(constant("0x.DEp19L", env), Ok(hex("0x.DEp19L")));
-    assert_eq!(constant("0x2A.DEp19L", env), Ok(hex("0x2A.DEp19L")));
+    assert_eq!(constant("0x2Ap19L", env), Ok(hex("2Ap19", "L")));
+    assert_eq!(constant("0x2A.p19L", env), Ok(hex("2A.p19", "L")));
+    assert_eq!(constant("0x.DEp19L", env), Ok(hex(".DEp19", "L")));
+    assert_eq!(constant("0x2A.DEp19L", env), Ok(hex("2A.DEp19", "L")));
 }
 
 #[test]
@@ -323,7 +339,7 @@ fn test_cast() {
                 specifiers: vec![Int.into()],
                 declarator: None,
             }.into(),
-            expression: int::dec("1"),
+            expression: int::dec("1", ""),
         }.into())
     );
 
@@ -363,7 +379,7 @@ fn test_declaration1() {
                         derived: vec![
                             ArrayDeclarator {
                                 qualifiers: vec![],
-                                size: StaticExpression(int::dec("10")),
+                                size: StaticExpression(int::dec("10", "")),
                             }.into(),
                             ArrayDeclarator {
                                 qualifiers: vec![Const.into()],
@@ -407,7 +423,7 @@ fn test_declaration2() {
                         }.into(),
                         Enumerator {
                             identifier: ident("BAR"),
-                            expression: Some(int::dec("1")),
+                            expression: Some(int::dec("1", "")),
                         }.into(),
                     ],
                 }.into(),
@@ -604,7 +620,7 @@ fn test_declaration5() {
                                                 derived: vec![
                                                     ArrayDeclarator {
                                                         qualifiers: vec![],
-                                                        size: VariableExpression(dec("3")),
+                                                        size: VariableExpression(dec("3", "")),
                                                     }.into(),
                                                 ],
                                                 extensions: vec![],
@@ -708,7 +724,7 @@ fn test_attribute() {
                             }.into(),
                             Attribute {
                                 name: "__nonnull__".into(),
-                                arguments: vec![int::dec("2")],
+                                arguments: vec![int::dec("2", "")],
                             }.into(),
                         ],
                     }.into(),
@@ -790,7 +806,7 @@ fn test_attribute2() {
                         extensions: vec![
                             Attribute {
                                 name: "format".into(),
-                                arguments: vec![ident("printf"), dec("1"), dec("2")],
+                                arguments: vec![ident("printf"), dec("1", ""), dec("2", "")],
                             }.into(),
                         ],
                     }.into(),
@@ -977,7 +993,7 @@ fn test_stmt_expr() {
                             derived: vec![],
                             extensions: vec![],
                         }.into(),
-                        initializer: Some(oct("0")),
+                        initializer: Some(oct("", "")),
                     }.into(),
                 ],
             }.into(),
@@ -1103,7 +1119,7 @@ fn test_union() {
                                             derived: vec![
                                                 ArrayDeclarator {
                                                     qualifiers: vec![],
-                                                    size: VariableExpression(dec("3")),
+                                                    size: VariableExpression(dec("3", "")),
                                                 }.into(),
                                             ],
                                             extensions: vec![],
@@ -1191,7 +1207,7 @@ fn test_offsetof() {
                                                     derived: vec![
                                                         ArrayDeclarator {
                                                             qualifiers: vec![],
-                                                            size: VariableExpression(dec("2")),
+                                                            size: VariableExpression(dec("2", "")),
                                                         }.into(),
                                                     ],
                                                     extensions: vec![],
@@ -1588,7 +1604,7 @@ fn test_ts18661_float() {
                         derived: vec![],
                         extensions: vec![],
                     }.into(),
-                    initializer: Some(float::dec("1.5f64")),
+                    initializer: Some(float::dec("1.5", "f64")),
                 }.into(),
             ],
         }.into())
@@ -1635,7 +1651,7 @@ fn test_gnu_extension() {
         translation_unit(r#"__extension__ _Static_assert(1,"ERR");"#, &mut Env::new()),
         Ok(TranslationUnit(vec![
             StaticAssert {
-                expression: int::dec("1"),
+                expression: int::dec("1", ""),
                 message: cstr(&[r#""ERR""#]),
             }.into(),
         ]).into())

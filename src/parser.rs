@@ -458,6 +458,39 @@ fn __parse_numeric_constant<'input>(__input: &'input str, __state: &mut ParseSta
 fn __parse_integer_constant<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Integer> {
     #![allow(non_snake_case, unused)]
     {
+        let __seq_res = __parse_integer_number(__input, __state, __pos, env);
+        match __seq_res {
+            Matched(__pos, n) => {
+                let __seq_res = {
+                    let str_start = __pos;
+                    match match __parse_integer_suffix(__input, __state, __pos, env) {
+                        Matched(__newpos, _) => Matched(__newpos, ()),
+                        Failed => Matched(__pos, ()),
+                    } {
+                        Matched(__newpos, _) => Matched(__newpos, &__input[str_start..__newpos]),
+                        Failed => Failed,
+                    }
+                };
+                match __seq_res {
+                    Matched(__pos, suffix) => Matched(__pos, {
+                        let (base, number) = n;
+                        Integer {
+                            base: base,
+                            number: number.into(),
+                            suffix: suffix.into(),
+                        }
+                    }),
+                    Failed => Failed,
+                }
+            }
+            Failed => Failed,
+        }
+    }
+}
+
+fn __parse_integer_number<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<(IntegerBase, &'input str)> {
+    #![allow(non_snake_case, unused)]
+    {
         let __choice_res = {
             let __seq_res = {
                 let str_start = __pos;
@@ -473,29 +506,20 @@ fn __parse_integer_constant<'input>(__input: &'input str, __state: &mut ParseSta
                     };
                     match __seq_res {
                         Matched(__pos, _) => {
-                            let __seq_res = {
-                                let mut __repeat_pos = __pos;
-                                loop {
-                                    let __pos = __repeat_pos;
-                                    let __step_res = __parse_dec(__input, __state, __pos, env);
-                                    match __step_res {
-                                        Matched(__newpos, __value) => {
-                                            __repeat_pos = __newpos;
-                                        }
-                                        Failed => {
-                                            break;
-                                        }
+                            let mut __repeat_pos = __pos;
+                            loop {
+                                let __pos = __repeat_pos;
+                                let __step_res = __parse_dec(__input, __state, __pos, env);
+                                match __step_res {
+                                    Matched(__newpos, __value) => {
+                                        __repeat_pos = __newpos;
+                                    }
+                                    Failed => {
+                                        break;
                                     }
                                 }
-                                Matched(__repeat_pos, ())
-                            };
-                            match __seq_res {
-                                Matched(__pos, _) => match __parse_integer_suffix(__input, __state, __pos, env) {
-                                    Matched(__newpos, _) => Matched(__newpos, ()),
-                                    Failed => Matched(__pos, ()),
-                                },
-                                Failed => Failed,
                             }
+                            Matched(__repeat_pos, ())
                         }
                         Failed => Failed,
                     }
@@ -505,7 +529,7 @@ fn __parse_integer_constant<'input>(__input: &'input str, __state: &mut ParseSta
                 }
             };
             match __seq_res {
-                Matched(__pos, n) => Matched(__pos, { Integer::Decimal(String::from(n)) }),
+                Matched(__pos, n) => Matched(__pos, { (IntegerBase::Decimal, n) }),
                 Failed => Failed,
             }
         };
@@ -513,96 +537,78 @@ fn __parse_integer_constant<'input>(__input: &'input str, __state: &mut ParseSta
             Matched(__pos, __value) => Matched(__pos, __value),
             Failed => {
                 let __choice_res = {
-                    let __seq_res = {
-                        let str_start = __pos;
-                        match {
-                            let __seq_res = __parse_ohx(__input, __state, __pos, env);
-                            match __seq_res {
-                                Matched(__pos, _) => {
-                                    let __seq_res = {
-                                        let mut __repeat_pos = __pos;
-                                        let mut __repeat_value = vec![];
-                                        loop {
-                                            let __pos = __repeat_pos;
-                                            let __step_res = __parse_hex(__input, __state, __pos, env);
-                                            match __step_res {
-                                                Matched(__newpos, __value) => {
-                                                    __repeat_pos = __newpos;
-                                                    __repeat_value.push(__value);
-                                                }
-                                                Failed => {
-                                                    break;
-                                                }
+                    let __seq_res = __parse_ohx(__input, __state, __pos, env);
+                    match __seq_res {
+                        Matched(__pos, _) => {
+                            let __seq_res = {
+                                let str_start = __pos;
+                                match {
+                                    let mut __repeat_pos = __pos;
+                                    let mut __repeat_value = vec![];
+                                    loop {
+                                        let __pos = __repeat_pos;
+                                        let __step_res = __parse_hex(__input, __state, __pos, env);
+                                        match __step_res {
+                                            Matched(__newpos, __value) => {
+                                                __repeat_pos = __newpos;
+                                                __repeat_value.push(__value);
+                                            }
+                                            Failed => {
+                                                break;
                                             }
                                         }
-                                        if __repeat_value.len() >= 1 {
-                                            Matched(__repeat_pos, ())
-                                        } else {
-                                            Failed
-                                        }
-                                    };
-                                    match __seq_res {
-                                        Matched(__pos, _) => match __parse_integer_suffix(__input, __state, __pos, env) {
-                                            Matched(__newpos, _) => Matched(__newpos, ()),
-                                            Failed => Matched(__pos, ()),
-                                        },
-                                        Failed => Failed,
                                     }
+                                    if __repeat_value.len() >= 1 {
+                                        Matched(__repeat_pos, ())
+                                    } else {
+                                        Failed
+                                    }
+                                } {
+                                    Matched(__newpos, _) => Matched(__newpos, &__input[str_start..__newpos]),
+                                    Failed => Failed,
                                 }
+                            };
+                            match __seq_res {
+                                Matched(__pos, n) => Matched(__pos, { (IntegerBase::Hexademical, n) }),
                                 Failed => Failed,
                             }
-                        } {
-                            Matched(__newpos, _) => Matched(__newpos, &__input[str_start..__newpos]),
-                            Failed => Failed,
                         }
-                    };
-                    match __seq_res {
-                        Matched(__pos, n) => Matched(__pos, { Integer::Hexademical(String::from(n)) }),
                         Failed => Failed,
                     }
                 };
                 match __choice_res {
                     Matched(__pos, __value) => Matched(__pos, __value),
                     Failed => {
-                        let __seq_res = {
-                            let str_start = __pos;
-                            match {
-                                let __seq_res = slice_eq(__input, __state, __pos, "0");
-                                match __seq_res {
-                                    Matched(__pos, _) => {
-                                        let __seq_res = {
-                                            let mut __repeat_pos = __pos;
-                                            loop {
-                                                let __pos = __repeat_pos;
-                                                let __step_res = __parse_oct(__input, __state, __pos, env);
-                                                match __step_res {
-                                                    Matched(__newpos, __value) => {
-                                                        __repeat_pos = __newpos;
-                                                    }
-                                                    Failed => {
-                                                        break;
-                                                    }
+                        let __seq_res = slice_eq(__input, __state, __pos, "0");
+                        match __seq_res {
+                            Matched(__pos, _) => {
+                                let __seq_res = {
+                                    let str_start = __pos;
+                                    match {
+                                        let mut __repeat_pos = __pos;
+                                        loop {
+                                            let __pos = __repeat_pos;
+                                            let __step_res = __parse_oct(__input, __state, __pos, env);
+                                            match __step_res {
+                                                Matched(__newpos, __value) => {
+                                                    __repeat_pos = __newpos;
+                                                }
+                                                Failed => {
+                                                    break;
                                                 }
                                             }
-                                            Matched(__repeat_pos, ())
-                                        };
-                                        match __seq_res {
-                                            Matched(__pos, _) => match __parse_integer_suffix(__input, __state, __pos, env) {
-                                                Matched(__newpos, _) => Matched(__newpos, ()),
-                                                Failed => Matched(__pos, ()),
-                                            },
-                                            Failed => Failed,
                                         }
+                                        Matched(__repeat_pos, ())
+                                    } {
+                                        Matched(__newpos, _) => Matched(__newpos, &__input[str_start..__newpos]),
+                                        Failed => Failed,
                                     }
+                                };
+                                match __seq_res {
+                                    Matched(__pos, n) => Matched(__pos, { (IntegerBase::Octal, n) }),
                                     Failed => Failed,
                                 }
-                            } {
-                                Matched(__newpos, _) => Matched(__newpos, &__input[str_start..__newpos]),
-                                Failed => Failed,
                             }
-                        };
-                        match __seq_res {
-                            Matched(__pos, n) => Matched(__pos, { Integer::Octal(String::from(n)) }),
                             Failed => Failed,
                         }
                     }
@@ -677,6 +683,39 @@ fn __parse_integer_suffix<'input>(__input: &'input str, __state: &mut ParseState
 fn __parse_float_constant<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Float> {
     #![allow(non_snake_case, unused)]
     {
+        let __seq_res = __parse_float_number(__input, __state, __pos, env);
+        match __seq_res {
+            Matched(__pos, n) => {
+                let __seq_res = {
+                    let str_start = __pos;
+                    match match __parse_float_suffix(__input, __state, __pos, env) {
+                        Matched(__newpos, _) => Matched(__newpos, ()),
+                        Failed => Matched(__pos, ()),
+                    } {
+                        Matched(__newpos, _) => Matched(__newpos, &__input[str_start..__newpos]),
+                        Failed => Failed,
+                    }
+                };
+                match __seq_res {
+                    Matched(__pos, suffix) => Matched(__pos, {
+                        let (base, number) = n;
+                        Float {
+                            base: base,
+                            number: number.into(),
+                            suffix: suffix.into(),
+                        }
+                    }),
+                    Failed => Failed,
+                }
+            }
+            Failed => Failed,
+        }
+    }
+}
+
+fn __parse_float_number<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<(FloatBase, &'input str)> {
+    #![allow(non_snake_case, unused)]
+    {
         let __choice_res = {
             let __seq_res = {
                 let str_start = __pos;
@@ -686,22 +725,28 @@ fn __parse_float_constant<'input>(__input: &'input str, __state: &mut ParseState
                 }
             };
             match __seq_res {
-                Matched(__pos, n) => Matched(__pos, { Float::Decimal(String::from(n)) }),
+                Matched(__pos, n) => Matched(__pos, { (FloatBase::Decimal, n) }),
                 Failed => Failed,
             }
         };
         match __choice_res {
             Matched(__pos, __value) => Matched(__pos, __value),
             Failed => {
-                let __seq_res = {
-                    let str_start = __pos;
-                    match __parse_float_hexademical(__input, __state, __pos, env) {
-                        Matched(__newpos, _) => Matched(__newpos, &__input[str_start..__newpos]),
-                        Failed => Failed,
-                    }
-                };
+                let __seq_res = __parse_ohx(__input, __state, __pos, env);
                 match __seq_res {
-                    Matched(__pos, n) => Matched(__pos, { Float::Hexademical(String::from(n)) }),
+                    Matched(__pos, _) => {
+                        let __seq_res = {
+                            let str_start = __pos;
+                            match __parse_float_hexademical(__input, __state, __pos, env) {
+                                Matched(__newpos, _) => Matched(__newpos, &__input[str_start..__newpos]),
+                                Failed => Failed,
+                            }
+                        };
+                        match __seq_res {
+                            Matched(__pos, n) => Matched(__pos, { (FloatBase::Hexademical, n) }),
+                            Failed => Failed,
+                        }
+                    }
                     Failed => Failed,
                 }
             }
@@ -757,19 +802,10 @@ fn __parse_float_decimal<'input>(__input: &'input str, __state: &mut ParseState<
                                 }
                             };
                             match __seq_res {
-                                Matched(__pos, _) => {
-                                    let __seq_res = match __parse_float_decimal_exp(__input, __state, __pos, env) {
-                                        Matched(__newpos, _) => Matched(__newpos, ()),
-                                        Failed => Matched(__pos, ()),
-                                    };
-                                    match __seq_res {
-                                        Matched(__pos, _) => match __parse_float_suffix(__input, __state, __pos, env) {
-                                            Matched(__newpos, _) => Matched(__newpos, ()),
-                                            Failed => Matched(__pos, ()),
-                                        },
-                                        Failed => Failed,
-                                    }
-                                }
+                                Matched(__pos, _) => match __parse_float_decimal_exp(__input, __state, __pos, env) {
+                                    Matched(__newpos, _) => Matched(__newpos, ()),
+                                    Failed => Matched(__pos, ()),
+                                },
                                 Failed => Failed,
                             }
                         }
@@ -809,19 +845,10 @@ fn __parse_float_decimal<'input>(__input: &'input str, __state: &mut ParseState<
                         Matched(__pos, _) => {
                             let __seq_res = slice_eq(__input, __state, __pos, ".");
                             match __seq_res {
-                                Matched(__pos, _) => {
-                                    let __seq_res = match __parse_float_decimal_exp(__input, __state, __pos, env) {
-                                        Matched(__newpos, _) => Matched(__newpos, ()),
-                                        Failed => Matched(__pos, ()),
-                                    };
-                                    match __seq_res {
-                                        Matched(__pos, _) => match __parse_float_suffix(__input, __state, __pos, env) {
-                                            Matched(__newpos, _) => Matched(__newpos, ()),
-                                            Failed => Matched(__pos, ()),
-                                        },
-                                        Failed => Failed,
-                                    }
-                                }
+                                Matched(__pos, _) => match __parse_float_decimal_exp(__input, __state, __pos, env) {
+                                    Matched(__newpos, _) => Matched(__newpos, ()),
+                                    Failed => Matched(__pos, ()),
+                                },
                                 Failed => Failed,
                             }
                         }
@@ -854,16 +881,7 @@ fn __parse_float_decimal<'input>(__input: &'input str, __state: &mut ParseState<
                             }
                         };
                         match __seq_res {
-                            Matched(__pos, _) => {
-                                let __seq_res = __parse_float_decimal_exp(__input, __state, __pos, env);
-                                match __seq_res {
-                                    Matched(__pos, _) => match __parse_float_suffix(__input, __state, __pos, env) {
-                                        Matched(__newpos, _) => Matched(__newpos, ()),
-                                        Failed => Matched(__pos, ()),
-                                    },
-                                    Failed => Failed,
-                                }
-                            }
+                            Matched(__pos, _) => __parse_float_decimal_exp(__input, __state, __pos, env),
                             Failed => Failed,
                         }
                     }
@@ -934,80 +952,25 @@ fn __parse_float_hexademical<'input>(__input: &'input str, __state: &mut ParseSt
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
-            let __seq_res = __parse_ohx(__input, __state, __pos, env);
-            match __seq_res {
-                Matched(__pos, _) => {
-                    let __seq_res = {
-                        let mut __repeat_pos = __pos;
-                        loop {
-                            let __pos = __repeat_pos;
-                            let __step_res = __parse_hex(__input, __state, __pos, env);
-                            match __step_res {
-                                Matched(__newpos, __value) => {
-                                    __repeat_pos = __newpos;
-                                }
-                                Failed => {
-                                    break;
-                                }
-                            }
+            let __seq_res = {
+                let mut __repeat_pos = __pos;
+                loop {
+                    let __pos = __repeat_pos;
+                    let __step_res = __parse_hex(__input, __state, __pos, env);
+                    match __step_res {
+                        Matched(__newpos, __value) => {
+                            __repeat_pos = __newpos;
                         }
-                        Matched(__repeat_pos, ())
-                    };
-                    match __seq_res {
-                        Matched(__pos, _) => {
-                            let __seq_res = slice_eq(__input, __state, __pos, ".");
-                            match __seq_res {
-                                Matched(__pos, _) => {
-                                    let __seq_res = {
-                                        let mut __repeat_pos = __pos;
-                                        let mut __repeat_value = vec![];
-                                        loop {
-                                            let __pos = __repeat_pos;
-                                            let __step_res = __parse_hex(__input, __state, __pos, env);
-                                            match __step_res {
-                                                Matched(__newpos, __value) => {
-                                                    __repeat_pos = __newpos;
-                                                    __repeat_value.push(__value);
-                                                }
-                                                Failed => {
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                        if __repeat_value.len() >= 1 {
-                                            Matched(__repeat_pos, ())
-                                        } else {
-                                            Failed
-                                        }
-                                    };
-                                    match __seq_res {
-                                        Matched(__pos, _) => {
-                                            let __seq_res = __parse_float_binary_exp(__input, __state, __pos, env);
-                                            match __seq_res {
-                                                Matched(__pos, _) => match __parse_float_suffix(__input, __state, __pos, env) {
-                                                    Matched(__newpos, _) => Matched(__newpos, ()),
-                                                    Failed => Matched(__pos, ()),
-                                                },
-                                                Failed => Failed,
-                                            }
-                                        }
-                                        Failed => Failed,
-                                    }
-                                }
-                                Failed => Failed,
-                            }
+                        Failed => {
+                            break;
                         }
-                        Failed => Failed,
                     }
                 }
-                Failed => Failed,
-            }
-        };
-        match __choice_res {
-            Matched(__pos, __value) => Matched(__pos, __value),
-            Failed => {
-                let __choice_res = {
-                    let __seq_res = __parse_ohx(__input, __state, __pos, env);
+                Matched(__repeat_pos, ())
+            };
+            match __seq_res {
+                Matched(__pos, _) => {
+                    let __seq_res = slice_eq(__input, __state, __pos, ".");
                     match __seq_res {
                         Matched(__pos, _) => {
                             let __seq_res = {
@@ -1033,22 +996,47 @@ fn __parse_float_hexademical<'input>(__input: &'input str, __state: &mut ParseSt
                                 }
                             };
                             match __seq_res {
-                                Matched(__pos, _) => {
-                                    let __seq_res = slice_eq(__input, __state, __pos, ".");
-                                    match __seq_res {
-                                        Matched(__pos, _) => {
-                                            let __seq_res = __parse_float_binary_exp(__input, __state, __pos, env);
-                                            match __seq_res {
-                                                Matched(__pos, _) => match __parse_float_suffix(__input, __state, __pos, env) {
-                                                    Matched(__newpos, _) => Matched(__newpos, ()),
-                                                    Failed => Matched(__pos, ()),
-                                                },
-                                                Failed => Failed,
-                                            }
-                                        }
-                                        Failed => Failed,
-                                    }
+                                Matched(__pos, _) => __parse_float_binary_exp(__input, __state, __pos, env),
+                                Failed => Failed,
+                            }
+                        }
+                        Failed => Failed,
+                    }
+                }
+                Failed => Failed,
+            }
+        };
+        match __choice_res {
+            Matched(__pos, __value) => Matched(__pos, __value),
+            Failed => {
+                let __choice_res = {
+                    let __seq_res = {
+                        let mut __repeat_pos = __pos;
+                        let mut __repeat_value = vec![];
+                        loop {
+                            let __pos = __repeat_pos;
+                            let __step_res = __parse_hex(__input, __state, __pos, env);
+                            match __step_res {
+                                Matched(__newpos, __value) => {
+                                    __repeat_pos = __newpos;
+                                    __repeat_value.push(__value);
                                 }
+                                Failed => {
+                                    break;
+                                }
+                            }
+                        }
+                        if __repeat_value.len() >= 1 {
+                            Matched(__repeat_pos, ())
+                        } else {
+                            Failed
+                        }
+                    };
+                    match __seq_res {
+                        Matched(__pos, _) => {
+                            let __seq_res = slice_eq(__input, __state, __pos, ".");
+                            match __seq_res {
+                                Matched(__pos, _) => __parse_float_binary_exp(__input, __state, __pos, env),
                                 Failed => Failed,
                             }
                         }
@@ -1058,45 +1046,30 @@ fn __parse_float_hexademical<'input>(__input: &'input str, __state: &mut ParseSt
                 match __choice_res {
                     Matched(__pos, __value) => Matched(__pos, __value),
                     Failed => {
-                        let __seq_res = __parse_ohx(__input, __state, __pos, env);
-                        match __seq_res {
-                            Matched(__pos, _) => {
-                                let __seq_res = {
-                                    let mut __repeat_pos = __pos;
-                                    let mut __repeat_value = vec![];
-                                    loop {
-                                        let __pos = __repeat_pos;
-                                        let __step_res = __parse_hex(__input, __state, __pos, env);
-                                        match __step_res {
-                                            Matched(__newpos, __value) => {
-                                                __repeat_pos = __newpos;
-                                                __repeat_value.push(__value);
-                                            }
-                                            Failed => {
-                                                break;
-                                            }
-                                        }
+                        let __seq_res = {
+                            let mut __repeat_pos = __pos;
+                            let mut __repeat_value = vec![];
+                            loop {
+                                let __pos = __repeat_pos;
+                                let __step_res = __parse_hex(__input, __state, __pos, env);
+                                match __step_res {
+                                    Matched(__newpos, __value) => {
+                                        __repeat_pos = __newpos;
+                                        __repeat_value.push(__value);
                                     }
-                                    if __repeat_value.len() >= 1 {
-                                        Matched(__repeat_pos, ())
-                                    } else {
-                                        Failed
+                                    Failed => {
+                                        break;
                                     }
-                                };
-                                match __seq_res {
-                                    Matched(__pos, _) => {
-                                        let __seq_res = __parse_float_binary_exp(__input, __state, __pos, env);
-                                        match __seq_res {
-                                            Matched(__pos, _) => match __parse_float_suffix(__input, __state, __pos, env) {
-                                                Matched(__newpos, _) => Matched(__newpos, ()),
-                                                Failed => Matched(__pos, ()),
-                                            },
-                                            Failed => Failed,
-                                        }
-                                    }
-                                    Failed => Failed,
                                 }
                             }
+                            if __repeat_value.len() >= 1 {
+                                Matched(__repeat_pos, ())
+                            } else {
+                                Failed
+                            }
+                        };
+                        match __seq_res {
+                            Matched(__pos, _) => __parse_float_binary_exp(__input, __state, __pos, env),
                             Failed => Failed,
                         }
                     }

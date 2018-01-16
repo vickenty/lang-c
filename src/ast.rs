@@ -49,19 +49,37 @@ pub enum Constant {
 ///
 /// (C11 6.4.4.1)
 #[derive(Debug, PartialEq, Clone)]
-pub enum Integer {
-    Decimal(String),
-    Octal(String),
-    Hexademical(String),
+pub struct Integer {
+    pub base: IntegerBase,
+    pub number: String,
+    pub suffix: String,
+}
+
+/// Base of the integer literal
+///
+/// (C11 6.4.4.1)
+#[derive(Debug, PartialEq, Clone)]
+pub enum IntegerBase {
+    Decimal,
+    Octal,
+    Hexademical,
 }
 
 /// Floating point number literal
 ///
 /// (C11 6.4.4.2)
 #[derive(Debug, PartialEq, Clone)]
-pub enum Float {
-    Decimal(String),
-    Hexademical(String),
+pub struct Float {
+    pub base: FloatBase,
+    pub number: String,
+    pub suffix: String,
+}
+
+/// Floating point number base
+#[derive(Debug, PartialEq, Clone)]
+pub enum FloatBase {
+    Decimal,
+    Hexademical,
 }
 
 /// String literal

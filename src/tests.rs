@@ -131,44 +131,53 @@ mod expr {
 mod int {
     use ast::*;
 
-    fn num<T: From<Constant>>(base: IntegerBase, number: &str, suffix: &str) -> T {
+    pub fn num<T: From<Constant>>(base: IntegerBase, number: &str, suffix: IntegerSuffix) -> T {
         Constant::Integer(Integer {
             base: base,
             number: number.into(),
-            suffix: suffix.into(),
+            suffix: suffix,
         }).into()
     }
 
-    pub fn dec<T: From<Constant>>(n: &str, s: &str) -> T {
-        num(IntegerBase::Decimal, n, s)
+    pub const NONE: IntegerSuffix = IntegerSuffix {
+        size: IntegerSize::Int,
+        unsigned: false,
+        imaginary: false,
+    };
+
+    pub const UL: IntegerSuffix = IntegerSuffix {
+        size: IntegerSize::Long,
+        unsigned: true,
+        imaginary: false,
+    };
+
+    pub fn zero<T: From<Constant>>() -> T {
+        num(IntegerBase::Octal, "", NONE.clone())
     }
 
-    pub fn oct<T: From<Constant>>(n: &str, s: &str) -> T {
-        num(IntegerBase::Octal, n, s)
-    }
-
-    pub fn hex<T: From<Constant>>(n: &str, s: &str) -> T {
-        num(IntegerBase::Hexademical, n, s)
+    pub fn dec<T: From<Constant>>(n: &str) -> T {
+        num(IntegerBase::Decimal, n, NONE.clone())
     }
 }
 
 mod float {
     use ast::*;
 
-    fn num<T: From<Constant>>(base: FloatBase, number: &str, suffix: &str) -> T {
+    pub fn num<T: From<Constant>>(base: FloatBase, number: &str, suffix: FloatSuffix) -> T {
         Constant::Float(Float {
             base: base,
             number: number.into(),
-            suffix: suffix.into(),
+            suffix: suffix,
         }).into()
     }
 
-    pub fn dec<T: From<Constant>>(n: &str, s: &str) -> T {
-        num(FloatBase::Decimal, n, s)
-    }
+    pub const NONE: FloatSuffix = FloatSuffix {
+        format: FloatFormat::Double,
+        imaginary: false,
+    };
 
-    pub fn hex<T: From<Constant>>(n: &str, s: &str) -> T {
-        num(FloatBase::Hexademical, n, s)
+    pub fn dec<T: From<Constant>>(n: &str) -> T {
+        num(FloatBase::Decimal, n, NONE.clone())
     }
 }
 
@@ -185,48 +194,135 @@ fn cstr<T: From<StringLiteral>>(i: &[&str]) -> T {
 
 #[test]
 fn test_integer() {
-    use self::int::*;
+    use self::int::{num, NONE, UL};
+    use ast::IntegerBase::*;
     use parser::constant;
 
     let env = &mut Env::new();
 
-    assert_eq!(constant("0", env), Ok(oct("", "")));
-    assert_eq!(constant("1", env), Ok(dec("1", "")));
-    assert_eq!(constant("1234567890", env), Ok(dec("1234567890", "")));
-    assert_eq!(constant("01234567", env), Ok(oct("1234567", "")));
+    assert_eq!(constant("0", env), Ok(num(Octal, "", NONE.clone())));
+    assert_eq!(constant("1", env), Ok(num(Decimal, "1", NONE.clone())));
+    assert_eq!(
+        constant("1234567890", env),
+        Ok(num(Decimal, "1234567890", NONE.clone()))
+    );
+    assert_eq!(
+        constant("01234567", env),
+        Ok(num(Octal, "1234567", NONE.clone()))
+    );
     assert_eq!(
         constant("0x1234567890abdefABCDEF", env),
-        Ok(hex("1234567890abdefABCDEF", ""))
+        Ok(num(Hexademical, "1234567890abdefABCDEF", NONE.clone()))
     );
-    assert_eq!(constant("042lu", env), Ok(oct("42", "lu")));
+    assert_eq!(constant("042lu", env), Ok(num(Octal, "42", UL.clone())));
+    assert_eq!(constant("042ul", env), Ok(num(Octal, "42", UL.clone())));
+    assert_eq!(constant("042uL", env), Ok(num(Octal, "42", UL.clone())));
 
     assert!(constant("1a", env).is_err());
     assert!(constant("08", env).is_err());
     assert!(constant("0xX", env).is_err());
+    assert!(constant("1lul", env).is_err());
+    assert!(constant("2lL", env).is_err());
 }
 
 #[test]
 fn test_floating() {
     use self::float::*;
+    use ast::FloatBase::*;
     use parser::constant;
 
     let env = &mut Env::new();
 
-    assert_eq!(constant("2.", env), Ok(dec("2.", "")));
-    assert_eq!(constant("2.e2", env), Ok(dec("2.e2", "")));
-    assert_eq!(constant(".2", env), Ok(dec(".2", "")));
-    assert_eq!(constant(".2e2", env), Ok(dec(".2e2", "")));
-    assert_eq!(constant("2.0", env), Ok(dec("2.0", "")));
+    const F: FloatSuffix = FloatSuffix {
+        format: FloatFormat::Float,
+        imaginary: false,
+    };
 
-    assert_eq!(constant("24.01e100", env), Ok(dec("24.01e100", "")));
-    assert_eq!(constant("24.01e+100", env), Ok(dec("24.01e+100", "")));
-    assert_eq!(constant("24.01e-100", env), Ok(dec("24.01e-100", "")));
-    assert_eq!(constant("24.01e100f", env), Ok(dec("24.01e100", "f")));
+    const L: FloatSuffix = FloatSuffix {
+        format: FloatFormat::LongDouble,
+        imaginary: false,
+    };
 
-    assert_eq!(constant("0x2Ap19L", env), Ok(hex("2Ap19", "L")));
-    assert_eq!(constant("0x2A.p19L", env), Ok(hex("2A.p19", "L")));
-    assert_eq!(constant("0x.DEp19L", env), Ok(hex(".DEp19", "L")));
-    assert_eq!(constant("0x2A.DEp19L", env), Ok(hex("2A.DEp19", "L")));
+    assert_eq!(constant("2.", env), Ok(num(Decimal, "2.", NONE.clone())));
+    assert_eq!(
+        constant("2.e2", env),
+        Ok(num(Decimal, "2.e2", NONE.clone()))
+    );
+    assert_eq!(constant(".2", env), Ok(num(Decimal, ".2", NONE.clone())));
+    assert_eq!(
+        constant(".2e2", env),
+        Ok(num(Decimal, ".2e2", NONE.clone()))
+    );
+    assert_eq!(constant("2.0", env), Ok(num(Decimal, "2.0", NONE.clone())));
+    assert_eq!(constant("2.0f", env), Ok(num(Decimal, "2.0", F.clone())));
+
+    assert_eq!(
+        constant("24.01e100", env),
+        Ok(num(Decimal, "24.01e100", NONE.clone()))
+    );
+    assert_eq!(
+        constant("24.01e+100", env),
+        Ok(num(Decimal, "24.01e+100", NONE.clone()))
+    );
+    assert_eq!(
+        constant("24.01e-100", env),
+        Ok(num(Decimal, "24.01e-100", NONE.clone()))
+    );
+    assert_eq!(
+        constant("24.01e100f", env),
+        Ok(num(Decimal, "24.01e100", F.clone()))
+    );
+
+    assert_eq!(
+        constant("0x2Ap19L", env),
+        Ok(num(Hexademical, "2Ap19", L.clone()))
+    );
+    assert_eq!(
+        constant("0x2A.p19L", env),
+        Ok(num(Hexademical, "2A.p19", L.clone()))
+    );
+    assert_eq!(
+        constant("0x.DEp19L", env),
+        Ok(num(Hexademical, ".DEp19", L.clone()))
+    );
+    assert_eq!(
+        constant("0x2A.DEp19L", env),
+        Ok(num(Hexademical, "2A.DEp19", L.clone()))
+    );
+}
+
+#[test]
+fn ts18661_literal() {
+    use self::float::*;
+    use ast::FloatBase::*;
+    use parser::constant;
+
+    let env = &mut Env::new();
+
+    const F16: FloatSuffix = FloatSuffix {
+        format: FloatFormat::TS18661Format(TS18661FloatType {
+            format: TS18661FloatFormat::BinaryInterchange,
+            width: 16,
+        }),
+        imaginary: false,
+    };
+
+    const F64: FloatSuffix = FloatSuffix {
+        format: FloatFormat::TS18661Format(TS18661FloatType {
+            format: TS18661FloatFormat::BinaryInterchange,
+            width: 64,
+        }),
+        imaginary: false,
+    };
+
+    assert_eq!(
+        constant("1.0f64", env),
+        Ok(num(Decimal, "1.0", F64.clone()))
+    );
+    assert_eq!(
+        constant("0xAp1f16", env),
+        Ok(num(Hexademical, "Ap1", F16.clone()))
+    );
 }
 
 #[test]
@@ -339,7 +435,7 @@ fn test_cast() {
                 specifiers: vec![Int.into()],
                 declarator: None,
             }.into(),
-            expression: int::dec("1", ""),
+            expression: int::dec("1"),
         }.into())
     );
 
@@ -379,7 +475,7 @@ fn test_declaration1() {
                         derived: vec![
                             ArrayDeclarator {
                                 qualifiers: vec![],
-                                size: StaticExpression(int::dec("10", "")),
+                                size: StaticExpression(int::dec("10")),
                             }.into(),
                             ArrayDeclarator {
                                 qualifiers: vec![Const.into()],
@@ -423,7 +519,7 @@ fn test_declaration2() {
                         }.into(),
                         Enumerator {
                             identifier: ident("BAR"),
-                            expression: Some(int::dec("1", "")),
+                            expression: Some(int::dec("1")),
                         }.into(),
                     ],
                 }.into(),
@@ -620,7 +716,7 @@ fn test_declaration5() {
                                                 derived: vec![
                                                     ArrayDeclarator {
                                                         qualifiers: vec![],
-                                                        size: VariableExpression(dec("3", "")),
+                                                        size: VariableExpression(dec("3")),
                                                     }.into(),
                                                 ],
                                                 extensions: vec![],
@@ -724,7 +820,7 @@ fn test_attribute() {
                             }.into(),
                             Attribute {
                                 name: "__nonnull__".into(),
-                                arguments: vec![int::dec("2", "")],
+                                arguments: vec![int::dec("2")],
                             }.into(),
                         ],
                     }.into(),
@@ -806,7 +902,7 @@ fn test_attribute2() {
                         extensions: vec![
                             Attribute {
                                 name: "format".into(),
-                                arguments: vec![ident("printf"), dec("1", ""), dec("2", "")],
+                                arguments: vec![ident("printf"), dec("1"), dec("2")],
                             }.into(),
                         ],
                     }.into(),
@@ -979,8 +1075,6 @@ fn test_stmt_expr() {
     use ast::TypeSpecifier::Int;
     use parser::expression;
 
-    use self::int::oct;
-
     assert_eq!(
         expression("({ int p = 0; p; })", &mut Env::new()),
         Ok(Compound(vec![
@@ -993,7 +1087,7 @@ fn test_stmt_expr() {
                             derived: vec![],
                             extensions: vec![],
                         }.into(),
-                        initializer: Some(oct("", "")),
+                        initializer: Some(int::zero()),
                     }.into(),
                 ],
             }.into(),
@@ -1119,7 +1213,7 @@ fn test_union() {
                                             derived: vec![
                                                 ArrayDeclarator {
                                                     qualifiers: vec![],
-                                                    size: VariableExpression(dec("3", "")),
+                                                    size: VariableExpression(dec("3")),
                                                 }.into(),
                                             ],
                                             extensions: vec![],
@@ -1207,7 +1301,7 @@ fn test_offsetof() {
                                                     derived: vec![
                                                         ArrayDeclarator {
                                                             qualifiers: vec![],
-                                                            size: VariableExpression(dec("2", "")),
+                                                            size: VariableExpression(dec("2")),
                                                         }.into(),
                                                     ],
                                                     extensions: vec![],
@@ -1589,7 +1683,7 @@ fn test_keyword_expr() {
 fn test_ts18661_float() {
     use parser::declaration;
     assert_eq!(
-        declaration("_Float64 foo = 1.5f64;", &mut Env::new()),
+        declaration("_Float64 foo = 1.5;", &mut Env::new()),
         Ok(Declaration {
             specifiers: vec![
                 TS18661FloatType {
@@ -1604,7 +1698,7 @@ fn test_ts18661_float() {
                         derived: vec![],
                         extensions: vec![],
                     }.into(),
-                    initializer: Some(float::dec("1.5", "f64")),
+                    initializer: Some(float::dec("1.5")),
                 }.into(),
             ],
         }.into())
@@ -1651,7 +1745,7 @@ fn test_gnu_extension() {
         translation_unit(r#"__extension__ _Static_assert(1,"ERR");"#, &mut Env::new()),
         Ok(TranslationUnit(vec![
             StaticAssert {
-                expression: int::dec("1", ""),
+                expression: int::dec("1"),
                 message: cstr(&[r#""ERR""#]),
             }.into(),
         ]).into())

@@ -77,12 +77,12 @@ numeric_constant -> Constant =
     c:integer_constant { Constant::Integer(c) }
 
 integer_constant -> Integer =
-    n:integer_number suffix:$(integer_suffix?) {
+    n:integer_number suffix:integer_suffix {
         let (base, number) = n;
         Integer {
             base: base,
             number: number.into(),
-            suffix: suffix.into(),
+            suffix: suffix,
         }
     }
 
@@ -91,15 +91,19 @@ integer_number -> (IntegerBase, &'input str) =
     ohx n:$(hex+) { (IntegerBase::Hexademical, n) } /
     "0" n:$(oct*) { (IntegerBase::Octal, n) }
 
-integer_suffix = ([uUlL] / gnu<[iIjJ]>)*
+integer_suffix -> IntegerSuffix =
+    #quiet<integer_suffix_inner> / #expected("integer suffix")
+
+integer_suffix_inner -> IntegerSuffix =
+    s:$(([uUlL] / gnu<[iIjJ]>)*) {? int_suffix(s) }
 
 float_constant -> Float =
-    n:float_number suffix:$(float_suffix?) {
+    n:float_number suffix:float_suffix {
         let (base, number) = n;
         Float {
             base: base,
             number: number.into(),
-            suffix: suffix.into(),
+            suffix: suffix,
         }
     }
 
@@ -121,10 +125,27 @@ float_hexademical =
 
 float_binary_exp = [pP][+-]?dec+
 
-float_suffix =
-    ts18661_float_suffix /
-    [fFlL] gnu<[iIjJ]>? /
-    gnu<[iIjJ] [fFlL]?>
+float_suffix -> FloatSuffix = #quiet<float_suffix_inner> / #expected("float literal suffix")
+
+float_suffix_inner -> FloatSuffix =
+    gnu<[iIjJ]> fmt:float_format {
+        FloatSuffix {
+            format: fmt,
+            imaginary: true,
+        }
+    } /
+    fmt:float_format imag:gnu<[iIjJ]>? {
+        FloatSuffix {
+            format: fmt,
+            imaginary: imag.is_some(),
+        }
+    }
+
+float_format -> FloatFormat =
+    f:ts18661_float_suffix { FloatFormat::TS18661Format(f) } /
+    [fF] { FloatFormat::Float } /
+    [lL] { FloatFormat::LongDouble } /
+    { FloatFormat::Double }
 
 character_constant -> String =
     c:$([LuU]? "'" character+ "'") { String::from(c) }
@@ -1185,21 +1206,33 @@ ts18661_float_type_specifier -> TS18661FloatType =
     ts18661_decimal_float
 
 ts18661_binary_float -> TS18661FloatType =
-    "_Float" width:$(ts18661_binary_width) extended:"x"? {
-        ts18661_float(true, width.parse().unwrap(), extended.is_some())
+    "_Float" width:ts18661_binary_width extended:"x"? {
+        ts18661_float(true, width, extended.is_some())
     }
 
-ts18661_binary_width = "16" / "32" / "64" / "128"
+ts18661_binary_width -> usize =
+    n:$("16" / "32" / "64" / "128") {
+        n.parse().unwrap()
+    }
 
 ts18661_decimal_float -> TS18661FloatType =
-    "_Decimal" width:$(ts18661_decimal_width) extended:"x"? {
-        ts18661_float(false, width.parse().unwrap(), extended.is_some())
+    "_Decimal" width:ts18661_decimal_width extended:"x"? {
+        ts18661_float(false, width, extended.is_some())
     }
 
-ts18661_decimal_width = "32" / "64" / "128"
+ts18661_decimal_width -> usize =
+    n:$("32" / "64" / "128") {
+        n.parse().unwrap()
+    }
 
-ts18661_float_suffix =
-    "df" / "dd" / "dl" /
-    "DF" / "DD" / "DL" /
-    [fF] ts18661_binary_width "x"? /
-    [dD] ts18661_decimal_width "x"?
+ts18661_float_suffix -> TS18661FloatType =
+    ("df" / "DF") { ts18661_float(false, 32, false) } /
+    ("dd" / "DD") { ts18661_float(false, 64, false) } /
+    ("dl" / "DL") { ts18661_float(false, 128, false) } /
+
+    [fF] width:ts18661_binary_width extended:"x"? {
+        ts18661_float(true, width, extended.is_some())
+    } /
+    [dD] width:ts18661_decimal_width extended:"x"? {
+        ts18661_float(false, width, extended.is_some())
+    }

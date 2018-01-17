@@ -51,8 +51,8 @@ pub enum Constant {
 #[derive(Debug, PartialEq, Clone)]
 pub struct Integer {
     pub base: IntegerBase,
-    pub number: String,
-    pub suffix: String,
+    pub number: Box<str>,
+    pub suffix: IntegerSuffix,
 }
 
 /// Base of the integer literal
@@ -65,21 +65,82 @@ pub enum IntegerBase {
     Hexademical,
 }
 
+/// Suffix of an integer literal
+///
+/// (C11 6.4.4.1)
+#[derive(Debug, PartialEq, Clone)]
+pub struct IntegerSuffix {
+    /// Minimum size of the integer literal
+    pub size: IntegerSize,
+    /// Integer literal has unsigned type
+    pub unsigned: bool,
+    /// Integer literal is an imaginary part of a complex number
+    ///
+    /// [GNU extension](https://gcc.gnu.org/onlinedocs/gcc/Complex.html) suffixes `i` and `j`.
+    pub imaginary: bool,
+}
+
+/// Size part of a integer literal suffix
+///
+/// (C11 6.4.4.1)
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub enum IntegerSize {
+    /// no `l` or `ll`
+    Int = 0,
+    /// `l`
+    Long,
+    /// `ll`
+    LongLong,
+}
+
 /// Floating point number literal
 ///
 /// (C11 6.4.4.2)
 #[derive(Debug, PartialEq, Clone)]
 pub struct Float {
     pub base: FloatBase,
-    pub number: String,
-    pub suffix: String,
+    pub number: Box<str>,
+    pub suffix: FloatSuffix,
 }
 
 /// Floating point number base
+///
+/// (C11 6.4.4.2)
 #[derive(Debug, PartialEq, Clone)]
 pub enum FloatBase {
     Decimal,
     Hexademical,
+}
+
+/// Floating point number suffix
+///
+/// (C11 6.4.4.2)
+#[derive(Debug, PartialEq, Clone)]
+pub struct FloatSuffix {
+    pub format: FloatFormat,
+    /// Integer literal is an imaginary part of a complex number
+    ///
+    /// [GNU extension](https://gcc.gnu.org/onlinedocs/gcc/Complex.html) suffixes `i` and `j`.
+    pub imaginary: bool,
+}
+
+/// Floating point literal format specified by the suffix
+///
+/// (C11 6.4.4.2)
+#[derive(Debug, PartialEq, Clone)]
+pub enum FloatFormat {
+    /// `f` suffix
+    Float,
+    /// no suffix
+    Double,
+    /// `l` suffix
+    LongDouble,
+    /// [ISO/IEC TS 18661-2:2015](http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1912.pdf)
+    /// `df`, `dd`, `dl` suffixes
+    ///
+    /// [ISO/IEC TS 18661-3:2015](http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1945.pdf)
+    /// `fN`, `fNx`, `dN`, `dNx` suffixes
+    TS18661Format(TS18661FloatType),
 }
 
 /// String literal

@@ -570,37 +570,61 @@ fn __parse_integer_number<'input>(__input: &'input str, __state: &mut ParseState
                 match __choice_res {
                     Matched(__pos, __value) => Matched(__pos, __value),
                     Failed => {
-                        let __seq_res = slice_eq(__input, __state, __pos, "0");
-                        match __seq_res {
-                            Matched(__pos, _) => {
-                                let __seq_res = {
-                                    let str_start = __pos;
-                                    match {
-                                        let mut __repeat_pos = __pos;
-                                        loop {
-                                            let __pos = __repeat_pos;
-                                            let __step_res = __parse_oct(__input, __state, __pos, env);
-                                            match __step_res {
-                                                Matched(__newpos, __value) => {
-                                                    __repeat_pos = __newpos;
-                                                }
-                                                Failed => {
-                                                    break;
+                        let __choice_res = {
+                            let __seq_res = slice_eq(__input, __state, __pos, "0");
+                            match __seq_res {
+                                Matched(__pos, _) => {
+                                    let __seq_res = {
+                                        let str_start = __pos;
+                                        match {
+                                            let mut __repeat_pos = __pos;
+                                            let mut __repeat_value = vec![];
+                                            loop {
+                                                let __pos = __repeat_pos;
+                                                let __step_res = __parse_oct(__input, __state, __pos, env);
+                                                match __step_res {
+                                                    Matched(__newpos, __value) => {
+                                                        __repeat_pos = __newpos;
+                                                        __repeat_value.push(__value);
+                                                    }
+                                                    Failed => {
+                                                        break;
+                                                    }
                                                 }
                                             }
+                                            if __repeat_value.len() >= 1 {
+                                                Matched(__repeat_pos, ())
+                                            } else {
+                                                Failed
+                                            }
+                                        } {
+                                            Matched(__newpos, _) => Matched(__newpos, &__input[str_start..__newpos]),
+                                            Failed => Failed,
                                         }
-                                        Matched(__repeat_pos, ())
-                                    } {
+                                    };
+                                    match __seq_res {
+                                        Matched(__pos, n) => Matched(__pos, { (IntegerBase::Octal, n) }),
+                                        Failed => Failed,
+                                    }
+                                }
+                                Failed => Failed,
+                            }
+                        };
+                        match __choice_res {
+                            Matched(__pos, __value) => Matched(__pos, __value),
+                            Failed => {
+                                let __seq_res = {
+                                    let str_start = __pos;
+                                    match slice_eq(__input, __state, __pos, "0") {
                                         Matched(__newpos, _) => Matched(__newpos, &__input[str_start..__newpos]),
                                         Failed => Failed,
                                     }
                                 };
                                 match __seq_res {
-                                    Matched(__pos, n) => Matched(__pos, { (IntegerBase::Octal, n) }),
+                                    Matched(__pos, n) => Matched(__pos, { (IntegerBase::Decimal, n) }),
                                     Failed => Failed,
                                 }
                             }
-                            Failed => Failed,
                         }
                     }
                 }

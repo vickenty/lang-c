@@ -83,7 +83,7 @@ pub struct IntegerSuffix {
 /// Size part of a integer literal suffix
 ///
 /// (C11 6.4.4.1)
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, PartialOrd, Clone, Copy)]
 pub enum IntegerSize {
     /// no `l` or `ll`
     Int = 0,

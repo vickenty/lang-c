@@ -152,7 +152,7 @@ mod int {
     };
 
     pub fn zero<T: From<Constant>>() -> T {
-        num(IntegerBase::Octal, "", NONE.clone())
+        num(IntegerBase::Decimal, "0", NONE.clone())
     }
 
     pub fn dec<T: From<Constant>>(n: &str) -> T {
@@ -200,7 +200,7 @@ fn test_integer() {
 
     let env = &mut Env::new();
 
-    assert_eq!(constant("0", env), Ok(num(Octal, "", NONE.clone())));
+    assert_eq!(constant("0", env), Ok(num(Decimal, "0", NONE.clone())));
     assert_eq!(constant("1", env), Ok(num(Decimal, "1", NONE.clone())));
     assert_eq!(
         constant("1234567890", env),

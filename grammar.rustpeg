@@ -89,7 +89,8 @@ integer_constant -> Integer =
 integer_number -> (IntegerBase, &'input str) =
     n:$([1-9] dec*) { (IntegerBase::Decimal, n) } /
     ohx n:$(hex+) { (IntegerBase::Hexademical, n) } /
-    "0" n:$(oct*) { (IntegerBase::Octal, n) }
+    "0" n:$(oct+) { (IntegerBase::Octal, n) } /
+    n:$("0") { (IntegerBase::Decimal, n) }
 
 integer_suffix -> IntegerSuffix =
     #quiet<integer_suffix_inner> / #expected("integer suffix")

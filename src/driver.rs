@@ -118,7 +118,7 @@ impl fmt::Display for SyntaxError {
 }
 
 /// Parse a C file
-pub fn parse<P: AsRef<Path>>(config: &Config, source: &P) -> Result<Parse, Error> {
+pub fn parse<P: AsRef<Path>>(config: &Config, source: P) -> Result<Parse, Error> {
     let processed = match preprocess(config, source.as_ref()) {
         Ok(s) => s,
         Err(e) => return Err(Error::PreprocessorError(e)),

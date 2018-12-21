@@ -149,7 +149,16 @@ pub fn parse_preprocessed(config: &Config, source: String) -> Result<Parse, Synt
 }
 
 fn preprocess(config: &Config, source: &Path) -> io::Result<String> {
-    let mut cmd = Command::new("cpp");
+    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
+    compile_error!("I don't know what preprocessor to use for your OS");
+
+    let mut cmd;
+    if cfg!(target_os = "linux") {
+        cmd = Command::new("cpp");
+    } else {  // macos
+        cmd = Command::new("clang");
+        cmd.arg("-E".to_string());
+    }
 
     for item in &config.options {
         cmd.arg(item);

@@ -27,6 +27,8 @@ pub enum Flavor {
     StdC11,
     /// Standard C11 with GNU extensions
     GnuC11,
+    /// Standard C11 with Clang extensions
+    ClangC11,
 }
 
 impl Default for Flavor {
@@ -129,8 +131,9 @@ pub fn parse<P: AsRef<Path>>(config: &Config, source: P) -> Result<Parse, Error>
 
 pub fn parse_preprocessed(config: &Config, source: String) -> Result<Parse, SyntaxError> {
     let mut env = match config.flavor {
-        Flavor::StdC11 => Env::with_gnu(false),
-        Flavor::GnuC11 => Env::with_gnu(true),
+        Flavor::StdC11 => Env::with_core(),
+        Flavor::GnuC11 => Env::with_gnu(),
+        Flavor::ClangC11 => Env::with_clang(),
     };
 
     match translation_unit(&source, &mut env) {

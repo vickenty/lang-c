@@ -7,28 +7,51 @@ use strings;
 pub struct Env {
     pub typenames: Vec<HashSet<String>>,
     pub extensions_gnu: bool,
+    pub extensions_clang: bool,
     pub reserved: HashSet<&'static str>,
 }
 
 impl Env {
     #[cfg(test)]
     pub fn new() -> Env {
-        Env::with_gnu(true)
+        Env::with_gnu()
     }
 
-    pub fn with_gnu(enable: bool) -> Env {
-        let mut typenames = HashSet::default();
-
+    pub fn with_core() -> Env {
         let mut reserved = HashSet::default();
         reserved.extend(strings::RESERVED_C11.iter());
-
-        if enable {
-            typenames.insert("__builtin_va_list".to_owned());
-            reserved.extend(strings::RESERVED_GNU.iter());
-        }
-
         Env {
-            extensions_gnu: enable,
+            extensions_gnu: false,
+            extensions_clang: false,
+            typenames: Vec::new(),
+            reserved: reserved,
+        }
+    }
+
+    pub fn with_gnu() -> Env {
+        let mut typenames = HashSet::default();
+        let mut reserved = HashSet::default();
+        typenames.insert("__builtin_va_list".to_owned());
+        reserved.extend(strings::RESERVED_C11.iter());
+        reserved.extend(strings::RESERVED_GNU.iter());
+        Env {
+            extensions_gnu: true,
+            extensions_clang: false,
+            typenames: vec![typenames],
+            reserved: reserved,
+        }
+    }
+
+    pub fn with_clang() -> Env {
+        let mut typenames = HashSet::default();
+        let mut reserved = HashSet::default();
+        typenames.insert("__builtin_va_list".to_owned());
+        reserved.extend(strings::RESERVED_C11.iter());
+        reserved.extend(strings::RESERVED_GNU.iter());
+        reserved.extend(strings::RESERVED_CLANG.iter());
+        Env {
+            extensions_gnu: true,
+            extensions_clang: true,
             typenames: vec![typenames],
             reserved: reserved,
         }

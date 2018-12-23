@@ -62,6 +62,7 @@ mk_from_inner! {
     Constant => Initializer::Expression;
     Declaration => BlockItem::Declaration;
     Declaration => ExternalDeclaration::Declaration;
+    Declarator => DeclaratorKind::Declarator;
     DoWhileStatement => Statement::DoWhile;
     EnumType => DeclarationSpecifier::TypeSpecifier;
     EnumType => TypeSpecifier::Enum;
@@ -620,7 +621,7 @@ fn test_declaration4() {
     use parser::declaration;
 
     assert_eq!(
-        declaration("int __restrict__;", &mut Env::with_gnu(false)),
+        declaration("int __restrict__;", &mut Env::with_core()),
         Ok(Declaration {
             specifiers: vec![Int.into()],
             declarators: vec![
@@ -637,7 +638,7 @@ fn test_declaration4() {
     );
 
     assert_eq!(
-        declaration("int __restrict__;", &mut Env::with_gnu(true)),
+        declaration("int __restrict__;", &mut Env::with_gnu()),
         Ok(Declaration {
             specifiers: vec![Int.into(), Restrict.into()],
             declarators: vec![],
@@ -1710,7 +1711,7 @@ fn test_gnu_extension() {
     use ast::TypeSpecifier::Long;
     use parser::translation_unit;
     assert_eq!(
-        translation_unit("__extension__ union { long l; };", &mut Env::with_gnu(true)),
+        translation_unit("__extension__ union { long l; };", &mut Env::with_gnu()),
         Ok(TranslationUnit(vec![
             Declaration {
                 specifiers: vec![
@@ -1749,5 +1750,57 @@ fn test_gnu_extension() {
                 message: cstr(&[r#""ERR""#]),
             }.into(),
         ]).into())
+    );
+}
+
+#[test]
+fn test_declaration7() {
+    use ast::DerivedDeclarator::Pointer;
+    use ast::DeclaratorKind::Abstract;
+    use ast::TypeQualifier::Nullable;
+    use ast::TypeSpecifier::{Int, Void};
+    use parser::declaration;
+
+    let mut env = Env::with_clang();
+    let env = &mut env;
+
+    assert_eq!(
+        // This is the first Clang-specific declaration you'll encounter in macOS
+        // if you #include <stdio.h>.
+        declaration("int (* _Nullable _close)(void *);", env),
+        Ok(Declaration {
+            specifiers: vec![Int.into()],
+            declarators: vec![
+                InitDeclarator {
+                    declarator: Declarator {
+                        kind: Declarator {
+                            kind: ident("_close"),
+                            derived: vec![Pointer(vec![Nullable.into()]).into()],
+                            extensions: vec![],
+                        }.into(),
+                        derived: vec![
+                            FunctionDeclarator {
+                                parameters: vec![
+                                    ParameterDeclaration {
+                                        specifiers: vec![Void.into()],
+                                        declarator: Some(
+                                            Declarator {
+                                                kind: Abstract.into(),
+                                                derived: vec![Pointer(vec![]).into()],
+                                                extensions: vec![],
+                                            }.into(),
+                                        ),
+                                        extensions: vec![],
+                                    }.into(),
+                                ],
+                                ellipsis: Ellipsis::None,
+                            }.into(),
+                        ],
+                        extensions: vec![],
+                    }.into(),
+                    initializer: None,
+                }.into(),
+            ],
+        }.into())
     );
 }

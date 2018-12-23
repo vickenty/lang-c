@@ -92,3 +92,46 @@ pub const RESERVED_GNU: &'static [&'static str] = &[
     "__volatile",
     "__volatile__",
 ];
+
+// Ref: https://clang.llvm.org/docs/AttributeReference.html
+pub const RESERVED_CLANG: &'static [&'static str] = &[
+    // Only enabled with -fms-extensions and only affect *-*-win32 targets
+    "__single_inheritance",
+    "__multiple_inheritance",
+    "__virtual_inheritance",
+    "__unspecified_inheritance",
+    // OpenCL v2.0
+    "__read_only",
+    "read_only",
+    "__write_only",
+    "write_only",
+    "__read_write",
+    "read_write",
+    // Calling conventions
+    "_fastcall",
+    "_fastcall",
+    "__regcall",
+    "__stdcall",
+    "_stdcall",
+    "__thiscall",
+    "_thiscall",
+    "__vectorcall",
+    "_vectorcall",
+    // OpenCL Address Spaces
+    "__constant",
+    "constant",
+    "__generic",
+    "generic",
+    "__global",
+    "global",
+    "__local",
+    "local",
+    "__private",
+    "private",
+    // Nullability attributes
+    "_Nonnull",
+    "_Null_unspecified",
+    "_Nullable",
+    "nonnull",
+    "returns_nonnull",
+];

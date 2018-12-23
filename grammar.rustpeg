@@ -604,6 +604,9 @@ type_qualifier0 -> TypeQualifier =
     K<"const"    / gnu<"__const">> { TypeQualifier::Const } /
     K<"restrict" / gnu<"__restrict" "__"?>> { TypeQualifier::Restrict } /
     K<"volatile" / gnu<"__volatile" "__"?>> { TypeQualifier::Volatile } /
+    clang<"_Nonnull"> { TypeQualifier::Nonnull } /
+    clang<"_Null_unspecified"> { TypeQualifier::NullUnspecified } /
+    clang<"_Nullable"> { TypeQualifier::Nullable } /
     K<"_Atomic"> { TypeQualifier::Atomic }
 
 ////
@@ -1237,3 +1240,11 @@ ts18661_float_suffix -> TS18661FloatType =
     [dD] width:ts18661_decimal_width extended:"x"? {
         ts18661_float(false, width, extended.is_some())
     }
+
+////
+// Clang extensions
+////
+
+clang<E> = &clang_guard e:E { e }
+
+clang_guard = {? if env.extensions_clang { Ok(()) } else { Err("clang extensions disabled") } }

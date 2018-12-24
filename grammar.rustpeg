@@ -604,9 +604,9 @@ type_qualifier0 -> TypeQualifier =
     K<"const"    / gnu<"__const">> { TypeQualifier::Const } /
     K<"restrict" / gnu<"__restrict" "__"?>> { TypeQualifier::Restrict } /
     K<"volatile" / gnu<"__volatile" "__"?>> { TypeQualifier::Volatile } /
-    clang<"_Nonnull"> { TypeQualifier::Nonnull } /
-    clang<"_Null_unspecified"> { TypeQualifier::NullUnspecified } /
-    clang<"_Nullable"> { TypeQualifier::Nullable } /
+    clang<K<"_Nonnull">> { TypeQualifier::Nonnull } /
+    clang<K<"_Null_unspecified">> { TypeQualifier::NullUnspecified } /
+    clang<K<"_Nullable">> { TypeQualifier::Nullable } /
     K<"_Atomic"> { TypeQualifier::Atomic }
 
 ////

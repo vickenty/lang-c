@@ -12,12 +12,46 @@ use env::Env;
 use parser::translation_unit;
 
 /// Parser configuration
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct Config {
+    /// Command used to invoke C preprocessor
+    pub cpp_command: String,
     /// Options to pass to the preprocessor program
-    pub options: Vec<String>,
+    pub cpp_options: Vec<String>,
     /// Language flavor to parse
     pub flavor: Flavor,
+}
+
+impl Config {
+    /// Use `gcc` as a pre-processor and enable gcc extensions
+    pub fn with_gcc() -> Config {
+        Config {
+            cpp_command: "gcc".into(),
+            cpp_options: vec![ "-E".into() ],
+            flavor: Flavor::GnuC11,
+        }
+    }
+
+    /// Use `clang` as a pre-processor and enable Clang extensions
+    pub fn with_clang() -> Config {
+        Config {
+            cpp_command: "clang".into(),
+            cpp_options: vec![ "-E".into() ],
+            flavor: Flavor::ClangC11,
+        }
+    }
+}
+
+impl Default for Config {
+    #[cfg(target_os="macos")]
+    fn default() -> Config {
+        Self::with_clang()
+    }
+
+    #[cfg(not(target_os="macos"))]
+    fn default() -> Config {
+        Self::with_gcc()
+    }
 }
 
 /// C language flavors
@@ -29,12 +63,6 @@ pub enum Flavor {
     GnuC11,
     /// Standard C11 with Clang extensions
     ClangC11,
-}
-
-impl Default for Flavor {
-    fn default() -> Self {
-        Flavor::GnuC11
-    }
 }
 
 /// Result of a successful parse
@@ -152,16 +180,9 @@ pub fn parse_preprocessed(config: &Config, source: String) -> Result<Parse, Synt
 }
 
 fn preprocess(config: &Config, source: &Path) -> io::Result<String> {
-    let mut cmd;
-    if cfg!(target_os = "macos") {
-        // cpp on macOS will not work for C11
-        cmd = Command::new("clang");
-        cmd.arg("-E".to_string());
-    } else {
-        cmd = Command::new("cpp");
-    }
+    let mut cmd = Command::new(&config.cpp_command);
 
-    for item in &config.options {
+    for item in &config.cpp_options {
         cmd.arg(item);
     }
 

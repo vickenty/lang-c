@@ -744,6 +744,18 @@ pub enum TypeQualifier {
     ///
     /// `__volatile`, `__volatile__` (GNU extension)
     Volatile,
+    /// '_Nonnull' (Clang extension)
+    ///
+    /// [Clang extension](https://clang.llvm.org/docs/AttributeReference.html)
+    Nonnull,
+    /// '_Null_unspecified' (Clang extension)
+    ///
+    /// [Clang extension](https://clang.llvm.org/docs/AttributeReference.html)
+    NullUnspecified,
+    /// '_Nullable' (Clang extension)
+    ///
+    /// [Clang extension](https://clang.llvm.org/docs/AttributeReference.html)
+    Nullable,
     /// `_Atomic`
     Atomic,
 }

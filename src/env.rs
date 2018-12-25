@@ -66,7 +66,8 @@ impl Env {
     }
 
     pub fn add_typename(&mut self, s: &str) {
-        let scope = self.typenames
+        let scope = self
+            .typenames
             .last_mut()
             .expect("at least one scope should be always present");
         scope.insert(s.to_string());
@@ -79,7 +80,8 @@ impl Env {
     pub fn handle_declaration(&mut self, declaration: &Declaration) {
         if declaration.specifiers.iter().any(is_typedef) {
             for init_decl in &declaration.declarators {
-                if let Some(name) = find_declarator_name(&init_decl.node.declarator.node.kind.node) {
+                if let Some(name) = find_declarator_name(&init_decl.node.declarator.node.kind.node)
+                {
                     self.add_typename(name);
                 }
             }

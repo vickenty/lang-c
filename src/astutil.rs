@@ -56,7 +56,12 @@ pub fn concat<T>(mut a: Vec<T>, b: Vec<T>) -> Vec<T> {
     a
 }
 
-pub fn infix(node: Node<()>, op: BinaryOperator, lhs: Node<Expression>, rhs: Node<Expression>) -> Node<Expression> {
+pub fn infix(
+    node: Node<()>,
+    op: BinaryOperator,
+    lhs: Node<Expression>,
+    rhs: Node<Expression>,
+) -> Node<Expression> {
     let span = Span::span(lhs.span.start, rhs.span.end);
     Node::new(
         Expression::BinaryOperator(Box::new(Node::new(
@@ -105,7 +110,12 @@ pub fn int_suffix(mut s: &str) -> Result<IntegerSuffix, &'static str> {
         } else if !u && (s.starts_with("u") || s.starts_with("U")) {
             u = true;
             s = &s[1..];
-        } else if !i && (s.starts_with("i") || s.starts_with("I") || s.starts_with("j") || s.starts_with("J")) {
+        } else if !i
+            && (s.starts_with("i")
+                || s.starts_with("I")
+                || s.starts_with("j")
+                || s.starts_with("J"))
+        {
             i = true;
             s = &s[1..];
         } else {

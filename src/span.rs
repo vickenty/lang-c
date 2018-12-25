@@ -1,6 +1,6 @@
 //! Source text location tracking
-use std::{cmp, fmt};
 use std::usize::MAX;
+use std::{cmp, fmt};
 
 /// Byte offset of a node start and end positions in the input stream
 #[derive(Copy, Clone)]

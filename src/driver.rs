@@ -27,7 +27,7 @@ impl Config {
     pub fn with_gcc() -> Config {
         Config {
             cpp_command: "gcc".into(),
-            cpp_options: vec![ "-E".into() ],
+            cpp_options: vec!["-E".into()],
             flavor: Flavor::GnuC11,
         }
     }
@@ -36,19 +36,19 @@ impl Config {
     pub fn with_clang() -> Config {
         Config {
             cpp_command: "clang".into(),
-            cpp_options: vec![ "-E".into() ],
+            cpp_options: vec!["-E".into()],
             flavor: Flavor::ClangC11,
         }
     }
 }
 
 impl Default for Config {
-    #[cfg(target_os="macos")]
+    #[cfg(target_os = "macos")]
     fn default() -> Config {
         Self::with_clang()
     }
 
-    #[cfg(not(target_os="macos"))]
+    #[cfg(not(target_os = "macos"))]
     fn default() -> Config {
         Self::with_gcc()
     }

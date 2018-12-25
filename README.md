@@ -4,7 +4,7 @@
 [![Documentation](https://docs.rs/lang-c/badge.svg)](https://docs.rs/lang-c)
 
 Ligtweight parser of C language for Rust users. Almost full support for C11 revision of the language.
-Several GNU extensions are supported as an option (and enabled by default).
+Several GCC and Clang extensions are also supported as an option.
 
 ```rust
 extern crate lang_c;
@@ -29,8 +29,8 @@ Dual-licenced under Apache 2.0 or MIT licenses (see `LICENSE-APACHE` and `LICENS
 A number of external tools are used during development:
 
 - GNU make
-- rustfmt-nightly
-- [rust-peg](https://github.com/kevinmehall/rust-peg) 0.5.4
+- rustfmt
+- [rust-peg](https://github.com/kevinmehall/rust-peg) 0.5.7
 
 Parser (`src/parser.rs`) is built from a PEG grammar in `grammar.rustpeg`. It is updated manually and then 
 committed, not generated on every build, thus no `rust-peg` in the list of dependencies.

@@ -1014,18 +1014,11 @@ fn test_attribute3() {
                     specifiers: vec![
                         Extern.into(),
                         Inline.into(),
-                        Extension(vec![
-                            Attribute {
-                                name: "__always_inline__".into(),
-                                arguments: vec![],
-                            }
-                            .into(),
-                            Attribute {
-                                name: "__always_inline__".into(),
-                                arguments: vec![],
-                            }
-                            .into()
-                        ])
+                        Extension(vec![Attribute {
+                            name: "__always_inline__".into(),
+                            arguments: vec![],
+                        }
+                        .into()])
                         .into(),
                         Extension(vec![Attribute {
                             name: "__artificial__".into(),

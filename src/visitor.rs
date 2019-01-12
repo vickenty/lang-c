@@ -102,8 +102,8 @@ pub trait Visit<'ast> {
         visit_conditional_expression(self, conditional_expression, span)
     }
 
-    fn visitva_arg_expression(&mut self, va_arg_expression: &'ast VaArgExpression, span: &'ast Span) {
-        visitva_arg_expression(self, va_arg_expression, span)
+    fn visit_va_arg_expression(&mut self, va_arg_expression: &'ast VaArgExpression, span: &'ast Span) {
+        visit_va_arg_expression(self, va_arg_expression, span)
     }
 
     fn visit_offset_of_expression(&mut self, offset_of_expression: &'ast OffsetOfExpression, span: &'ast Span) {
@@ -396,7 +396,7 @@ pub fn visit_expression<'ast, V: Visit<'ast> + ?Sized>(visitor: &mut V, expressi
             }
         },
         Expression::OffsetOf(o) => visitor.visit_offset_of_expression(&o.node, &o.span),
-        Expression::VaArg(v) => visitor.visitva_arg_expression(&v.node, &v.span),
+        Expression::VaArg(v) => visitor.visit_va_arg_expression(&v.node, &v.span),
         Expression::Statement(s) => visitor.visit_statement(&s.node, &s.span)
     }
 }
@@ -479,7 +479,7 @@ pub fn visit_conditional_expression<'ast, V: Visit<'ast> + ?Sized>(visitor: &mut
     visitor.visit_expression(&conditional_expression.else_expression.node, &conditional_expression.else_expression.span);
 }
 
-pub fn visitva_arg_expression<'ast, V: Visit<'ast> + ?Sized>(visitor: &mut V, va_arg_expression: &'ast VaArgExpression, _span: &'ast Span) {
+pub fn visit_va_arg_expression<'ast, V: Visit<'ast> + ?Sized>(visitor: &mut V, va_arg_expression: &'ast VaArgExpression, _span: &'ast Span) {
     visitor.visit_expression(&va_arg_expression.va_list.node, &va_arg_expression.va_list.span);
     visitor.visit_type_name(&va_arg_expression.type_name.node, &va_arg_expression.type_name.span);
 }

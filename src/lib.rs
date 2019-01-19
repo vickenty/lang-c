@@ -12,7 +12,7 @@
 pub mod ast;
 pub mod driver;
 pub mod span;
-pub mod visitor;
+pub mod visit;
 
 mod astutil;
 mod env;

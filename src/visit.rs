@@ -1,3 +1,23 @@
+//! Recursive abstract syntax tree traversal
+//!
+//! ```rust
+//! # use lang_c::{ast, span, visit};
+//! struct ExprCount(usize);
+//!
+//! impl<'ast> visit::Visit<'ast> for ExprCount {
+//!     fn visit_expression(&mut self, expr: &'ast ast::Expression, span: &'ast span::Span) {
+//!         self.0 += 1;
+//!         visit::visit_expression(self, expr, span);
+//!     }
+//! }
+//! ```
+//!
+//! The `Visit` trait is a collection of hooks, one for each type of node in the AST (for each type
+//! in the `ast` module). Default implementations will recursively visit the sub-nodes (by calling
+//! a corresponding free function in this module).
+//!
+//! Free functions apply the visitor to sub-nodes of any given AST node.
+
 use ast::*;
 use span::Span;
 

@@ -1113,7 +1113,7 @@ pub fn visit_pointer_qualifier<'ast, V: Visit<'ast> + ?Sized>(
 pub fn visit_array_size<'ast, V: Visit<'ast> + ?Sized>(
     visitor: &mut V,
     array_size: &'ast ArraySize,
-    span: &'ast Span,
+    _span: &'ast Span,
 ) {
     match array_size {
         ArraySize::VariableExpression(e) => visitor.visit_expression(&e.node, &e.span),

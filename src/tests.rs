@@ -420,6 +420,84 @@ fn test_multiplicative() {
 }
 
 #[test]
+fn test_logical_and() {
+    use self::expr::*;
+    use ast::BinaryOperator::LogicalAnd;
+    use parser::expression;
+    let env = &mut Env::new();
+
+    assert_eq!(
+        expression("a && b", env),
+        Ok(binop(LogicalAnd, ident("a"), ident("b")))
+    );
+}
+
+#[test]
+fn test_chained_and() {
+    use self::expr::*;
+    use ast::BinaryOperator::LogicalAnd;
+    use parser::expression;
+    let env = &mut Env::new();
+
+    assert_eq!(
+        expression("a && b && c", env),
+        Ok(binop(
+            LogicalAnd,
+            binop(LogicalAnd, ident("a"), ident("b"),),
+            ident("c"),
+        ))
+    );
+}
+
+#[test]
+fn test_chained_or() {
+    use self::expr::*;
+    use ast::BinaryOperator::LogicalOr;
+    use parser::expression;
+    let env = &mut Env::new();
+    assert_eq!(
+        expression("a || b || c", env),
+        Ok(binop(
+            LogicalOr,
+            binop(LogicalOr, ident("a"), ident("b")),
+            ident("c"),
+        ))
+    );
+}
+
+#[test]
+fn test_chained_shl() {
+    use self::expr::*;
+    use ast::BinaryOperator::ShiftLeft;
+    use parser::expression;
+    let env = &mut Env::new();
+    assert_eq!(
+        expression("a << b << c", env),
+        Ok(binop(
+            ShiftLeft,
+            binop(ShiftLeft, ident("a"), ident("b")),
+            ident("c"),
+        ))
+    );
+}
+
+#[test]
+fn test_chained_shr() {
+    use self::expr::*;
+    use ast::BinaryOperator::ShiftRight;
+    use parser::expression;
+    let env = &mut Env::new();
+    assert_eq!(
+        expression("a >> b >> c", env),
+        Ok(binop(
+            ShiftRight,
+            binop(ShiftRight, ident("a"), ident("b")),
+            ident("c"),
+        ))
+    );
+}
+
+#[test]
 fn test_comma() {
     use ast::Expression::Comma;
     use parser::expression;

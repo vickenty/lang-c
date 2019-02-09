@@ -3072,7 +3072,21 @@ fn __parse_unary_operator<'input>(__input: &'input str, __state: &mut ParseState
         let __choice_res = {
             let __seq_res = slice_eq(__input, __state, __pos, "&");
             match __seq_res {
-                Matched(__pos, _) => Matched(__pos, { UnaryOperator::Address }),
+                Matched(__pos, _) => {
+                    let __seq_res = {
+                        __state.suppress_fail += 1;
+                        let __assert_res = slice_eq(__input, __state, __pos, "&");
+                        __state.suppress_fail -= 1;
+                        match __assert_res {
+                            Failed => Matched(__pos, ()),
+                            Matched(..) => Failed,
+                        }
+                    };
+                    match __seq_res {
+                        Matched(__pos, _) => Matched(__pos, { UnaryOperator::Address }),
+                        Failed => Failed,
+                    }
+                }
                 Failed => Failed,
             }
         };
@@ -3655,7 +3669,21 @@ fn __parse_binary_expression0<'input>(__input: &'input str, __state: &mut ParseS
                                         let __seq_res = Matched(__pos, __pos);
                                         match __seq_res {
                                             Matched(__pos, l) => {
-                                                let __seq_res = slice_eq(__input, __state, __pos, "&");
+                                                let __seq_res = {
+                                                    let __seq_res = slice_eq(__input, __state, __pos, "&");
+                                                    match __seq_res {
+                                                        Matched(__pos, _) => {
+                                                            __state.suppress_fail += 1;
+                                                            let __assert_res = slice_eq(__input, __state, __pos, "&");
+                                                            __state.suppress_fail -= 1;
+                                                            match __assert_res {
+                                                                Failed => Matched(__pos, ()),
+                                                                Matched(..) => Failed,
+                                                            }
+                                                        }
+                                                        Failed => Failed,
+                                                    }
+                                                };
                                                 match __seq_res {
                                                     Matched(__pos, e) => {
                                                         let __seq_res = Matched(__pos, __pos);

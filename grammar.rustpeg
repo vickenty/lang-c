@@ -287,7 +287,7 @@ unary_cast_inner -> UnaryOperatorExpression =
     }
 
 unary_operator -> UnaryOperator =
-    "&" { UnaryOperator::Address } /
+    "&"!"&" { UnaryOperator::Address } /
     "*" { UnaryOperator::Indirection } /
     "+" { UnaryOperator::Plus } /
     "-" { UnaryOperator::Minus } /
@@ -333,7 +333,7 @@ binary_expression0 -> Node<Expression> = #infix<binary_operand> {
 #L  x o:infix<"&&"> y { infix(o, BinaryOperator::LogicalAnd, x, y) }
 #L  x o:infix<"|"> y { infix(o, BinaryOperator::BitwiseOr, x, y) }
 #L  x o:infix<"^"> y { infix(o, BinaryOperator::BitwiseXor, x, y) }
-#L  x o:infix<"&"> y { infix(o, BinaryOperator::BitwiseAnd, x, y) }
+#L  x o:infix<"&"!"&"> y { infix(o, BinaryOperator::BitwiseAnd, x, y) }
 #L  x o:infix<"=="> y { infix(o, BinaryOperator::Equals, x, y) }
     x o:infix<"!="> y { infix(o, BinaryOperator::NotEquals, x, y) }
 #L  x o:infix<"<"> y { infix(o, BinaryOperator::Less, x, y) }

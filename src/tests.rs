@@ -391,7 +391,7 @@ fn test_postfix() {
                 member(Indirect, member(Direct, ident("a"), ident("b")), ident("c")),
                 binop(Index, ident("d"), ident("e")),
             ),
-        ),)
+        ))
     );
 }
 
@@ -402,8 +402,7 @@ fn test_multiplicative() {
     use ast::UnaryOperator::{PostDecrement, PreIncrement};
     use parser::expression;
 
-    let mut env = Env::new();
-    let env = &mut env;
+    let env = &mut Env::new();
 
     assert_eq!(
         expression("a-- * ++b / c", env),
@@ -415,7 +414,7 @@ fn test_multiplicative() {
                 unop(PreIncrement, ident("b")),
             ),
             ident("c"),
-        ),)
+        ))
     );
 }
 
@@ -443,7 +442,7 @@ fn test_chained_and() {
         expression("a && b && c", env),
         Ok(binop(
             LogicalAnd,
-            binop(LogicalAnd, ident("a"), ident("b"),),
+            binop(LogicalAnd, ident("a"), ident("b")),
             ident("c"),
         ))
     );
@@ -547,8 +546,7 @@ fn test_declaration1() {
     use ast::UnaryOperator::Address;
     use parser::declaration;
 
-    let mut env = Env::new();
-    let env = &mut env;
+    let env = &mut Env::new();
 
     assert_eq!(
         declaration("int typedef * foo = &bar, baz[static 10][const *];", env),
@@ -603,8 +601,7 @@ fn test_declaration2() {
     use ast::TypeQualifier::Const;
     use parser::declaration;
 
-    let mut env = Env::new();
-    let env = &mut env;
+    let env = &mut Env::new();
 
     assert_eq!(
         declaration("typedef enum { FOO, BAR = 1 } * const foobar;", env),
@@ -650,8 +647,7 @@ fn test_declaration3() {
     use ast::TypeSpecifier::{Float, Int};
     use parser::declaration;
 
-    let mut env = Env::new();
-    let env = &mut env;
+    let env = &mut Env::new();
 
     assert_eq!(
         declaration("struct { int a, b; float c; } S;", env).unwrap(),
@@ -1927,8 +1923,7 @@ fn test_declaration7() {
     use ast::TypeSpecifier::{Int, Void};
     use parser::declaration;
 
-    let mut env = Env::with_clang();
-    let env = &mut env;
+    let env = &mut Env::with_clang();
 
     assert_eq!(
         // This is the first Clang-specific declaration you'll encounter in macOS

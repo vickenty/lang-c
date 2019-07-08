@@ -1966,3 +1966,59 @@ fn test_declaration7() {
         .into())
     );
 }
+
+#[test]
+fn test_kr_definition1() {
+    use ast::DerivedDeclarator::{KRFunction, Pointer};
+    use ast::Statement::Compound;
+    use ast::TranslationUnit;
+    use ast::TypeSpecifier::{Char, Int};
+    use parser::translation_unit;
+
+    let env = &mut Env::new();
+
+    assert_eq!(
+        translation_unit("int main(argc, argv) int argc; char **argv; { }", env),
+        Ok(TranslationUnit(vec![FunctionDefinition {
+            specifiers: vec![Int.into()],
+            declarator: Declarator {
+                kind: ident("main"),
+                derived: vec![KRFunction(vec![ident("argc"), ident("argv")]).into()],
+                extensions: vec![],
+            }
+            .into(),
+            declarations: vec![
+                Declaration {
+                    specifiers: vec![Int.into()],
+                    declarators: vec![InitDeclarator {
+                        declarator: Declarator {
+                            kind: ident("argc"),
+                            derived: vec![],
+                            extensions: vec![],
+                        }
+                        .into(),
+                        initializer: None
+                    }
+                    .into()],
+                }
+                .into(),
+                Declaration {
+                    specifiers: vec![Char.into()],
+                    declarators: vec![InitDeclarator {
+                        declarator: Declarator {
+                            kind: ident("argv"),
+                            derived: vec![Pointer(vec![]).into(), Pointer(vec![]).into()],
+                            extensions: vec![],
+                        }
+                        .into(),
+                        initializer: None
+                    }
+                    .into()],
+                }
+                .into(),
+            ],
+            statement: Compound(vec![]).into(),
+        }
+        .into()]))
+    );
+}

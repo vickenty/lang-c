@@ -655,7 +655,7 @@ direct_declarator -> DeclaratorKind =
 derived_declarator -> DerivedDeclarator =
     "[" _ a:node<array_declarator> { DerivedDeclarator::Array(a) } /
     "(" _ f:node<function_declarator> _ ")" { DerivedDeclarator::Function(f) } /
-    "(" _ p:list0<identifier> _ ")" { DerivedDeclarator::KRFunction(p) }
+    "(" _ p:cs0<identifier> _ ")" { DerivedDeclarator::KRFunction(p) }
 
 array_declarator -> ArrayDeclarator =
     q:list0<type_qualifier> _ "]" {

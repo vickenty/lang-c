@@ -8586,7 +8586,19 @@ fn __parse_derived_declarator<'input>(__input: &'input str, __state: &mut ParseS
                                                 loop {
                                                     let __pos = __repeat_pos;
                                                     let __pos = if __repeat_value.len() > 0 {
-                                                        let __sep_res = __parse__(__input, __state, __pos, env);
+                                                        let __sep_res = {
+                                                            let __seq_res = __parse__(__input, __state, __pos, env);
+                                                            match __seq_res {
+                                                                Matched(__pos, _) => {
+                                                                    let __seq_res = slice_eq(__input, __state, __pos, ",");
+                                                                    match __seq_res {
+                                                                        Matched(__pos, _) => __parse__(__input, __state, __pos, env),
+                                                                        Failed => Failed,
+                                                                    }
+                                                                }
+                                                                Failed => Failed,
+                                                            }
+                                                        };
                                                         match __sep_res {
                                                             Matched(__newpos, _) => __newpos,
                                                             Failed => break,

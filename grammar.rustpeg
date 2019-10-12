@@ -1077,7 +1077,7 @@ attribute_name -> String =
     n:$(#quiet<[_a-zA-Z][_a-zA-Z0-9]*>) { String::from(n) }
 
 attribute_parameters -> Vec<Node<Expression>> =
-    "(" _ e:cs0<node<assignment_expression0>> _")" { e }
+    "(" _ e:cs0<node<assignment_expression0>> _ ")" { e }
 
 ////
 // GNU assembler labels

@@ -1066,6 +1066,7 @@ attribute_specifier -> Vec<Node<Extension>> =
     K<"__attribute__"> _ "((" _ a:cs0<node<attribute>> _ "))" { a }
 
 attribute -> Extension =
+    c:clang<node<attr_availability>> { Extension::AvailabilityAttribute(c) } /
     n:node<attribute_name> _ p:attribute_parameters? {
         Extension::Attribute(Attribute {
             name: n,
@@ -1078,6 +1079,31 @@ attribute_name -> String =
 
 attribute_parameters -> Vec<Node<Expression>> =
     "(" _ e:cs0<node<assignment_expression0>> _ ")" { e }
+
+attr_availability -> AvailabilityAttribute =
+    K<"availability"> _ "(" _ p:identifier _ "," _ c:cs1<node<attr_availability_clause>> _ ")" {
+        AvailabilityAttribute {
+            platform: p,
+            clauses: c,
+        }
+    }
+
+attr_availability_clause -> AvailabilityClause =
+    K<"introduced"> _ "=" _ v:node<attr_availability_version> { AvailabilityClause::Introduced(v) } /
+    K<"deprecated"> _ "=" _ v:node<attr_availability_version> { AvailabilityClause::Deprecated(v) } /
+    K<"obsoleted"> _ "=" _ v:node<attr_availability_version> { AvailabilityClause::Obsoleted(v) } /
+    K<"unavailable"> { AvailabilityClause::Unavailable } /
+    K<"message"> _ "=" _ s:string_literal { AvailabilityClause::Message(s) } /
+    K<"replacement"> _ "=" _ s:string_literal { AvailabilityClause::Replacement(s) }
+
+attr_availability_version -> AvailabilityVersion =
+    a:$(dec+) b:("." $(dec+) )? c:("." $(dec+) )? {
+        AvailabilityVersion {
+            major: a.into(),
+            minor: b.map(str::to_owned),
+            subminor: c.map(str::to_owned),
+        }
+    }
 
 ////
 // GNU assembler labels

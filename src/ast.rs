@@ -1145,6 +1145,10 @@ pub enum Extension {
     ///
     /// [GNU extension](https://gcc.gnu.org/onlinedocs/gcc/Asm-Labels.html)
     AsmLabel(Node<StringLiteral>),
+    /// Platform availability
+    ///
+    /// [Clang extension](https://clang.llvm.org/docs/AttributeReference.html#availability)
+    AvailabilityAttribute(Node<AvailabilityAttribute>),
 }
 
 /// Attributes
@@ -1154,6 +1158,38 @@ pub enum Extension {
 pub struct Attribute {
     pub name: Node<String>,
     pub arguments: Vec<Node<Expression>>,
+}
+
+/// Platform availability attribute
+///
+/// [Clang extension](https://clang.llvm.org/docs/AttributeReference.html#availability)
+#[derive(Debug, PartialEq, Clone)]
+pub struct AvailabilityAttribute {
+    pub platform: Node<Identifier>,
+    pub clauses: Vec<Node<AvailabilityClause>>,
+}
+
+/// Platfrom availability attribute clause
+///
+/// [Clang extension](https://clang.llvm.org/docs/AttributeReference.html#availability)
+#[derive(Debug, PartialEq, Clone)]
+pub enum AvailabilityClause {
+    Introduced(Node<AvailabilityVersion>),
+    Deprecated(Node<AvailabilityVersion>),
+    Obsoleted(Node<AvailabilityVersion>),
+    Unavailable,
+    Message(Node<StringLiteral>),
+    Replacement(Node<StringLiteral>),
+}
+
+/// Platfrom version inside availability attribute
+///
+/// [Clang extension](https://clang.llvm.org/docs/AttributeReference.html#availability)
+#[derive(Debug, PartialEq, Clone)]
+pub struct AvailabilityVersion {
+    pub major: String,
+    pub minor: Option<String>,
+    pub subminor: Option<String>,
 }
 
 /// Inline assembler

@@ -462,6 +462,20 @@ pub trait Visit<'ast> {
         visit_asm_statement(self, asm_statement, span)
     }
 
+    fn visit_availability_attribute(
+        &mut self,
+        availability: &'ast AvailabilityAttribute,
+        span: &'ast Span,
+    ) {
+        visit_availability_attribute(self, availability, span)
+    }
+
+    fn visit_availability_clause(
+        &mut self,
+        _clause: &'ast AvailabilityClause,
+        _span: &'ast Span,
+    ) {}
+
     fn visit_gnu_extended_asm_statement(
         &mut self,
         gnu_extended_asm_statement: &'ast GnuExtendedAsmStatement,
@@ -1452,6 +1466,9 @@ pub fn visit_extension<'ast, V: Visit<'ast> + ?Sized>(
     match extension {
         Extension::Attribute(a) => visitor.visit_attribute(a, span),
         Extension::AsmLabel(a) => visitor.visit_string_literal(&a.node, &a.span),
+        Extension::AvailabilityAttribute(a) => {
+            visitor.visit_availability_attribute(&a.node, &a.span)
+        }
     }
 }
 
@@ -1473,6 +1490,16 @@ pub fn visit_asm_statement<'ast, V: Visit<'ast> + ?Sized>(
     match asm_statement {
         AsmStatement::GnuBasic(g) => visitor.visit_string_literal(&g.node, &g.span),
         AsmStatement::GnuExtended(g) => visitor.visit_gnu_extended_asm_statement(g, span),
+    }
+}
+
+pub fn visit_availability_attribute<'ast, V: Visit<'ast> + ?Sized>(
+    visitor: &mut V,
+    availability: &'ast AvailabilityAttribute,
+    span: &'ast Span,
+) {
+    for clause in &availability.clauses {
+        visitor.visit_availability_clause(&clause.node, &clause.span);
     }
 }
 

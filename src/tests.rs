@@ -55,6 +55,7 @@ mk_from_inner! {
     ArrayDeclarator => DerivedDeclarator::Array;
     AsmStatement => Statement::Asm;
     Attribute => Extension::Attribute;
+    AvailabilityAttribute => Extension::AvailabilityAttribute;
     CallExpression => Expression::Call;
     CallExpression => Initializer::Expression;
     CallExpression => TypeOf::Expression;
@@ -2020,5 +2021,56 @@ fn test_kr_definition1() {
             statement: Compound(vec![]).into(),
         }
         .into()]))
+    );
+}
+
+#[test]
+fn test_clang_availability_attr() {
+    use ast::AvailabilityClause::*;
+    use ast::TypeSpecifier::Int;
+    use parser::declaration;
+
+    let env = &mut Env::with_clang();
+
+    let src = r#"int f __attribute__((availability(p1,introduced=1.2.3))) __attribute__((availability(p2,unavailable,replacement="f2")));"#;
+
+    assert_eq!(
+        declaration(src, env),
+        Ok(Declaration {
+            specifiers: vec![Int.into(),],
+            declarators: vec![InitDeclarator {
+                declarator: Declarator {
+                    kind: ident("f"),
+                    derived: vec![],
+                    extensions: vec![
+                        AvailabilityAttribute {
+                            platform: ident("p1"),
+                            clauses: vec![Introduced(
+                                AvailabilityVersion {
+                                    major: "1".into(),
+                                    minor: Some("2".into()),
+                                    subminor: Some("3".into()),
+                                }
+                                .into()
+                            )
+                            .into()],
+                        }
+                        .into(),
+                        AvailabilityAttribute {
+                            platform: ident("p2"),
+                            clauses: vec![
+                                Unavailable.into(),
+                                Replacement(cstr(&["\"f2\""])).into(),
+                            ],
+                        }
+                        .into(),
+                    ],
+                }
+                .into(),
+                initializer: None,
+            }
+            .into(),],
+        }
+        .into())
     );
 }

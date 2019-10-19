@@ -1496,7 +1496,7 @@ pub fn visit_asm_statement<'ast, V: Visit<'ast> + ?Sized>(
 pub fn visit_availability_attribute<'ast, V: Visit<'ast> + ?Sized>(
     visitor: &mut V,
     availability: &'ast AvailabilityAttribute,
-    span: &'ast Span,
+    _span: &'ast Span,
 ) {
     for clause in &availability.clauses {
         visitor.visit_availability_clause(&clause.node, &clause.span);

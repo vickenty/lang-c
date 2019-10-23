@@ -722,6 +722,52 @@ fn test_declaration3() {
 }
 
 #[test]
+fn test_empty_struct_declaration() {
+    use parser::declaration;
+
+    let env = &mut Env::with_gnu();
+
+    assert_eq!(
+        declaration("struct {} S;", env).unwrap(),
+        Declaration {
+            specifiers: vec![StructType {
+                kind: StructKind::Struct.into(),
+                identifier: None,
+                declarations: vec![],
+            }
+            .into()],
+            declarators: vec![InitDeclarator {
+                declarator: Declarator {
+                    kind: ident("S"),
+                    derived: vec![],
+                    extensions: vec![],
+                }
+                .into(),
+                initializer: None,
+            }
+            .into()],
+        }
+        .into()
+    );
+
+    assert_eq!(
+        declaration("struct S {};", env).unwrap(),
+        Declaration {
+            specifiers: vec![StructType {
+                kind: StructKind::Struct.into(),
+                identifier: Some(ident("S")),
+                declarations: vec![],
+            }
+            .into()],
+            declarators: vec![],
+        }
+        .into()
+    );
+
+}
+
+
+#[test]
 fn test_declaration4() {
     use ast::TypeQualifier::Restrict;
     use ast::TypeSpecifier::Int;

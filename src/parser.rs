@@ -6552,11 +6552,11 @@ fn __parse_struct_or_union_specifier<'input>(__input: &'input str, __state: &mut
                                                                                 __repeat_value.push(__value);
                                                                             }
                                                                             Failed => {
-                                                                                break;
+                                                                                break
                                                                             }
                                                                         }
                                                                     }
-                                                                    if __repeat_value.len() >= 1 {
+                                                                    if __repeat_value.len() >= 1 || env.extensions_gnu {
                                                                         Matched(__repeat_pos, __repeat_value)
                                                                     } else {
                                                                         Failed

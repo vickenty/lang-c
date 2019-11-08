@@ -470,11 +470,7 @@ pub trait Visit<'ast> {
         visit_availability_attribute(self, availability, span)
     }
 
-    fn visit_availability_clause(
-        &mut self,
-        _clause: &'ast AvailabilityClause,
-        _span: &'ast Span,
-    ) {}
+    fn visit_availability_clause(&mut self, _clause: &'ast AvailabilityClause, _span: &'ast Span) {}
 
     fn visit_gnu_extended_asm_statement(
         &mut self,
@@ -951,8 +947,10 @@ pub fn visit_struct_type<'ast, V: Visit<'ast> + ?Sized>(
     if let Some(ref identifier) = &struct_type.identifier {
         visitor.visit_identifier(&identifier.node, &identifier.span);
     }
-    for declaration in &struct_type.declarations {
-        visitor.visit_struct_declaration(&declaration.node, &declaration.span);
+    if let Some(ref declarations) = struct_type.declarations {
+        for declaration in declarations {
+            visitor.visit_struct_declaration(&declaration.node, &declaration.span);
+        }
     }
 }
 

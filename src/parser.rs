@@ -6574,7 +6574,7 @@ fn __parse_struct_or_union_specifier<'input>(__input: &'input str, __state: &mut
                                                                         Matched(__pos, _) => {
                                                                             let __seq_res = slice_eq(__input, __state, __pos, "}");
                                                                             match __seq_res {
-                                                                                Matched(__pos, _) => Matched(__pos, { StructType { kind: t, identifier: i, declarations: d } }),
+                                                                                Matched(__pos, _) => Matched(__pos, { StructType { kind: t, identifier: i, declarations: Some(d) } }),
                                                                                 Failed => Failed,
                                                                             }
                                                                         }
@@ -6631,7 +6631,7 @@ fn __parse_struct_or_union_specifier<'input>(__input: &'input str, __state: &mut
                             Matched(__pos, _) => {
                                 let __seq_res = __parse_identifier(__input, __state, __pos, env);
                                 match __seq_res {
-                                    Matched(__pos, i) => Matched(__pos, { StructType { kind: t, identifier: Some(i), declarations: Vec::new() } }),
+                                    Matched(__pos, i) => Matched(__pos, { StructType { kind: t, identifier: Some(i), declarations: None } }),
                                     Failed => Failed,
                                 }
                             }

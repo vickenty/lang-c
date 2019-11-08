@@ -656,7 +656,7 @@ fn test_declaration3() {
             specifiers: vec![StructType {
                 kind: StructKind::Struct.into(),
                 identifier: None,
-                declarations: vec![
+                declarations: Some(vec![
                     StructField {
                         specifiers: vec![Int.into()],
                         declarators: vec![
@@ -703,7 +703,7 @@ fn test_declaration3() {
                         .into()],
                     }
                     .into(),
-                ],
+                ]),
             }
             .into()],
             declarators: vec![InitDeclarator {
@@ -1342,7 +1342,7 @@ fn test_union() {
             specifiers: vec![StructType {
                 kind: StructKind::Union.into(),
                 identifier: None,
-                declarations: vec![
+                declarations: Some(vec![
                     StructField {
                         specifiers: vec![Long.into(), Double.into()],
                         declarators: vec![StructDeclarator {
@@ -1379,7 +1379,7 @@ fn test_union() {
                         .into()],
                     }
                     .into(),
-                ],
+                ]),
             }
             .into()],
             declarators: vec![InitDeclarator {
@@ -1424,11 +1424,11 @@ fn test_offsetof() {
                     specifiers: vec![StructType {
                         kind: StructKind::Struct.into(),
                         identifier: None,
-                        declarations: vec![StructField {
+                        declarations: Some(vec![StructField {
                             specifiers: vec![StructType {
                                 kind: StructKind::Struct.into(),
                                 identifier: None,
-                                declarations: vec![StructField {
+                                declarations: Some(vec![StructField {
                                     specifiers: vec![Int.into()],
                                     declarators: vec![StructDeclarator {
                                         declarator: Some(
@@ -1443,7 +1443,7 @@ fn test_offsetof() {
                                     }
                                     .into()],
                                 }
-                                .into()],
+                                .into()]),
                             }
                             .into()],
                             declarators: vec![StructDeclarator {
@@ -1463,7 +1463,7 @@ fn test_offsetof() {
                             }
                             .into()],
                         }
-                        .into()],
+                        .into()]),
                     }
                     .into()],
                     declarator: None,
@@ -1751,7 +1751,7 @@ fn test_declaration6() {
                 StructType {
                     kind: StructKind::Struct.into(),
                     identifier: None,
-                    declarations: vec![
+                    declarations: Some(vec![
                         StructField {
                             specifiers: vec![Long.into(), Long.into()],
                             declarators: vec![StructDeclarator {
@@ -1806,7 +1806,7 @@ fn test_declaration6() {
                             .into()],
                         }
                         .into(),
-                    ],
+                    ]),
                 }
                 .into(),
             ],
@@ -1881,7 +1881,7 @@ fn test_gnu_extension() {
             specifiers: vec![StructType {
                 kind: StructKind::Union.into(),
                 identifier: None,
-                declarations: vec![StructField {
+                declarations: Some(vec![StructField {
                     specifiers: vec![Long.into()],
                     declarators: vec![StructDeclarator {
                         declarator: Some(
@@ -1896,7 +1896,7 @@ fn test_gnu_extension() {
                     }
                     .into()],
                 }
-                .into()],
+                .into()]),
             }
             .into()],
             declarators: vec![],
@@ -2072,5 +2072,37 @@ fn test_clang_availability_attr() {
             .into(),],
         }
         .into())
+    );
+}
+
+#[test]
+fn test_struct_decl() {
+    use ast::Declaration;
+    use parser::declaration;
+
+    let env = &mut Env::new();
+
+    assert_eq!(
+        declaration("struct foo S;", env).unwrap(),
+        Declaration {
+            specifiers: vec![StructType {
+                kind: StructKind::Struct.into(),
+                identifier: Some(ident("foo")),
+                declarations: None,
+            }
+            .into()],
+
+            declarators: vec![InitDeclarator {
+                declarator: Declarator {
+                    kind: ident("S"),
+                    derived: vec![],
+                    extensions: vec![],
+                }
+                .into(),
+                initializer: None,
+            }
+            .into()],
+        }
+        .into()
     );
 }

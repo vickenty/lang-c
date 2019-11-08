@@ -521,14 +521,14 @@ struct_or_union_specifier -> StructType =
         StructType {
             kind: t,
             identifier: i,
-            declarations: d,
+            declarations: Some(d),
         }
     } /
     t:node<struct_or_union> _ i:identifier {
         StructType {
             kind: t,
             identifier: Some(i),
-            declarations: Vec::new(),
+            declarations: None,
         }
     }
 

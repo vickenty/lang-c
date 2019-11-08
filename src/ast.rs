@@ -657,7 +657,7 @@ pub enum TS18661FloatFormat {
 pub struct StructType {
     pub kind: Node<StructKind>,
     pub identifier: Option<Node<Identifier>>,
-    pub declarations: Vec<Node<StructDeclaration>>,
+    pub declarations: Option<Vec<Node<StructDeclaration>>>,
 }
 
 /// The only difference between a `struct` and a `union`

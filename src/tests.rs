@@ -2106,3 +2106,38 @@ fn test_struct_decl() {
         .into()
     );
 }
+
+#[test]
+fn test_struct_empty_decl() {
+    use ast::Declaration;
+    use parser::declaration;
+
+    let env = &mut Env::with_core();
+    assert!(declaration("struct foo { } S;", env).is_err());
+
+    let env = &mut Env::with_gnu();
+
+    assert_eq!(
+        declaration("struct foo { } S;", env).unwrap(),
+        Declaration {
+            specifiers: vec![StructType {
+                kind: StructKind::Struct.into(),
+                identifier: Some(ident("foo")),
+                declarations: Some(Vec::new()),
+            }
+            .into()],
+
+            declarators: vec![InitDeclarator {
+                declarator: Declarator {
+                    kind: ident("S"),
+                    derived: vec![],
+                    extensions: vec![],
+                }
+                .into(),
+                initializer: None,
+            }
+            .into()],
+        }
+        .into()
+    );
+}

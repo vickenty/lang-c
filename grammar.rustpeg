@@ -517,11 +517,11 @@ type_specifier0 -> TypeSpecifier =
     gnu<typeof_specifier>
 
 struct_or_union_specifier -> StructType =
-    t:node<struct_or_union> _ i:identifier? _ "{" _ d:list1<node<struct_declaration>> _ "}" {
+    t:node<struct_or_union> _ i:identifier? _ d:struct_or_union_body {
         StructType {
             kind: t,
             identifier: i,
-            declarations: Some(d),
+            declarations: d,
         }
     } /
     t:node<struct_or_union> _ i:identifier {
@@ -531,6 +531,11 @@ struct_or_union_specifier -> StructType =
             declarations: None,
         }
     }
+
+struct_or_union_body -> Option<Vec<Node<StructDeclaration>>> =
+    "{" _ d:list1<node<struct_declaration>> _ "}" { Some(d) } /
+    gnu<"{" _ "}"> { Some(Vec::new()) } /
+    { None }
 
 struct_or_union -> StructKind =
     K<"struct"> { StructKind::Struct } /

@@ -657,6 +657,9 @@ pub enum TS18661FloatFormat {
 pub struct StructType {
     pub kind: Node<StructKind>,
     pub identifier: Option<Node<Identifier>>,
+    /// List of structure of union members, when present.
+    ///
+    /// A [GNU extension](https://gcc.gnu.org/onlinedocs/gcc-8.1.0/gcc/Empty-Structures.html) allows the list to be empty.
     pub declarations: Option<Vec<Node<StructDeclaration>>>,
 }
 

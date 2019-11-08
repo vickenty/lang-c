@@ -147,7 +147,7 @@ mod int {
     pub fn num<T: From<Constant>>(base: IntegerBase, number: &str, suffix: IntegerSuffix) -> T {
         Constant::Integer(Integer {
             base: base,
-            number: number.into(),
+            number: number.to_string().into_boxed_str(),
             suffix: suffix,
         })
         .into()
@@ -180,7 +180,7 @@ mod float {
     pub fn num<T: From<Constant>>(base: FloatBase, number: &str, suffix: FloatSuffix) -> T {
         Constant::Float(Float {
             base: base,
-            number: number.into(),
+            number: number.to_string().into_boxed_str(),
             suffix: suffix,
         })
         .into()
@@ -507,7 +507,7 @@ fn test_comma() {
     assert_eq!(expression("a", env), Ok(ident("a")));
     assert_eq!(
         expression("a, a, a,a\n,a", env),
-        Ok(Comma(vec![ident("a"); 5].into()).into())
+        Ok(Comma(Box::new(vec![ident("a"); 5].into())).into())
     );
 }
 

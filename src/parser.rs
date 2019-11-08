@@ -452,7 +452,7 @@ fn __parse_integer_constant<'input>(__input: &'input str, __state: &mut ParseSta
                 match __seq_res {
                     Matched(__pos, suffix) => Matched(__pos, {
                         let (base, number) = n;
-                        Integer { base: base, number: number.into(), suffix: suffix }
+                        Integer { base: base, number: number.to_owned().into_boxed_str(), suffix: suffix }
                     }),
                     Failed => Failed,
                 }
@@ -725,7 +725,7 @@ fn __parse_float_constant<'input>(__input: &'input str, __state: &mut ParseState
                 match __seq_res {
                     Matched(__pos, suffix) => Matched(__pos, {
                         let (base, number) = n;
-                        Float { base: base, number: number.into(), suffix: suffix }
+                        Float { base: base, number: number.to_string().into_boxed_str(), suffix: suffix }
                     }),
                     Failed => Failed,
                 }

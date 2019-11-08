@@ -81,7 +81,7 @@ integer_constant -> Integer =
         let (base, number) = n;
         Integer {
             base: base,
-            number: number.into(),
+            number: number.to_owned().into_boxed_str(),
             suffix: suffix,
         }
     }
@@ -103,7 +103,7 @@ float_constant -> Float =
         let (base, number) = n;
         Float {
             base: base,
-            number: number.into(),
+            number: number.to_string().into_boxed_str(),
             suffix: suffix,
         }
     }

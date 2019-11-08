@@ -501,9 +501,9 @@ pub fn visit_constant<'ast, V: Visit<'ast> + ?Sized>(
     constant: &'ast Constant,
     span: &'ast Span,
 ) {
-    match constant {
-        Constant::Integer(i) => visitor.visit_integer(i, span),
-        Constant::Float(f) => visitor.visit_float(f, span),
+    match *constant {
+        Constant::Integer(ref i) => visitor.visit_integer(i, span),
+        Constant::Float(ref f) => visitor.visit_float(f, span),
         Constant::Character(_) => {}
     }
 }
@@ -568,8 +568,8 @@ pub fn visit_float_format<'ast, V: Visit<'ast> + ?Sized>(
     float_format: &'ast FloatFormat,
     span: &'ast Span,
 ) {
-    match float_format {
-        FloatFormat::TS18661Format(f) => visitor.visit_ts18661_float_type(f, span),
+    match *float_format {
+        FloatFormat::TS18661Format(ref f) => visitor.visit_ts18661_float_type(f, span),
         _ => {}
     }
 }
@@ -586,28 +586,28 @@ pub fn visit_expression<'ast, V: Visit<'ast> + ?Sized>(
     expression: &'ast Expression,
     _span: &'ast Span,
 ) {
-    match expression {
-        Expression::Identifier(i) => visitor.visit_identifier(&i.node, &i.span),
-        Expression::Constant(c) => visitor.visit_constant(&c.node, &c.span),
-        Expression::StringLiteral(s) => visitor.visit_string_literal(&s.node, &s.span),
-        Expression::GenericSelection(g) => visitor.visit_generic_selection(&g.node, &g.span),
-        Expression::Member(m) => visitor.visit_member_expression(&m.node, &m.span),
-        Expression::Call(c) => visitor.visit_call_expression(&c.node, &c.span),
-        Expression::CompoundLiteral(c) => visitor.visit_compound_literal(&c.node, &c.span),
-        Expression::SizeOf(s) => visitor.visit_type_name(&s.node, &s.span),
-        Expression::AlignOf(a) => visitor.visit_type_name(&a.node, &a.span),
-        Expression::UnaryOperator(u) => visitor.visit_unary_operator_expression(&u.node, &u.span),
-        Expression::Cast(c) => visitor.visit_cast_expression(&c.node, &c.span),
-        Expression::BinaryOperator(b) => visitor.visit_binary_operator_expression(&b.node, &b.span),
-        Expression::Conditional(c) => visitor.visit_conditional_expression(&c.node, &c.span),
-        Expression::Comma(comma) => {
+    match *expression {
+        Expression::Identifier(ref i) => visitor.visit_identifier(&i.node, &i.span),
+        Expression::Constant(ref c) => visitor.visit_constant(&c.node, &c.span),
+        Expression::StringLiteral(ref s) => visitor.visit_string_literal(&s.node, &s.span),
+        Expression::GenericSelection(ref g) => visitor.visit_generic_selection(&g.node, &g.span),
+        Expression::Member(ref m) => visitor.visit_member_expression(&m.node, &m.span),
+        Expression::Call(ref c) => visitor.visit_call_expression(&c.node, &c.span),
+        Expression::CompoundLiteral(ref c) => visitor.visit_compound_literal(&c.node, &c.span),
+        Expression::SizeOf(ref s) => visitor.visit_type_name(&s.node, &s.span),
+        Expression::AlignOf(ref a) => visitor.visit_type_name(&a.node, &a.span),
+        Expression::UnaryOperator(ref u) => visitor.visit_unary_operator_expression(&u.node, &u.span),
+        Expression::Cast(ref c) => visitor.visit_cast_expression(&c.node, &c.span),
+        Expression::BinaryOperator(ref b) => visitor.visit_binary_operator_expression(&b.node, &b.span),
+        Expression::Conditional(ref c) => visitor.visit_conditional_expression(&c.node, &c.span),
+        Expression::Comma(ref comma) => {
             for c in comma.iter() {
                 visitor.visit_expression(&c.node, &c.span);
             }
         }
-        Expression::OffsetOf(o) => visitor.visit_offset_of_expression(&o.node, &o.span),
-        Expression::VaArg(v) => visitor.visit_va_arg_expression(&v.node, &v.span),
-        Expression::Statement(s) => visitor.visit_statement(&s.node, &s.span),
+        Expression::OffsetOf(ref o) => visitor.visit_offset_of_expression(&o.node, &o.span),
+        Expression::VaArg(ref v) => visitor.visit_va_arg_expression(&v.node, &v.span),
+        Expression::Statement(ref s) => visitor.visit_statement(&s.node, &s.span),
     }
 }
 
@@ -637,9 +637,9 @@ pub fn visit_generic_association<'ast, V: Visit<'ast> + ?Sized>(
     generic_association: &'ast GenericAssociation,
     _span: &'ast Span,
 ) {
-    match generic_association {
-        GenericAssociation::Type(t) => visitor.visit_generic_association_type(&t.node, &t.span),
-        GenericAssociation::Default(d) => visitor.visit_expression(&d.node, &d.span),
+    match *generic_association {
+        GenericAssociation::Type(ref t) => visitor.visit_generic_association_type(&t.node, &t.span),
+        GenericAssociation::Default(ref d) => visitor.visit_expression(&d.node, &d.span),
     }
 }
 
@@ -844,10 +844,10 @@ pub fn visit_offset_member<'ast, V: Visit<'ast> + ?Sized>(
     offset_member: &'ast OffsetMember,
     _span: &'ast Span,
 ) {
-    match offset_member {
-        OffsetMember::Member(m) => visitor.visit_identifier(&m.node, &m.span),
-        OffsetMember::IndirectMember(m) => visitor.visit_identifier(&m.node, &m.span),
-        OffsetMember::Index(i) => visitor.visit_expression(&i.node, &i.span),
+    match *offset_member {
+        OffsetMember::Member(ref m) => visitor.visit_identifier(&m.node, &m.span),
+        OffsetMember::IndirectMember(ref m) => visitor.visit_identifier(&m.node, &m.span),
+        OffsetMember::Index(ref i) => visitor.visit_expression(&i.node, &i.span),
     }
 }
 
@@ -870,15 +870,15 @@ pub fn visit_declaration_specifier<'ast, V: Visit<'ast> + ?Sized>(
     declaration_specifier: &'ast DeclarationSpecifier,
     _span: &'ast Span,
 ) {
-    match declaration_specifier {
-        DeclarationSpecifier::StorageClass(s) => {
+    match *declaration_specifier {
+        DeclarationSpecifier::StorageClass(ref s) => {
             visitor.visit_storage_class_specifier(&s.node, &s.span)
         }
-        DeclarationSpecifier::TypeSpecifier(t) => visitor.visit_type_specifier(&t.node, &t.span),
-        DeclarationSpecifier::TypeQualifier(t) => visitor.visit_type_qualifier(&t.node, &t.span),
-        DeclarationSpecifier::Function(f) => visitor.visit_function_specifier(&f.node, &f.span),
-        DeclarationSpecifier::Alignment(a) => visitor.visit_alignment_specifier(&a.node, &a.span),
-        DeclarationSpecifier::Extension(e) => {
+        DeclarationSpecifier::TypeSpecifier(ref t) => visitor.visit_type_specifier(&t.node, &t.span),
+        DeclarationSpecifier::TypeQualifier(ref t) => visitor.visit_type_qualifier(&t.node, &t.span),
+        DeclarationSpecifier::Function(ref f) => visitor.visit_function_specifier(&f.node, &f.span),
+        DeclarationSpecifier::Alignment(ref a) => visitor.visit_alignment_specifier(&a.node, &a.span),
+        DeclarationSpecifier::Extension(ref e) => {
             for extension in e {
                 visitor.visit_extension(&extension.node, &extension.span);
             }
@@ -912,13 +912,13 @@ pub fn visit_type_specifier<'ast, V: Visit<'ast> + ?Sized>(
     type_specifier: &'ast TypeSpecifier,
     span: &'ast Span,
 ) {
-    match type_specifier {
-        TypeSpecifier::Atomic(a) => visitor.visit_type_name(&a.node, &a.span),
-        TypeSpecifier::Struct(s) => visitor.visit_struct_type(&s.node, &s.span),
-        TypeSpecifier::Enum(e) => visitor.visit_enum_type(&e.node, &e.span),
-        TypeSpecifier::TypedefName(t) => visitor.visit_identifier(&t.node, &t.span),
-        TypeSpecifier::TypeOf(t) => visitor.visit_type_of(&t.node, &t.span),
-        TypeSpecifier::TS18661Float(t) => visitor.visit_ts18661_float_type(t, span),
+    match *type_specifier {
+        TypeSpecifier::Atomic(ref a) => visitor.visit_type_name(&a.node, &a.span),
+        TypeSpecifier::Struct(ref s) => visitor.visit_struct_type(&s.node, &s.span),
+        TypeSpecifier::Enum(ref e) => visitor.visit_enum_type(&e.node, &e.span),
+        TypeSpecifier::TypedefName(ref t) => visitor.visit_identifier(&t.node, &t.span),
+        TypeSpecifier::TypeOf(ref t) => visitor.visit_type_of(&t.node, &t.span),
+        TypeSpecifier::TS18661Float(ref t) => visitor.visit_ts18661_float_type(t, span),
         _ => {}
     }
 }
@@ -944,7 +944,7 @@ pub fn visit_struct_type<'ast, V: Visit<'ast> + ?Sized>(
     _span: &'ast Span,
 ) {
     visitor.visit_struct_kind(&struct_type.kind.node, &struct_type.kind.span);
-    if let Some(ref identifier) = &struct_type.identifier {
+    if let Some(ref identifier) = struct_type.identifier {
         visitor.visit_identifier(&identifier.node, &identifier.span);
     }
     if let Some(ref declarations) = struct_type.declarations {
@@ -966,9 +966,9 @@ pub fn visit_struct_declaration<'ast, V: Visit<'ast> + ?Sized>(
     struct_declaration: &'ast StructDeclaration,
     _span: &'ast Span,
 ) {
-    match struct_declaration {
-        StructDeclaration::Field(f) => visitor.visit_struct_field(&f.node, &f.span),
-        StructDeclaration::StaticAssert(s) => visitor.visit_static_assert(&s.node, &s.span),
+    match *struct_declaration {
+        StructDeclaration::Field(ref f) => visitor.visit_struct_field(&f.node, &f.span),
+        StructDeclaration::StaticAssert(ref s) => visitor.visit_static_assert(&s.node, &s.span),
     }
 }
 
@@ -990,9 +990,9 @@ pub fn visit_specifier_qualifier<'ast, V: Visit<'ast> + ?Sized>(
     specifier_qualifier: &'ast SpecifierQualifier,
     _span: &'ast Span,
 ) {
-    match specifier_qualifier {
-        SpecifierQualifier::TypeSpecifier(t) => visitor.visit_type_specifier(&t.node, &t.span),
-        SpecifierQualifier::TypeQualifier(t) => visitor.visit_type_qualifier(&t.node, &t.span),
+    match *specifier_qualifier {
+        SpecifierQualifier::TypeSpecifier(ref t) => visitor.visit_type_specifier(&t.node, &t.span),
+        SpecifierQualifier::TypeQualifier(ref t) => visitor.visit_type_qualifier(&t.node, &t.span),
     }
 }
 
@@ -1052,9 +1052,9 @@ pub fn visit_alignment_specifier<'ast, V: Visit<'ast> + ?Sized>(
     alignment_specifier: &'ast AlignmentSpecifier,
     _span: &'ast Span,
 ) {
-    match alignment_specifier {
-        AlignmentSpecifier::Type(t) => visitor.visit_type_name(&t.node, &t.span),
-        AlignmentSpecifier::Constant(c) => visitor.visit_expression(&c.node, &c.span),
+    match *alignment_specifier {
+        AlignmentSpecifier::Type(ref t) => visitor.visit_type_name(&t.node, &t.span),
+        AlignmentSpecifier::Constant(ref c) => visitor.visit_expression(&c.node, &c.span),
     }
 }
 
@@ -1077,9 +1077,9 @@ pub fn visit_declarator_kind<'ast, V: Visit<'ast> + ?Sized>(
     declarator_kind: &'ast DeclaratorKind,
     _span: &'ast Span,
 ) {
-    match declarator_kind {
-        DeclaratorKind::Identifier(i) => visitor.visit_identifier(&i.node, &i.span),
-        DeclaratorKind::Declarator(d) => visitor.visit_declarator(&d.node, &d.span),
+    match *declarator_kind {
+        DeclaratorKind::Identifier(ref i) => visitor.visit_identifier(&i.node, &i.span),
+        DeclaratorKind::Declarator(ref d) => visitor.visit_declarator(&d.node, &d.span),
         _ => {}
     }
 }
@@ -1089,15 +1089,15 @@ pub fn visit_derived_declarator<'ast, V: Visit<'ast> + ?Sized>(
     derived_declarator: &'ast DerivedDeclarator,
     _span: &'ast Span,
 ) {
-    match derived_declarator {
-        DerivedDeclarator::Pointer(p) => {
+    match *derived_declarator {
+        DerivedDeclarator::Pointer(ref p) => {
             for pointer in p {
                 visitor.visit_pointer_qualifier(&pointer.node, &pointer.span);
             }
         }
-        DerivedDeclarator::Array(a) => visitor.visit_array_declarator(&a.node, &a.span),
-        DerivedDeclarator::Function(f) => visitor.visit_function_declarator(&f.node, &f.span),
-        DerivedDeclarator::KRFunction(k) => {
+        DerivedDeclarator::Array(ref a) => visitor.visit_array_declarator(&a.node, &a.span),
+        DerivedDeclarator::Function(ref f) => visitor.visit_function_declarator(&f.node, &f.span),
+        DerivedDeclarator::KRFunction(ref k) => {
             for identifier in k {
                 visitor.visit_identifier(&identifier.node, &identifier.span);
             }
@@ -1132,9 +1132,9 @@ pub fn visit_pointer_qualifier<'ast, V: Visit<'ast> + ?Sized>(
     pointer_qualifier: &'ast PointerQualifier,
     _span: &'ast Span,
 ) {
-    match pointer_qualifier {
-        PointerQualifier::TypeQualifier(t) => visitor.visit_type_qualifier(&t.node, &t.span),
-        PointerQualifier::Extension(e) => {
+    match *pointer_qualifier {
+        PointerQualifier::TypeQualifier(ref t) => visitor.visit_type_qualifier(&t.node, &t.span),
+        PointerQualifier::Extension(ref e) => {
             for extension in e {
                 visitor.visit_extension(&extension.node, &extension.span);
             }
@@ -1147,9 +1147,9 @@ pub fn visit_array_size<'ast, V: Visit<'ast> + ?Sized>(
     array_size: &'ast ArraySize,
     _span: &'ast Span,
 ) {
-    match array_size {
-        ArraySize::VariableExpression(e) => visitor.visit_expression(&e.node, &e.span),
-        ArraySize::StaticExpression(s) => visitor.visit_expression(&s.node, &s.span),
+    match *array_size {
+        ArraySize::VariableExpression(ref e) => visitor.visit_expression(&e.node, &e.span),
+        ArraySize::StaticExpression(ref s) => visitor.visit_expression(&s.node, &s.span),
         _ => {}
     }
 }
@@ -1195,9 +1195,9 @@ pub fn visit_initializer<'ast, V: Visit<'ast> + ?Sized>(
     initializer: &'ast Initializer,
     _span: &'ast Span,
 ) {
-    match initializer {
-        Initializer::Expression(e) => visitor.visit_expression(&e.node, &e.span),
-        Initializer::List(l) => {
+    match *initializer {
+        Initializer::Expression(ref e) => visitor.visit_expression(&e.node, &e.span),
+        Initializer::List(ref l) => {
             for item in l {
                 visitor.visit_initializer_list_item(&item.node, &item.span);
             }
@@ -1224,10 +1224,10 @@ pub fn visit_designator<'ast, V: Visit<'ast> + ?Sized>(
     designator: &'ast Designator,
     _span: &'ast Span,
 ) {
-    match designator {
-        Designator::Index(i) => visitor.visit_expression(&i.node, &i.span),
-        Designator::Member(m) => visitor.visit_identifier(&m.node, &m.span),
-        Designator::Range(r) => visitor.visit_range_designator(&r.node, &r.span),
+    match *designator {
+        Designator::Index(ref i) => visitor.visit_expression(&i.node, &i.span),
+        Designator::Member(ref m) => visitor.visit_identifier(&m.node, &m.span),
+        Designator::Range(ref r) => visitor.visit_range_designator(&r.node, &r.span),
     }
 }
 
@@ -1257,30 +1257,26 @@ pub fn visit_statement<'ast, V: Visit<'ast> + ?Sized>(
     statement: &'ast Statement,
     _span: &'ast Span,
 ) {
-    match statement {
-        Statement::Labeled(l) => visitor.visit_labeled_statement(&l.node, &l.span),
-        Statement::Compound(c) => {
+    match *statement {
+        Statement::Labeled(ref l) => visitor.visit_labeled_statement(&l.node, &l.span),
+        Statement::Compound(ref c) => {
             for item in c {
                 visitor.visit_block_item(&item.node, &item.span);
             }
         }
-        Statement::Expression(e) => {
-            if let Some(ref e) = e {
-                visitor.visit_expression(&e.node, &e.span);
-            }
+        Statement::Expression(Some(ref e)) => {
+            visitor.visit_expression(&e.node, &e.span);
         }
-        Statement::If(i) => visitor.visit_if_statement(&i.node, &i.span),
-        Statement::Switch(s) => visitor.visit_switch_statement(&s.node, &s.span),
-        Statement::While(w) => visitor.visit_while_statement(&w.node, &w.span),
-        Statement::DoWhile(d) => visitor.visit_do_while_statement(&d.node, &d.span),
-        Statement::For(f) => visitor.visit_for_statement(&f.node, &f.span),
-        Statement::Goto(g) => visitor.visit_identifier(&g.node, &g.span),
-        Statement::Return(r) => {
-            if let Some(ref r) = r {
-                visitor.visit_expression(&r.node, &r.span);
-            }
+        Statement::If(ref i) => visitor.visit_if_statement(&i.node, &i.span),
+        Statement::Switch(ref s) => visitor.visit_switch_statement(&s.node, &s.span),
+        Statement::While(ref w) => visitor.visit_while_statement(&w.node, &w.span),
+        Statement::DoWhile(ref d) => visitor.visit_do_while_statement(&d.node, &d.span),
+        Statement::For(ref f) => visitor.visit_for_statement(&f.node, &f.span),
+        Statement::Goto(ref g) => visitor.visit_identifier(&g.node, &g.span),
+        Statement::Return(Some(ref r)) => {
+            visitor.visit_expression(&r.node, &r.span);
         }
-        Statement::Asm(a) => visitor.visit_asm_statement(&a.node, &a.span),
+        Statement::Asm(ref a) => visitor.visit_asm_statement(&a.node, &a.span),
         _ => {}
     }
 }
@@ -1380,9 +1376,9 @@ pub fn visit_label<'ast, V: Visit<'ast> + ?Sized>(
     label: &'ast Label,
     _span: &'ast Span,
 ) {
-    match label {
-        Label::Identifier(i) => visitor.visit_identifier(&i.node, &i.span),
-        Label::Case(c) => visitor.visit_expression(&c.node, &c.span),
+    match *label {
+        Label::Identifier(ref i) => visitor.visit_identifier(&i.node, &i.span),
+        Label::Case(ref c) => visitor.visit_expression(&c.node, &c.span),
         Label::Default => {}
     }
 }
@@ -1392,11 +1388,11 @@ pub fn visit_for_initializer<'ast, V: Visit<'ast> + ?Sized>(
     for_initializer: &'ast ForInitializer,
     _span: &'ast Span,
 ) {
-    match for_initializer {
+    match *for_initializer {
         ForInitializer::Empty => {}
-        ForInitializer::Expression(e) => visitor.visit_expression(&e.node, &e.span),
-        ForInitializer::Declaration(d) => visitor.visit_declaration(&d.node, &d.span),
-        ForInitializer::StaticAssert(s) => visitor.visit_static_assert(&s.node, &s.span),
+        ForInitializer::Expression(ref e) => visitor.visit_expression(&e.node, &e.span),
+        ForInitializer::Declaration(ref d) => visitor.visit_declaration(&d.node, &d.span),
+        ForInitializer::StaticAssert(ref s) => visitor.visit_static_assert(&s.node, &s.span),
     }
 }
 
@@ -1405,10 +1401,10 @@ pub fn visit_block_item<'ast, V: Visit<'ast> + ?Sized>(
     block_item: &'ast BlockItem,
     _span: &'ast Span,
 ) {
-    match block_item {
-        BlockItem::Declaration(d) => visitor.visit_declaration(&d.node, &d.span),
-        BlockItem::StaticAssert(s) => visitor.visit_static_assert(&s.node, &s.span),
-        BlockItem::Statement(s) => visitor.visit_statement(&s.node, &s.span),
+    match *block_item {
+        BlockItem::Declaration(ref d) => visitor.visit_declaration(&d.node, &d.span),
+        BlockItem::StaticAssert(ref s) => visitor.visit_static_assert(&s.node, &s.span),
+        BlockItem::Statement(ref s) => visitor.visit_statement(&s.node, &s.span),
     }
 }
 
@@ -1426,10 +1422,10 @@ pub fn visit_external_declaration<'ast, V: Visit<'ast> + ?Sized>(
     external_declaration: &'ast ExternalDeclaration,
     _span: &'ast Span,
 ) {
-    match external_declaration {
-        ExternalDeclaration::Declaration(d) => visitor.visit_declaration(&d.node, &d.span),
-        ExternalDeclaration::StaticAssert(s) => visitor.visit_static_assert(&s.node, &s.span),
-        ExternalDeclaration::FunctionDefinition(f) => {
+    match *external_declaration {
+        ExternalDeclaration::Declaration(ref d) => visitor.visit_declaration(&d.node, &d.span),
+        ExternalDeclaration::StaticAssert(ref s) => visitor.visit_static_assert(&s.node, &s.span),
+        ExternalDeclaration::FunctionDefinition(ref f) => {
             visitor.visit_function_definition(&f.node, &f.span)
         }
     }
@@ -1461,10 +1457,10 @@ pub fn visit_extension<'ast, V: Visit<'ast> + ?Sized>(
     extension: &'ast Extension,
     span: &'ast Span,
 ) {
-    match extension {
-        Extension::Attribute(a) => visitor.visit_attribute(a, span),
-        Extension::AsmLabel(a) => visitor.visit_string_literal(&a.node, &a.span),
-        Extension::AvailabilityAttribute(a) => {
+    match *extension {
+        Extension::Attribute(ref a) => visitor.visit_attribute(a, span),
+        Extension::AsmLabel(ref a) => visitor.visit_string_literal(&a.node, &a.span),
+        Extension::AvailabilityAttribute(ref a) => {
             visitor.visit_availability_attribute(&a.node, &a.span)
         }
     }
@@ -1485,9 +1481,9 @@ pub fn visit_asm_statement<'ast, V: Visit<'ast> + ?Sized>(
     asm_statement: &'ast AsmStatement,
     span: &'ast Span,
 ) {
-    match asm_statement {
-        AsmStatement::GnuBasic(g) => visitor.visit_string_literal(&g.node, &g.span),
-        AsmStatement::GnuExtended(g) => visitor.visit_gnu_extended_asm_statement(g, span),
+    match *asm_statement {
+        AsmStatement::GnuBasic(ref g) => visitor.visit_string_literal(&g.node, &g.span),
+        AsmStatement::GnuExtended(ref g) => visitor.visit_gnu_extended_asm_statement(g, span),
     }
 }
 
@@ -1547,8 +1543,8 @@ pub fn visit_type_of<'ast, V: Visit<'ast> + ?Sized>(
     type_of: &'ast TypeOf,
     _span: &'ast Span,
 ) {
-    match type_of {
-        TypeOf::Expression(e) => visitor.visit_expression(&e.node, &e.span),
-        TypeOf::Type(t) => visitor.visit_type_name(&t.node, &t.span),
+    match *type_of {
+        TypeOf::Expression(ref e) => visitor.visit_expression(&e.node, &e.span),
+        TypeOf::Type(ref t) => visitor.visit_type_name(&t.node, &t.span),
     }
 }

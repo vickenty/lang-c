@@ -62,7 +62,7 @@ pub struct Integer {
 pub enum IntegerBase {
     Decimal,
     Octal,
-    Hexademical,
+    Hexadecimal,
 }
 
 /// Suffix of an integer literal
@@ -109,7 +109,7 @@ pub struct Float {
 #[derive(Debug, PartialEq, Clone)]
 pub enum FloatBase {
     Decimal,
-    Hexademical,
+    Hexadecimal,
 }
 
 /// Floating point number suffix

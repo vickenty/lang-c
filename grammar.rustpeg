@@ -88,7 +88,7 @@ integer_constant -> Integer =
 
 integer_number -> (IntegerBase, &'input str) =
     n:$([1-9] dec*) { (IntegerBase::Decimal, n) } /
-    ohx n:$(hex+) { (IntegerBase::Hexademical, n) } /
+    ohx n:$(hex+) { (IntegerBase::Hexadecimal, n) } /
     "0" n:$(oct+) { (IntegerBase::Octal, n) } /
     n:$("0") { (IntegerBase::Decimal, n) }
 
@@ -110,7 +110,7 @@ float_constant -> Float =
 
 float_number -> (FloatBase, &'input str) =
     n:$(float_decimal) { (FloatBase::Decimal, n) } /
-    ohx n:$(float_hexademical) { (FloatBase::Hexademical, n) }
+    ohx n:$(float_hexadecimal) { (FloatBase::Hexadecimal, n) }
 
 float_decimal =
     dec* "." dec+ float_decimal_exp? /
@@ -119,7 +119,7 @@ float_decimal =
 
 float_decimal_exp = [eE][+-]?dec+
 
-float_hexademical =
+float_hexadecimal =
     hex* "." hex+ float_binary_exp /
     hex+ "." float_binary_exp /
     hex+ float_binary_exp

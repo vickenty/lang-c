@@ -227,7 +227,7 @@ fn test_integer() {
     );
     assert_eq!(
         constant("0x1234567890abdefABCDEF", env),
-        Ok(num(Hexademical, "1234567890abdefABCDEF", NONE.clone()))
+        Ok(num(Hexadecimal, "1234567890abdefABCDEF", NONE.clone()))
     );
     assert_eq!(constant("042lu", env), Ok(num(Octal, "42", UL.clone())));
     assert_eq!(constant("042ul", env), Ok(num(Octal, "42", UL.clone())));
@@ -290,19 +290,19 @@ fn test_floating() {
 
     assert_eq!(
         constant("0x2Ap19L", env),
-        Ok(num(Hexademical, "2Ap19", L.clone()))
+        Ok(num(Hexadecimal, "2Ap19", L.clone()))
     );
     assert_eq!(
         constant("0x2A.p19L", env),
-        Ok(num(Hexademical, "2A.p19", L.clone()))
+        Ok(num(Hexadecimal, "2A.p19", L.clone()))
     );
     assert_eq!(
         constant("0x.DEp19L", env),
-        Ok(num(Hexademical, ".DEp19", L.clone()))
+        Ok(num(Hexadecimal, ".DEp19", L.clone()))
     );
     assert_eq!(
         constant("0x2A.DEp19L", env),
-        Ok(num(Hexademical, "2A.DEp19", L.clone()))
+        Ok(num(Hexadecimal, "2A.DEp19", L.clone()))
     );
 }
 
@@ -336,7 +336,7 @@ fn ts18661_literal() {
     );
     assert_eq!(
         constant("0xAp1f16", env),
-        Ok(num(Hexademical, "Ap1", F16.clone()))
+        Ok(num(Hexadecimal, "Ap1", F16.clone()))
     );
 }
 

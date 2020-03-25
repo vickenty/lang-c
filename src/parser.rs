@@ -543,7 +543,7 @@ fn __parse_integer_number<'input>(__input: &'input str, __state: &mut ParseState
                                 }
                             };
                             match __seq_res {
-                                Matched(__pos, n) => Matched(__pos, { (IntegerBase::Hexademical, n) }),
+                                Matched(__pos, n) => Matched(__pos, { (IntegerBase::Hexadecimal, n) }),
                                 Failed => Failed,
                             }
                         }
@@ -759,13 +759,13 @@ fn __parse_float_number<'input>(__input: &'input str, __state: &mut ParseState<'
                     Matched(__pos, _) => {
                         let __seq_res = {
                             let str_start = __pos;
-                            match __parse_float_hexademical(__input, __state, __pos, env) {
+                            match __parse_float_hexadecimal(__input, __state, __pos, env) {
                                 Matched(__newpos, _) => Matched(__newpos, &__input[str_start..__newpos]),
                                 Failed => Failed,
                             }
                         };
                         match __seq_res {
-                            Matched(__pos, n) => Matched(__pos, { (FloatBase::Hexademical, n) }),
+                            Matched(__pos, n) => Matched(__pos, { (FloatBase::Hexadecimal, n) }),
                             Failed => Failed,
                         }
                     }
@@ -970,7 +970,7 @@ fn __parse_float_decimal_exp<'input>(__input: &'input str, __state: &mut ParseSt
     }
 }
 
-fn __parse_float_hexademical<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<()> {
+fn __parse_float_hexadecimal<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<()> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {

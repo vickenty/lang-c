@@ -596,9 +596,13 @@ pub fn visit_expression<'ast, V: Visit<'ast> + ?Sized>(
         Expression::CompoundLiteral(ref c) => visitor.visit_compound_literal(&c.node, &c.span),
         Expression::SizeOf(ref s) => visitor.visit_type_name(&s.node, &s.span),
         Expression::AlignOf(ref a) => visitor.visit_type_name(&a.node, &a.span),
-        Expression::UnaryOperator(ref u) => visitor.visit_unary_operator_expression(&u.node, &u.span),
+        Expression::UnaryOperator(ref u) => {
+            visitor.visit_unary_operator_expression(&u.node, &u.span)
+        }
         Expression::Cast(ref c) => visitor.visit_cast_expression(&c.node, &c.span),
-        Expression::BinaryOperator(ref b) => visitor.visit_binary_operator_expression(&b.node, &b.span),
+        Expression::BinaryOperator(ref b) => {
+            visitor.visit_binary_operator_expression(&b.node, &b.span)
+        }
         Expression::Conditional(ref c) => visitor.visit_conditional_expression(&c.node, &c.span),
         Expression::Comma(ref comma) => {
             for c in comma.iter() {
@@ -874,10 +878,16 @@ pub fn visit_declaration_specifier<'ast, V: Visit<'ast> + ?Sized>(
         DeclarationSpecifier::StorageClass(ref s) => {
             visitor.visit_storage_class_specifier(&s.node, &s.span)
         }
-        DeclarationSpecifier::TypeSpecifier(ref t) => visitor.visit_type_specifier(&t.node, &t.span),
-        DeclarationSpecifier::TypeQualifier(ref t) => visitor.visit_type_qualifier(&t.node, &t.span),
+        DeclarationSpecifier::TypeSpecifier(ref t) => {
+            visitor.visit_type_specifier(&t.node, &t.span)
+        }
+        DeclarationSpecifier::TypeQualifier(ref t) => {
+            visitor.visit_type_qualifier(&t.node, &t.span)
+        }
         DeclarationSpecifier::Function(ref f) => visitor.visit_function_specifier(&f.node, &f.span),
-        DeclarationSpecifier::Alignment(ref a) => visitor.visit_alignment_specifier(&a.node, &a.span),
+        DeclarationSpecifier::Alignment(ref a) => {
+            visitor.visit_alignment_specifier(&a.node, &a.span)
+        }
         DeclarationSpecifier::Extension(ref e) => {
             for extension in e {
                 visitor.visit_extension(&extension.node, &extension.span);

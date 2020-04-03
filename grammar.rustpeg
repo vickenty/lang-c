@@ -21,6 +21,19 @@ list1<ex> = e:ex ++ _ { e }
 cs0<ex> = e:ex ** (_ "," _) { e }
 cs1<ex> = e:ex ++ (_ "," _) { e }
 
+// A list containing 0+ before's, 1 single, and 0+ after's.
+list_010<before, single, after> =
+    before:list0<before> _ single:single _ after:list0<after> {
+        let mut before = before;
+        before.push(single);
+        before.extend(after);
+        before
+    }
+// A list containing *exactly* one element of a, and any of b.
+list_eq1_n<a, b> = list_010<b, a, b>
+// A list containing *at least* one element of a, and any of b.
+list_ge1_n<a, b> = list_010<b, a, a / b>
+
 ////
 // Whitespace
 ////
@@ -440,27 +453,37 @@ constant_expression0 -> Expression = conditional_expression0
 ////
 
 pub declaration -> Node<Declaration> = d:node<declaration0> {
-        env.handle_declaration(&d.node);
+        env.handle_declaration(
+                    &d.node.specifiers,
+                    d.node.declarators.iter().map(|d| &d.node.declarator),
+        );
         d
     }
 
 declaration0 -> Declaration =
-    gnu<K<"__extension__">>? _ s:list1<declaration_specifier> _ d:cs0<node<init_declarator>> _ ";" {
+    gnu<K<"__extension__">>? _ s:declaration_specifiers _ d:cs0<node<init_declarator>> _ ";" {
         Declaration {
             specifiers: s,
             declarators: d,
         }
     }
 
-declaration_specifier -> Node<DeclarationSpecifier> = node<declaration_specifier0>
+declaration_specifiers -> Vec<Node<DeclarationSpecifier>> =
+    list_eq1_n<node<declaration_specifier_unique_type0>, node<declaration_specifier0>> /
+    list_ge1_n<node<declaration_specifier_nonunique_type0>, node<declaration_specifier0>>
 
 declaration_specifier0 -> DeclarationSpecifier =
     s:storage_class_specifier { DeclarationSpecifier::StorageClass(s) } /
-    s:type_specifier { DeclarationSpecifier::TypeSpecifier(s) } /
     s:type_qualifier { DeclarationSpecifier::TypeQualifier(s) } /
     s:function_specifier { DeclarationSpecifier::Function(s) } /
     s:alignment_specifier { DeclarationSpecifier::Alignment(s) } /
     s:gnu<attribute_specifier> { DeclarationSpecifier::Extension(s) }
+
+declaration_specifier_unique_type0 -> DeclarationSpecifier =
+    s:node<type_specifier_unique> { DeclarationSpecifier::TypeSpecifier(s) }
+
+declaration_specifier_nonunique_type0 -> DeclarationSpecifier =
+    s:node<type_specifier_nonunique> { DeclarationSpecifier::TypeSpecifier(s) }
 
 init_declarator -> InitDeclarator =
     d:declarator _ e:gnu<init_declarator_gnu>? _ i:node<init_declarator_init>?
@@ -495,10 +518,18 @@ storage_class_specifier0 -> StorageClassSpecifier =
 // 6.7.2 Type specifiers
 ////
 
-type_specifier -> Node<TypeSpecifier> = node<type_specifier0>
-
-type_specifier0 -> TypeSpecifier =
+// ISO 2011, 6.7.2, §2. Void, _Bool, _Atomic, typedef names, struct/unions, and enum
+// specifiers can only appear once in declaration specifiers or specifier-qualifiers.
+// This resolves the ambiguity with typedef names.
+type_specifier_unique -> TypeSpecifier =
     K<"void"> { TypeSpecifier::Void } /
+    K<"_Bool"> { TypeSpecifier::Bool } /
+    K<"_Atomic"> _ "(" _ t:type_name _ ")" { TypeSpecifier::Atomic(t) } /
+    s:node<struct_or_union_specifier> { TypeSpecifier::Struct(s) } /
+    e:node<enum_specifier> { TypeSpecifier::Enum(e) } /
+    t:typedef_name { TypeSpecifier::TypedefName(t) }
+
+type_specifier_nonunique -> TypeSpecifier =
     K<"char"> { TypeSpecifier::Char } /
     K<"short"> { TypeSpecifier::Short } /
     K<"int"> { TypeSpecifier::Int } /
@@ -507,13 +538,8 @@ type_specifier0 -> TypeSpecifier =
     K<"double"> { TypeSpecifier::Double } /
     K<"signed" / gnu<"__signed" "__"?>> { TypeSpecifier::Signed } /
     K<"unsigned"> { TypeSpecifier::Unsigned } /
-    K<"_Bool"> { TypeSpecifier::Bool } /
     K<"_Complex" / gnu<"__complex" "__"?>> { TypeSpecifier::Complex } /
-    K<"_Atomic"> _ "(" _ t:type_name _ ")" { TypeSpecifier::Atomic(t) } /
     t:K<ts18661_float_type_specifier> { TypeSpecifier::TS18661Float(t) } /
-    t:typedef_name { TypeSpecifier::TypedefName(t) } /
-    s:node<struct_or_union_specifier> { TypeSpecifier::Struct(s) } /
-    e:node<enum_specifier> { TypeSpecifier::Enum(e) } /
     gnu<typeof_specifier>
 
 struct_or_union_specifier -> StructType =
@@ -547,17 +573,24 @@ struct_declaration -> StructDeclaration =
     gnu<K<"__extension__">> _ d:struct_declaration { d }
 
 struct_field -> StructField =
-    s:list1<specifier_qualifier> _ d:cs0<node<struct_declarator>> _ ";" {
+    s:specifier_qualifiers _ d:cs0<node<struct_declarator>> _ ";" {
         StructField {
             specifiers: s,
             declarators: d,
         }
     }
 
-specifier_qualifier -> Node<SpecifierQualifier> = node<specifier_qualifier0>
+specifier_qualifiers -> Vec<Node<SpecifierQualifier>> =
+    list_eq1_n<node<specifier_qualifier_unique_type0>, node<specifier_qualifier_qualifier0>> /
+    list_ge1_n<node<specifier_qualifier_nonunique_type0>, node<specifier_qualifier_qualifier0>>
 
-specifier_qualifier0 -> SpecifierQualifier =
-    s:type_specifier { SpecifierQualifier::TypeSpecifier(s) } /
+specifier_qualifier_unique_type0 -> SpecifierQualifier =
+    s:node<type_specifier_unique> { SpecifierQualifier::TypeSpecifier(s) }
+
+specifier_qualifier_nonunique_type0 -> SpecifierQualifier =
+    s:node<type_specifier_nonunique> { SpecifierQualifier::TypeSpecifier(s) }
+
+specifier_qualifier_qualifier0 -> SpecifierQualifier =
     q:type_qualifier { SpecifierQualifier::TypeQualifier(q) }
 
 struct_declarator -> StructDeclarator =
@@ -612,7 +645,8 @@ type_qualifier0 -> TypeQualifier =
     clang<K<"_Nonnull">> { TypeQualifier::Nonnull } /
     clang<K<"_Null_unspecified">> { TypeQualifier::NullUnspecified } /
     clang<K<"_Nullable">> { TypeQualifier::Nullable } /
-    K<"_Atomic"> { TypeQualifier::Atomic }
+    // 6.7.2.4: _Atomics followed by a "(" are interpreted as type specifiers.
+    K<"_Atomic"> _ !"(" { TypeQualifier::Atomic }
 
 ////
 // 6.7.4 Function specifiers
@@ -659,7 +693,7 @@ direct_declarator -> DeclaratorKind =
 
 derived_declarator -> DerivedDeclarator =
     "[" _ a:node<array_declarator> { DerivedDeclarator::Array(a) } /
-    "(" _ f:node<function_declarator> _ ")" { DerivedDeclarator::Function(f) } /
+    "(" _ f:scoped<node<function_declarator>> _ ")" { DerivedDeclarator::Function(f) } /
     "(" _ p:cs0<identifier> _ ")" { DerivedDeclarator::KRFunction(p) }
 
 array_declarator -> ArrayDeclarator =
@@ -717,7 +751,8 @@ ellipsis -> Ellipsis =
 parameter_declaration -> Node<ParameterDeclaration> = node<parameter_declaration0>
 
 parameter_declaration0 -> ParameterDeclaration =
-    s:list1<declaration_specifier> _ d:parameter_declarator _ a:gnu<attribute_specifier_list>? {
+    s:declaration_specifiers _ d:parameter_declarator _ a:gnu<attribute_specifier_list>? {
+        env.handle_declaration(&s, d.iter());
         ParameterDeclaration {
             specifiers: s,
             declarator: d,
@@ -737,7 +772,7 @@ parameter_declarator -> Option<Node<Declarator>> =
 type_name -> Node<TypeName> = node<type_name0>
 
 type_name0 -> TypeName =
-    s:list1<specifier_qualifier> _ d:abstract_declarator? {
+    s:specifier_qualifiers _ d:abstract_declarator? {
         TypeName {
             specifiers: s,
             declarator: d,
@@ -905,10 +940,10 @@ pub statement -> Box<Node<Statement>> = box<node<statement0>>
 
 statement0 -> Statement =
     s:node<labeled_statement> { Statement::Labeled(s) } /
-    compound_statement /
+    scoped<compound_statement> /
     expression_statement /
     selection_statement /
-    iteration_statement /
+    scoped<iteration_statement> /
     jump_statement /
     gnu<asm_statement>
 
@@ -1042,7 +1077,7 @@ external_declaration -> ExternalDeclaration =
 
 function_definition -> FunctionDefinition =
     gnu<K<"__extension__">>?
-    _ a:list1<declaration_specifier> _ b:declarator _ c:list0<declaration>
+    _ a:declaration_specifiers _ b:declarator _ c:list0<declaration>
     _ d:node<compound_statement> {
         FunctionDefinition {
             specifiers: a,

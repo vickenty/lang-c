@@ -1,11 +1,17 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use ast::*;
 use span::Node;
 use strings;
 
+#[derive(Clone, Copy, Debug, PartialEq, Hash)]
+enum Symbol {
+    Typename,
+    Identifier,
+}
+
 pub struct Env {
-    pub typenames: Vec<HashSet<String>>,
+    symbols: Vec<HashMap<String, Symbol>>,
     pub extensions_gnu: bool,
     pub extensions_clang: bool,
     pub reserved: HashSet<&'static str>,
@@ -23,69 +29,82 @@ impl Env {
         Env {
             extensions_gnu: false,
             extensions_clang: false,
-            typenames: Vec::new(),
+            symbols: vec![HashMap::default()],
             reserved: reserved,
         }
     }
 
     pub fn with_gnu() -> Env {
-        let mut typenames = HashSet::default();
+        let mut symbols = HashMap::default();
         let mut reserved = HashSet::default();
-        typenames.insert("__builtin_va_list".to_owned());
+        symbols.insert("__builtin_va_list".to_owned(), Symbol::Typename);
         reserved.extend(strings::RESERVED_C11.iter());
         reserved.extend(strings::RESERVED_GNU.iter());
         Env {
             extensions_gnu: true,
             extensions_clang: false,
-            typenames: vec![typenames],
+            symbols: vec![symbols],
             reserved: reserved,
         }
     }
 
     pub fn with_clang() -> Env {
-        let mut typenames = HashSet::default();
+        let mut symbols = HashMap::default();
         let mut reserved = HashSet::default();
-        typenames.insert("__builtin_va_list".to_owned());
+        symbols.insert("__builtin_va_list".to_owned(), Symbol::Typename);
         reserved.extend(strings::RESERVED_C11.iter());
         reserved.extend(strings::RESERVED_GNU.iter());
         reserved.extend(strings::RESERVED_CLANG.iter());
         Env {
             extensions_gnu: true,
             extensions_clang: true,
-            typenames: vec![typenames],
+            symbols: vec![symbols],
             reserved: reserved,
         }
     }
 
     pub fn enter_scope(&mut self) {
-        self.typenames.push(HashSet::new());
+        self.symbols.push(HashMap::new());
     }
 
     pub fn leave_scope(&mut self) {
-        self.typenames.pop().expect("more scope pops than pushes");
-    }
-
-    pub fn add_typename(&mut self, s: &str) {
-        let scope = self
-            .typenames
-            .last_mut()
-            .expect("at least one scope should be always present");
-        scope.insert(s.to_string());
+        self.symbols.pop().expect("more scope pops than pushes");
     }
 
     pub fn is_typename(&self, s: &str) -> bool {
-        self.typenames.iter().any(|sc| sc.contains(s))
+        self.symbols.iter().rev().find_map(|sc| sc.get(s)) == Some(&Symbol::Typename)
     }
 
-    pub fn handle_declaration(&mut self, declaration: &Declaration) {
-        if declaration.specifiers.iter().any(is_typedef) {
-            for init_decl in &declaration.declarators {
-                if let Some(name) = find_declarator_name(&init_decl.node.declarator.node.kind.node)
-                {
-                    self.add_typename(name);
-                }
+    pub fn handle_declaration<'a, T>(
+        &mut self,
+        specifiers: &[Node<DeclarationSpecifier>],
+        declarators: T,
+    ) where
+        T: 'a + Iterator<Item = &'a Node<Declarator>> + std::fmt::Debug,
+    {
+        let symbol_type = if specifiers.iter().any(is_typedef) {
+            Symbol::Typename
+        } else {
+            Symbol::Identifier
+        };
+        for declarator in declarators {
+            if let Some(name) = find_declarator_name(&declarator.node.kind.node) {
+                self.add_symbol(name, symbol_type);
             }
         }
+    }
+
+    fn add_symbol(&mut self, s: &str, symbol: Symbol) {
+        let scope = self
+            .symbols
+            .last_mut()
+            .expect("at least one scope should be always present");
+        scope.insert(s.to_string(), symbol);
+    }
+
+    #[cfg(test)]
+    pub fn add_typename(&mut self, s: &str) {
+        self.add_symbol(s, Symbol::Typename)
     }
 }
 

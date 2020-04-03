@@ -1825,6 +1825,279 @@ fn test_declaration6() {
     );
 }
 
+fn make_declaration(name: &str, specifiers: &[Node<DeclarationSpecifier>]) -> Declaration {
+    Declaration {
+        specifiers: specifiers.to_vec(),
+        declarators: vec![InitDeclarator {
+            declarator: Declarator {
+                kind: ident(name),
+                derived: vec![],
+                extensions: vec![],
+            }
+            .into(),
+            initializer: None,
+        }
+        .into()],
+    }
+}
+
+#[test]
+fn test_ambiguous_declaration1() {
+    use ast::DerivedDeclarator::KRFunction;
+    use ast::StorageClassSpecifier::Typedef;
+    use ast::TypeSpecifier::Int;
+    use ast::{FunctionDefinition, TranslationUnit};
+    use parser::translation_unit;
+
+    let env = &mut Env::new();
+
+    assert_eq!(
+        translation_unit(
+            r"
+            typedef int a;
+            int foo() {
+                int a;
+            }",
+            env
+        ),
+        Ok(TranslationUnit(vec![
+            make_declaration("a", &[Typedef.into(), Int.into()]).into(),
+            FunctionDefinition {
+                specifiers: vec![Int.into()],
+                declarator: Declarator {
+                    kind: ident("foo"),
+                    derived: vec![KRFunction(vec![]).into()],
+                    extensions: vec![]
+                }
+                .into(),
+                declarations: vec![],
+                statement: Statement::Compound(vec![make_declaration("a", &[Int.into()]).into()])
+                    .into()
+            }
+            .into()
+        ]))
+    );
+}
+
+#[test]
+fn test_ambiguous_declaration2() {
+    use parser::translation_unit;
+    let env = &mut Env::new();
+    assert!(translation_unit(
+        r"
+            typedef int a;
+            void foo() {
+                unsigned int;
+                const a;
+                a x;
+                unsigned a;
+                a = 1;
+            }",
+        env
+    )
+    .is_ok());
+}
+
+#[test]
+fn test_ambiguous_parameter_field_declaration() {
+    use parser::translation_unit;
+    let env = &mut Env::new();
+    // If parameter list treated "a" as a type specifier instead of identifier, this would succeed.
+    assert!(translation_unit(
+        r"
+            typedef int a;
+            int foo(int a* b) {}",
+        env
+    )
+    .is_err());
+}
+
+#[test]
+fn test_ambiguous_struct_field_declaration() {
+    use parser::translation_unit;
+    let env = &mut Env::new();
+    // If struct field treated "a" as a type specifier instead of identifier, this would succeed.
+    assert!(translation_unit(
+        r"
+            typedef int a;
+            struct a { a a, b; };",
+        env
+    )
+    .is_ok());
+}
+
+#[test]
+fn test_struct_name_scope() {
+    use parser::translation_unit;
+    let env = &mut Env::new();
+    // Struct fields maintain a separate
+    assert!(translation_unit(
+        r"
+            typedef int a;
+            struct a { a a; a b; };",
+        env
+    )
+    .is_ok());
+}
+
+#[test]
+fn test_typedef_redefinition() {
+    use parser::translation_unit;
+    let env = &mut Env::new();
+    assert!(translation_unit(
+        r"
+            typedef int a;
+            void foo() {
+               a a;
+               _Atomic (a) b;
+            }",
+        env
+    )
+    .is_err());
+    assert!(translation_unit(
+        r"
+            typedef int a;
+            void foo(int a, _Atomic (a) b) {}",
+        env
+    )
+    .is_err());
+}
+
+#[test]
+#[ignore]
+fn test_defines_symbol_before_initializer() {
+    // This test is currently broken, and should be enabled once symbols are defined at the
+    // end of a declarator (not declaration).
+    use parser::translation_unit;
+    let env = &mut Env::new();
+    // Technically, "a" is defined as a symbol before the "= .." part of the initializer is parsed.
+    assert!(translation_unit(
+        r"
+            typedef int a;
+            int foo() {
+                int a = sizeof(_Atomic(a));
+            }",
+        env
+    )
+    .is_err());
+}
+
+#[test]
+#[ignore]
+fn test_enum_modifies_scope() {
+    // Enable once enum correctly modifies scope.
+    use parser::translation_unit;
+    let env = &mut Env::new();
+    // enum {a} defines a new variable "a" into the current scope. So the next _Atomic(a) must fail.
+    assert!(translation_unit(
+        r"
+            typedef int a;
+            int foo() {
+                int x = (enum {a})1;
+                _Atomic(a) b;
+            }",
+        env
+    )
+    .is_err());
+    // Similarly, "a" is defined immediately after its declaration.
+    assert!(translation_unit(
+        r"
+            typedef int a;
+            int foo() {
+                int x = (enum {a, b = (a)1})1;
+             }",
+        env
+    )
+    .is_err());
+}
+
+#[test]
+fn test_restores_scope_after_function_decl() {
+    use parser::translation_unit;
+    let env = &mut Env::new();
+    assert!(translation_unit(
+        r"
+            typedef int a;
+            int foo(a a) {}
+            int bar(int a);
+            _Atomic (a) b;
+            ",
+        env
+    )
+    .is_ok());
+}
+
+#[test]
+fn test_restores_scope_after_block() {
+    use parser::translation_unit;
+    let env = &mut Env::new();
+    assert!(translation_unit(
+        r"
+            void foo() {
+              typedef int a;
+              {
+                  a a;
+              }
+              _Atomic (a) b;
+            }",
+        env
+    )
+    .is_ok());
+}
+
+#[test]
+fn test_restores_scope_after_loops() {
+    use parser::translation_unit;
+    let env = &mut Env::new();
+    assert!(translation_unit(
+        r"
+            typedef int a;
+            void foo() {
+                for (a a;;)
+                    a = a;
+                while (true) {int a;}
+                do { int a; } while(true);
+                _Atomic (a) b;
+            }",
+        env
+    )
+    .is_ok());
+}
+
+#[test]
+#[ignore]
+fn test_restores_scope_after_selections() {
+    // Enable once enum constants modify scope.
+    use parser::translation_unit;
+    let env = &mut Env::new();
+    // Test that scope of "if" condition and statement is cleaned up.
+    assert!(translation_unit(
+        r"
+            typedef int a, b;
+            int x;
+            void foo() {
+                if (sizeof(enum {a})) x = sizeof(enum{b});
+                else x = (b)a;
+                switch (sizeof(enum {b})) x = b;
+                a x, y;
+                b z, w;
+            }",
+        env
+    )
+    .is_ok());
+    // Test that "if" condition enum constants are defined within its scope.
+    assert!(translation_unit(
+        r"
+            typedef int a;
+            void foo() {
+                int x;
+                if (sizeof(enum {a})) x = (_Atomic(a))1;
+            }",
+        env
+    )
+    .is_err());
+}
+
 #[test]
 fn test_keyword_expr() {
     use parser::expression;

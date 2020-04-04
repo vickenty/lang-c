@@ -71,8 +71,13 @@ impl Env {
         self.symbols.pop().expect("more scope pops than pushes");
     }
 
-    pub fn is_typename(&self, s: &str) -> bool {
-        self.symbols.iter().rev().find_map(|sc| sc.get(s)) == Some(&Symbol::Typename)
+    pub fn is_typename(&self, ident: &str) -> bool {
+        for scope in self.symbols.iter().rev() {
+            if let Some(symbol) = scope.get(ident) {
+                return *symbol == Symbol::Typename;
+            }
+        }
+        false
     }
 
     pub fn handle_declaration<'a, T>(

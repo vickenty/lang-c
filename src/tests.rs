@@ -2061,7 +2061,6 @@ fn test_restores_scope_after_loops() {
 }
 
 #[test]
-#[ignore]
 fn test_restores_scope_after_selections() {
     // Enable once enum constants modify scope.
     use parser::translation_unit;
@@ -2073,7 +2072,7 @@ fn test_restores_scope_after_selections() {
             int x;
             void foo() {
                 if (sizeof(enum {a})) x = sizeof(enum{b});
-                else x = (b)a;
+                else x = b;
                 switch (sizeof(enum {b})) x = b;
                 a x, y;
                 b z, w;

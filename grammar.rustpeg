@@ -1008,7 +1008,7 @@ statement0 -> Statement =
     s:node<labeled_statement> { Statement::Labeled(s) } /
     scoped<compound_statement> /
     expression_statement /
-    selection_statement /
+    scoped<selection_statement> /
     scoped<iteration_statement> /
     jump_statement /
     gnu<asm_statement>

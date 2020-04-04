@@ -12437,7 +12437,35 @@ fn __parse_statement0<'input>(__input: &'input str, __state: &mut ParseState<'in
                         match __choice_res {
                             Matched(__pos, __value) => Matched(__pos, __value),
                             Failed => {
-                                let __choice_res = __parse_selection_statement(__input, __state, __pos, env);
+                                let __choice_res = {
+                                    let __seq_res = Matched(__pos, {
+                                        env.enter_scope();
+                                    });
+                                    match __seq_res {
+                                        Matched(__pos, _) => {
+                                            let __seq_res = match __parse_selection_statement(__input, __state, __pos, env) {
+                                                Matched(__newpos, __value) => Matched(__newpos, Some(__value)),
+                                                Failed => Matched(__pos, None),
+                                            };
+                                            match __seq_res {
+                                                Matched(__pos, e) => {
+                                                    match {
+                                                        env.leave_scope();
+                                                        e.ok_or("")
+                                                    } {
+                                                        Ok(res) => Matched(__pos, res),
+                                                        Err(expected) => {
+                                                            __state.mark_failure(__pos, expected);
+                                                            Failed
+                                                        }
+                                                    }
+                                                }
+                                                Failed => Failed,
+                                            }
+                                        }
+                                        Failed => Failed,
+                                    }
+                                };
                                 match __choice_res {
                                     Matched(__pos, __value) => Matched(__pos, __value),
                                     Failed => {

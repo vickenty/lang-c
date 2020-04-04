@@ -80,7 +80,7 @@ impl Env {
         specifiers: &[Node<DeclarationSpecifier>],
         declarators: T,
     ) where
-        T: 'a + Iterator<Item = &'a Node<Declarator>> + std::fmt::Debug,
+        T: 'a + Iterator<Item = &'a Node<Declarator>>,
     {
         let symbol_type = if specifiers.iter().any(is_typedef) {
             Symbol::Typename

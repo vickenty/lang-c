@@ -5,7 +5,7 @@ use span::Node;
 use strings;
 
 #[derive(Clone, Copy, Debug, PartialEq, Hash)]
-enum Symbol {
+pub enum Symbol {
     Typename,
     Identifier,
 }
@@ -80,26 +80,13 @@ impl Env {
         false
     }
 
-    pub fn handle_declaration<'a, T>(
-        &mut self,
-        specifiers: &[Node<DeclarationSpecifier>],
-        declarators: T,
-    ) where
-        T: 'a + Iterator<Item = &'a Node<Declarator>>,
-    {
-        let symbol_type = if specifiers.iter().any(is_typedef) {
-            Symbol::Typename
-        } else {
-            Symbol::Identifier
-        };
-        for declarator in declarators {
-            if let Some(name) = find_declarator_name(&declarator.node.kind.node) {
-                self.add_symbol(name, symbol_type);
-            }
+    pub fn handle_declarator(&mut self, d: &Node<Declarator>, sym: Symbol) {
+        if let Some(name) = find_declarator_name(&d.node.kind.node) {
+            self.add_symbol(name, sym)
         }
     }
 
-    fn add_symbol(&mut self, s: &str, symbol: Symbol) {
+    pub fn add_symbol(&mut self, s: &str, symbol: Symbol) {
         let scope = self
             .symbols
             .last_mut()
@@ -110,16 +97,6 @@ impl Env {
     #[cfg(test)]
     pub fn add_typename(&mut self, s: &str) {
         self.add_symbol(s, Symbol::Typename)
-    }
-}
-
-fn is_typedef(ds: &Node<DeclarationSpecifier>) -> bool {
-    match &ds.node {
-        &DeclarationSpecifier::StorageClass(Node {
-            node: StorageClassSpecifier::Typedef,
-            ..
-        }) => true,
-        _ => false,
     }
 }
 

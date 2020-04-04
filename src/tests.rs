@@ -538,19 +538,17 @@ fn test_cast() {
 
 #[test]
 fn test_declaration1() {
-    use self::expr::*;
     use ast::ArraySize::{StaticExpression, VariableUnknown};
     use ast::DerivedDeclarator::Pointer;
     use ast::StorageClassSpecifier::Typedef;
     use ast::TypeQualifier::Const;
     use ast::TypeSpecifier::Int;
-    use ast::UnaryOperator::Address;
     use parser::declaration;
 
     let env = &mut Env::new();
 
     assert_eq!(
-        declaration("int typedef * foo = &bar, baz[static 10][const *];", env),
+        declaration("int typedef * foo, baz[static 10][const *];", env),
         Ok(Declaration {
             specifiers: vec![Int.into(), Typedef.into()],
             declarators: vec![
@@ -561,7 +559,7 @@ fn test_declaration1() {
                         extensions: vec![],
                     }
                     .into(),
-                    initializer: Some(unop(Address, ident("bar"))),
+                    initializer: None,
                 }
                 .into(),
                 InitDeclarator {
@@ -1964,7 +1962,6 @@ fn test_typedef_redefinition() {
 }
 
 #[test]
-#[ignore]
 fn test_defines_symbol_before_initializer() {
     // This test is currently broken, and should be enabled once symbols are defined at the
     // end of a declarator (not declaration).
@@ -1983,7 +1980,6 @@ fn test_defines_symbol_before_initializer() {
 }
 
 #[test]
-#[ignore]
 fn test_enum_modifies_scope() {
     // Enable once enum correctly modifies scope.
     use parser::translation_unit;

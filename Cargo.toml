@@ -13,3 +13,7 @@ categories = [ "parser-implementations" ]
 
 [badges]
 travis-ci = { repository = "vickenty/lang-c" }
+
+[[bench]]
+name = "parse_preprocessed_bench"
+harness = false

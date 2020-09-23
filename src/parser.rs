@@ -5343,6 +5343,29 @@ fn __parse_declaration2<'input>(__input: &'input str, __state: &mut ParseState<'
 fn __parse_declaration_typedef_tail<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<(Vec<Node<DeclarationSpecifier>>, Vec<Node<InitDeclarator>>)> {
     #![allow(non_snake_case, unused)]
     {
+        let __seq_res = __parse_declaration_specifiers_unique(__input, __state, __pos, env);
+        match __seq_res {
+            Matched(__pos, h) => {
+                let __seq_res = __parse__(__input, __state, __pos, env);
+                match __seq_res {
+                    Matched(__pos, _) => {
+                        let __seq_res = __parse_declaration_typedef_tail0(__input, __state, __pos, env);
+                        match __seq_res {
+                            Matched(__pos, t) => Matched(__pos, { (concat(h, t.0), t.1) }),
+                            Failed => Failed,
+                        }
+                    }
+                    Failed => Failed,
+                }
+            }
+            Failed => Failed,
+        }
+    }
+}
+
+fn __parse_declaration_typedef_tail0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<(Vec<Node<DeclarationSpecifier>>, Vec<Node<InitDeclarator>>)> {
+    #![allow(non_snake_case, unused)]
+    {
         let __choice_res = {
             let __seq_res = __parse_declaration_unique_type(__input, __state, __pos, env);
             match __seq_res {

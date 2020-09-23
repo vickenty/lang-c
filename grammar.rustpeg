@@ -483,6 +483,9 @@ declaration_tail1<s> =
 
 // What can follow a typedef keyword
 declaration_typedef_tail -> (Vec<Node<DeclarationSpecifier>>, Vec<Node<InitDeclarator>>) =
+    declaration_seq<declaration_specifiers_unique, declaration_typedef_tail0>
+
+declaration_typedef_tail0 -> (Vec<Node<DeclarationSpecifier>>, Vec<Node<InitDeclarator>>) =
     declaration_seq<declaration_unique_type, declaration_typedef_tail1<declaration_specifiers_unique>> /
     declaration_seq<declaration_nonunique_type, declaration_typedef_tail1<declaration_specifiers_nonunique>>
 

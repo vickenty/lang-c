@@ -77,9 +77,11 @@ identifier0 -> Identifier =
 ////
 
 ohx = "0" [xX]
+obb = "0" [bB]
 dec = [0-9]
 oct = [0-7]
 hex = [0-9a-fA-F]
+bin = [0-1]
 
 pub constant -> Constant =
     &[0-9.] c:numeric_constant { c } /
@@ -103,6 +105,7 @@ integer_number -> (IntegerBase, &'input str) =
     n:$([1-9] dec*) { (IntegerBase::Decimal, n) } /
     ohx n:$(hex+) { (IntegerBase::Hexadecimal, n) } /
     "0" n:$(oct+) { (IntegerBase::Octal, n) } /
+    gnu<obb n:$(bin+) { (IntegerBase::Binary, n) }> /
     n:$("0") { (IntegerBase::Decimal, n) }
 
 integer_suffix -> IntegerSuffix =

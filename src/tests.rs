@@ -229,6 +229,10 @@ fn test_integer() {
         constant("0x1234567890abdefABCDEF", env),
         Ok(num(Hexadecimal, "1234567890abdefABCDEF", NONE.clone()))
     );
+    assert_eq!(
+        constant("0b0001001000110100", env),
+        Ok(num(Binary, "0001001000110100", NONE.clone()))
+    );
     assert_eq!(constant("042lu", env), Ok(num(Octal, "42", UL.clone())));
     assert_eq!(constant("042ul", env), Ok(num(Octal, "42", UL.clone())));
     assert_eq!(constant("042uL", env), Ok(num(Octal, "42", UL.clone())));
@@ -238,6 +242,7 @@ fn test_integer() {
     assert!(constant("0xX", env).is_err());
     assert!(constant("1lul", env).is_err());
     assert!(constant("2lL", env).is_err());
+    assert!(constant("0b2", env).is_err());
 }
 
 #[test]

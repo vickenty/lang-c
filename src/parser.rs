@@ -322,6 +322,27 @@ fn __parse_ohx<'input>(__input: &'input str, __state: &mut ParseState<'input>, _
     }
 }
 
+fn __parse_obb<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<()> {
+    #![allow(non_snake_case, unused)]
+    {
+        let __seq_res = slice_eq(__input, __state, __pos, "0");
+        match __seq_res {
+            Matched(__pos, _) => {
+                if __input.len() > __pos {
+                    let (__ch, __next) = char_range_at(__input, __pos);
+                    match __ch {
+                        'b' | 'B' => Matched(__next, ()),
+                        _ => __state.mark_failure(__pos, "[bB]"),
+                    }
+                } else {
+                    __state.mark_failure(__pos, "[bB]")
+                }
+            }
+            Failed => Failed,
+        }
+    }
+}
+
 fn __parse_dec<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<()> {
     #![allow(non_snake_case, unused)]
     if __input.len() > __pos {
@@ -358,6 +379,19 @@ fn __parse_hex<'input>(__input: &'input str, __state: &mut ParseState<'input>, _
         }
     } else {
         __state.mark_failure(__pos, "[0-9a-fA-F]")
+    }
+}
+
+fn __parse_bin<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<()> {
+    #![allow(non_snake_case, unused)]
+    if __input.len() > __pos {
+        let (__ch, __next) = char_range_at(__input, __pos);
+        match __ch {
+            '0'...'1' => Matched(__next, ()),
+            _ => __state.mark_failure(__pos, "[0-1]"),
+        }
+    } else {
+        __state.mark_failure(__pos, "[0-1]")
     }
 }
 
@@ -605,16 +639,81 @@ fn __parse_integer_number<'input>(__input: &'input str, __state: &mut ParseState
                         match __choice_res {
                             Matched(__pos, __value) => Matched(__pos, __value),
                             Failed => {
-                                let __seq_res = {
-                                    let str_start = __pos;
-                                    match slice_eq(__input, __state, __pos, "0") {
-                                        Matched(__newpos, _) => Matched(__newpos, &__input[str_start..__newpos]),
+                                let __choice_res = {
+                                    let __seq_res = {
+                                        __state.suppress_fail += 1;
+                                        let __assert_res = __parse_gnu_guard(__input, __state, __pos, env);
+                                        __state.suppress_fail -= 1;
+                                        match __assert_res {
+                                            Matched(_, __value) => Matched(__pos, __value),
+                                            Failed => Failed,
+                                        }
+                                    };
+                                    match __seq_res {
+                                        Matched(__pos, _) => {
+                                            let __seq_res = {
+                                                let __seq_res = __parse_obb(__input, __state, __pos, env);
+                                                match __seq_res {
+                                                    Matched(__pos, _) => {
+                                                        let __seq_res = {
+                                                            let str_start = __pos;
+                                                            match {
+                                                                let mut __repeat_pos = __pos;
+                                                                let mut __repeat_value = vec![];
+                                                                loop {
+                                                                    let __pos = __repeat_pos;
+                                                                    let __step_res = __parse_bin(__input, __state, __pos, env);
+                                                                    match __step_res {
+                                                                        Matched(__newpos, __value) => {
+                                                                            __repeat_pos = __newpos;
+                                                                            __repeat_value.push(__value);
+                                                                        }
+                                                                        Failed => {
+                                                                            break;
+                                                                        }
+                                                                    }
+                                                                }
+                                                                if __repeat_value.len() >= 1 {
+                                                                    Matched(__repeat_pos, ())
+                                                                } else {
+                                                                    Failed
+                                                                }
+                                                            } {
+                                                                Matched(__newpos, _) => Matched(__newpos, &__input[str_start..__newpos]),
+                                                                Failed => Failed,
+                                                            }
+                                                        };
+                                                        match __seq_res {
+                                                            Matched(__pos, n) => Matched(__pos, { (IntegerBase::Binary, n) }),
+                                                            Failed => Failed,
+                                                        }
+                                                    }
+                                                    Failed => Failed,
+                                                }
+                                            };
+                                            match __seq_res {
+                                                Matched(__pos, e) => Matched(__pos, { e }),
+                                                Failed => Failed,
+                                            }
+                                        }
                                         Failed => Failed,
                                     }
                                 };
-                                match __seq_res {
-                                    Matched(__pos, n) => Matched(__pos, { (IntegerBase::Decimal, n) }),
-                                    Failed => Failed,
+                                match __choice_res {
+                                    Matched(__pos, __value) => Matched(__pos, __value),
+                                    Failed => {
+                                        let __seq_res = {
+                                            let str_start = __pos;
+                                            match slice_eq(__input, __state, __pos, "0") {
+                                                Matched(__newpos, _) => Matched(__newpos, &__input[str_start..__newpos]),
+                                                Failed => Failed,
+                                            }
+                                        };
+                                        match __seq_res {
+                                            Matched(__pos, n) => Matched(__pos, { (IntegerBase::Decimal, n) }),
+                                            Failed => Failed,
+                                        }
+                                    }
                                 }
                             }
                         }

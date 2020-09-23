@@ -64,7 +64,7 @@ pub enum IntegerBase {
     Octal,
     Hexadecimal,
     /// [GNU extension](https://gcc.gnu.org/onlinedocs/gcc/Binary-constants.html)
-    Binary
+    Binary,
 }
 
 /// Suffix of an integer literal

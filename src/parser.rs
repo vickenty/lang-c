@@ -127,12 +127,21 @@ fn __parse__<'input>(__input: &'input str, __state: &mut ParseState<'input>, __p
                 let __pos = __repeat_pos;
                 let __step_res = {
                     let __choice_res = {
-                        let __seq_res = slice_eq(__input, __state, __pos, "\n");
+                        let __seq_res = match slice_eq(__input, __state, __pos, "\r") {
+                            Matched(__newpos, _) => Matched(__newpos, ()),
+                            Failed => Matched(__pos, ()),
+                        };
                         match __seq_res {
-                            Matched(__pos, _) => match __parse_directive(__input, __state, __pos, env) {
-                                Matched(__newpos, _) => Matched(__newpos, ()),
-                                Failed => Matched(__pos, ()),
-                            },
+                            Matched(__pos, _) => {
+                                let __seq_res = slice_eq(__input, __state, __pos, "\n");
+                                match __seq_res {
+                                    Matched(__pos, _) => match __parse_directive(__input, __state, __pos, env) {
+                                        Matched(__newpos, _) => Matched(__newpos, ()),
+                                        Failed => Matched(__pos, ()),
+                                    },
+                                    Failed => Failed,
+                                }
+                            }
                             Failed => Failed,
                         }
                     };

@@ -38,7 +38,7 @@ list_ge1_n<a, b> = list_010<b, a, a / b>
 // Whitespace
 ////
 
-_ = #quiet<("\n" directive? / [ \t])*>
+_ = #quiet<("\r"? "\n" directive? / [ \t])*>
 
 directive = "#" [^\n]*
 

@@ -666,7 +666,7 @@ struct_declarator -> StructDeclarator =
             bit_width: Some(e),
         }
     } /
-    d:declarator a:gnu<attribute_specifier_list>? {
+    d:declarator _ a:gnu<attribute_specifier_list>? {
         StructDeclarator {
             declarator: Some(with_ext(d, a)),
             bit_width: None,

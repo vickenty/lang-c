@@ -2458,3 +2458,35 @@ fn test_compound_literal() {
         .into())
     );
 }
+
+// #23
+#[test]
+fn test_typedef_const() {
+    use ast::Declaration;
+    use ast::Declarator;
+    use ast::InitDeclarator;
+    use ast::StorageClassSpecifier::Typedef;
+    use ast::TypeQualifier::Const;
+    use ast::TypeSpecifier::Int;
+    use parser::declaration;
+
+    let env = &mut Env::with_core();
+
+    assert_eq!(
+        declaration("typedef const int foo;", env).unwrap(),
+        Declaration {
+            specifiers: vec![Typedef.into(), Const.into(), Int.into()],
+            declarators: vec![InitDeclarator {
+                declarator: Declarator {
+                    kind: ident("foo"),
+                    derived: vec![],
+                    extensions: vec![],
+                }
+                .into(),
+                initializer: None,
+            }
+            .into()],
+        }
+        .into()
+    );
+}

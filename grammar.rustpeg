@@ -227,8 +227,8 @@ postfix_expression0 -> Expression =
     e:node<postfix_expression1> _ t:list0<node<postfix_expressionT>> { apply_ops(t, e).node }
 
 postfix_expression1 -> Expression =
-    primary_expression0 /
-    compound_literal
+    compound_literal /
+    primary_expression0
 
 postfix_expressionT -> Operation =
     index_operator /

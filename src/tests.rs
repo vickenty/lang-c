@@ -2491,3 +2491,76 @@ fn test_typedef_const() {
         .into()
     );
 }
+
+// #27
+#[test]
+fn test_compound_return() {
+    use self::int::dec;
+    use ast::CompoundLiteral;
+    use ast::Designator::Member;
+    use parser::statement;
+    use ast::TypeSpecifier::TypedefName;
+
+    let env = &mut Env::with_gnu();
+    env.add_typename("test_t");
+
+    assert_eq!(
+        statement("return (test_t) { 1, .x = 2, 3 };", env).unwrap(),
+        Statement::Return(Some(
+            CompoundLiteral {
+                type_name: TypeName {
+                    specifiers: vec![TypedefName(ident("test_t")).into()],
+                    declarator: None,
+                }
+                .into(),
+                initializer_list: vec![
+                    InitializerListItem {
+                        designation: vec![],
+                        initializer: dec("1"),
+                    }
+                    .into(),
+                    InitializerListItem {
+                        designation: vec![Member(ident("x")).into()],
+                        initializer: dec("2"),
+                    }
+                    .into(),
+                    InitializerListItem {
+                        designation: vec![],
+                        initializer: dec("3"),
+                    }
+                    .into(),
+                ],
+            }
+            .into()
+        ))
+        .into()
+    );
+}
+
+// #27 - make sure expressions starting with a type name in parens still work
+#[test]
+fn test_fake_compound1() {
+    use self::expr::unop;
+    use self::int::dec;
+    use ast::TypeSpecifier::TypedefName;
+    use parser::statement;
+
+    let env = &mut Env::with_gnu();
+    env.add_typename("test_t");
+
+    assert_eq!(
+        statement("return (test_t) + 1;", env).unwrap(),
+        Statement::Return(Some(
+            CastExpression {
+                type_name: TypeName {
+                    specifiers: vec![TypedefName(ident("test_t")).into()].into(),
+                    declarator: None,
+                }
+                .into(),
+                expression: unop(UnaryOperator::Plus, dec("1"))
+            }
+            .into()
+        ))
+        .into()
+    );
+}

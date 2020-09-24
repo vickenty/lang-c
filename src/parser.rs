@@ -2341,10 +2341,10 @@ fn __parse_postfix_expression0<'input>(__input: &'input str, __state: &mut Parse
 fn __parse_postfix_expression1<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Expression> {
     #![allow(non_snake_case, unused)]
     {
-        let __choice_res = __parse_primary_expression0(__input, __state, __pos, env);
+        let __choice_res = __parse_compound_literal(__input, __state, __pos, env);
         match __choice_res {
             Matched(__pos, __value) => Matched(__pos, __value),
-            Failed => __parse_compound_literal(__input, __state, __pos, env),
+            Failed => __parse_primary_expression0(__input, __state, __pos, env),
         }
     }
 }

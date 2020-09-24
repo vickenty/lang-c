@@ -327,7 +327,7 @@ pub struct CallExpression {
 #[derive(Debug, PartialEq, Clone)]
 pub struct CompoundLiteral {
     pub type_name: Node<TypeName>,
-    pub initializer_list: Vec<Node<Initializer>>,
+    pub initializer_list: Vec<Node<InitializerListItem>>,
 }
 
 /// All operators with one operand

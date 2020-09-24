@@ -2418,10 +2418,10 @@ fn test_struct_empty_decl() {
 
 #[test]
 fn test_compound_literal() {
-    use parser::expression;
-    use ast::{CompoundLiteral, StructType};
-    use ast::Designator::Member;
     use self::int::dec;
+    use ast::Designator::Member;
+    use ast::{CompoundLiteral, StructType};
+    use parser::expression;
 
     let env = &mut Env::with_gnu();
 
@@ -2433,7 +2433,8 @@ fn test_compound_literal() {
                     kind: StructKind::Struct.into(),
                     identifier: Some(ident("test_struct")),
                     declarations: None,
-                }.into()],
+                }
+                .into()],
                 declarator: None,
             }
             .into(),

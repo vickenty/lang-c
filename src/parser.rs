@@ -2631,7 +2631,7 @@ fn __parse_compound_literal_inner<'input>(__input: &'input str, __state: &mut Pa
                                                                                         let __seq_res = Matched(__pos, __pos);
                                                                                         match __seq_res {
                                                                                             Matched(__pos, l) => {
-                                                                                                let __seq_res = __parse_initializer(__input, __state, __pos, env);
+                                                                                                let __seq_res = __parse_initializer_list_item(__input, __state, __pos, env);
                                                                                                 match __seq_res {
                                                                                                     Matched(__pos, e) => {
                                                                                                         let __seq_res = Matched(__pos, __pos);

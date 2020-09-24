@@ -60,6 +60,7 @@ mk_from_inner! {
     CallExpression => Initializer::Expression;
     CallExpression => TypeOf::Expression;
     CastExpression => Expression::Cast;
+    CompoundLiteral => Expression::CompoundLiteral;
     Constant => Expression::Constant;
     Constant => Initializer::Expression;
     Declaration => BlockItem::Declaration;
@@ -2407,5 +2408,48 @@ fn test_struct_empty_decl() {
             .into()],
         }
         .into()
+    );
+}
+
+#[test]
+fn test_compound_literal() {
+    use parser::expression;
+    use ast::{CompoundLiteral, StructType};
+    use ast::Designator::Member;
+    use self::int::dec;
+
+    let env = &mut Env::with_gnu();
+
+    assert_eq!(
+        expression("(struct test_struct) { 1, .x = 2, 3 }", env),
+        Ok(CompoundLiteral {
+            type_name: TypeName {
+                specifiers: vec![StructType {
+                    kind: StructKind::Struct.into(),
+                    identifier: Some(ident("test_struct")),
+                    declarations: None,
+                }.into()],
+                declarator: None,
+            }
+            .into(),
+            initializer_list: vec![
+                InitializerListItem {
+                    designation: vec![],
+                    initializer: dec("1"),
+                }
+                .into(),
+                InitializerListItem {
+                    designation: vec![Member(ident("x")).into()],
+                    initializer: dec("2"),
+                }
+                .into(),
+                InitializerListItem {
+                    designation: vec![],
+                    initializer: dec("3"),
+                }
+                .into(),
+            ],
+        }
+        .into())
     );
 }

@@ -702,7 +702,7 @@ pub fn visit_compound_literal<'ast, V: Visit<'ast> + ?Sized>(
         &compound_literal.type_name.span,
     );
     for initializer in &compound_literal.initializer_list {
-        visitor.visit_initializer(&initializer.node, &initializer.span);
+        visitor.visit_initializer_list_item(&initializer.node, &initializer.span);
     }
 }
 

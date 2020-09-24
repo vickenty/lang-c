@@ -251,7 +251,7 @@ compound_literal -> Expression =
     n:node<compound_literal_inner> { Expression::CompoundLiteral(Box::new(n)) }
 
 compound_literal_inner -> CompoundLiteral =
-    "(" _ t:type_name _ ")" _ "{" _ i:cs1<node<initializer>> _ ","? _ "}" {
+    "(" _ t:type_name _ ")" _ "{" _ i:cs1<node<initializer_list_item>> _ ","? _ "}" {
         CompoundLiteral {
             type_name: t,
             initializer_list: i,

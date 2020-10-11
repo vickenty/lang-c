@@ -1,3 +1,4 @@
+// #27 - make sure expressions starting with a type name in parens still work
 #pragma gnu
 #pragma typedef test_t
 return (test_t) + 1;

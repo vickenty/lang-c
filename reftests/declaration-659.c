@@ -1,6 +1,8 @@
 #pragma gnu
 int typedef * foo, baz[static 10][const *];
 
+#pragma is_typename foo
+#pragma is_typename baz
 /*===
 Declaration
     DeclarationSpecifier

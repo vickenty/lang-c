@@ -1,3 +1,4 @@
+// Test that scope of "if" condition and statement is cleaned up.
 #pragma gnu
 
 typedef int a, b;

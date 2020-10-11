@@ -1,3 +1,4 @@
+// #27
 #pragma gnu
 #pragma typedef test_t
 return (test_t) { 1, .x = 2, 3 };

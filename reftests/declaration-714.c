@@ -1,6 +1,7 @@
 #pragma gnu
 typedef enum { FOO, BAR = 1 } * const foobar;
 
+#pragma is_typename foobar
 /*===
 Declaration
     DeclarationSpecifier

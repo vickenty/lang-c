@@ -1,3 +1,4 @@
+// enum {a} defines a new variable "a" into the current scope immediately after its declaration.
 #pragma gnu
 
 typedef int a;

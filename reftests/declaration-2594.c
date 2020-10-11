@@ -1,3 +1,5 @@
+// #23
+
 typedef const int foo;
 
 /*===

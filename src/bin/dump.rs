@@ -4,7 +4,7 @@ extern crate lang_c;
 
 use std::process::exit;
 
-use lang_c::driver::Config;
+use lang_c::{driver::Config, visit::Visit};
 
 fn main() {
     let mut config = Config::default();
@@ -41,7 +41,10 @@ fn main() {
     match lang_c::driver::parse(&config, &source) {
         Ok(parse) => {
             if !quiet {
-                println!("{:#?}", parse.unit);
+                let mut buf = String::new();
+                let mut printer = lang_c::print::Printer::new(&mut buf);
+                printer.visit_translation_unit(&parse.unit);
+                println!("{}", buf);
             }
         }
         Err(err) => {

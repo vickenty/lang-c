@@ -1,3 +1,5 @@
+#![allow(unused_imports)]
+
 use ast::*;
 use env::Env;
 use span::{Node, Span};
@@ -206,6 +208,107 @@ fn cstr<T: From<StringLiteral>>(i: &[&str]) -> T {
         .map(|s| String::from(*s))
         .collect::<Vec<String>>()
         .into()
+}
+
+use parser;
+
+mod dump {
+    use std::fs::File;
+    use std::io::{BufWriter, Write};
+
+    use ast::*;
+    use env::{Env, Symbol};
+    use parser;
+    use print::Printer;
+    use span::{Node, Span};
+    use visit::Visit;
+
+    pub type Line = u32;
+    pub fn dump(env: &Env, name: &str, line: Line, lhs: &str, rhs: &str) {
+        let path = format!("reftests/{}-{}.c", name, line);
+        let mut f = BufWriter::new(File::create(path).unwrap());
+        if env.extensions_gnu {
+            writeln!(&mut f, "#pragma gnu").unwrap();
+        }
+        if env.extensions_clang {
+            writeln!(&mut f, "#pragma clang").unwrap();
+        }
+        for scope in &env.symbols {
+            for (name, sym) in scope {
+                if name.starts_with("__builtin") {
+                    continue;
+                }
+                if let Symbol::Typename = sym {
+                    writeln!(&mut f, "#pragma typedef {}", name).unwrap();
+                }
+            }
+        }
+        for line in lhs.lines() {
+            writeln!(&mut f, "{}", line.trim()).unwrap();
+        }
+        writeln!(&mut f, "\n/*===\n{}===*/", rhs).unwrap();
+    }
+
+    pub fn constant(env: &Env, l: &str, r: Result<Constant, parser::ParseError>, line: Line) {
+        let s = &mut String::new();
+        Printer::new(s).visit_constant(&r.unwrap(), &Span::none());
+        dump(env, "constant", line, l, s);
+    }
+    pub fn declaration(
+        env: &Env,
+        l: &str,
+        r: Result<Node<Declaration>, parser::ParseError>,
+        line: Line,
+    ) {
+        let s = &mut String::new();
+        Printer::new(s).visit_declaration(&r.unwrap().node, &Span::none());
+        dump(env, "declaration", line, l, s);
+    }
+    pub fn expression(
+        env: &Env,
+        l: &str,
+        r: Result<Node<Expression>, parser::ParseError>,
+        line: Line,
+    ) {
+        let s = &mut String::new();
+        Printer::new(s).visit_expression(&r.unwrap().node, &Span::none());
+        dump(env, "expression", line, l, s);
+    }
+    pub fn statement(
+        env: &Env,
+        l: &str,
+        r: Result<Node<Statement>, parser::ParseError>,
+        line: Line,
+    ) {
+        let s = &mut String::new();
+        Printer::new(s).visit_statement(&r.unwrap().node, &Span::none());
+        dump(env, "statement", line, l, s);
+    }
+    pub fn translation_unit(
+        env: &Env,
+        l: &str,
+        r: Result<TranslationUnit, parser::ParseError>,
+        line: Line,
+    ) {
+        let s = &mut String::new();
+        Printer::new(s).visit_translation_unit(&r.unwrap());
+        dump(env, "translation_unit", line, l, s);
+    }
+}
+
+macro_rules! assert_eq {
+    ( $kind:ident ( $l:expr, $env:expr $(,)* ), $r:expr ) => {
+        dump::$kind($env, $l, $r, line!())
+    };
+    ( $kind:ident ( $l:expr, $env:expr $(,)* ).unwrap(), $r:expr ) => {
+        dump::$kind($env, $l, Ok($r), line!())
+    };
+}
+
+macro_rules! assert {
+    ( $kind:ident ( $l:expr, $env:expr $(,)* ) . is_err() ) => {
+        dump::dump($env, stringify!($kind), line!(), $l, "~ERROR\n")
+    };
 }
 
 #[test]
@@ -594,8 +697,8 @@ fn test_declaration1() {
         .into())
     );
 
-    assert!(env.is_typename("foo"));
-    assert!(env.is_typename("baz"));
+    // assert!(env.is_typename("foo"));
+    // assert!(env.is_typename("baz"));
 }
 
 #[test]
@@ -644,7 +747,7 @@ fn test_declaration2() {
         .into())
     );
 
-    assert!(env.is_typename("foobar"));
+    // assert!(env.is_typename("foobar"));
 }
 
 #[test]
@@ -1887,8 +1990,9 @@ fn test_ambiguous_declaration1() {
 fn test_ambiguous_declaration2() {
     use parser::translation_unit;
     let env = &mut Env::new();
-    assert!(translation_unit(
-        r"
+    assert_eq!(
+        translation_unit(
+            r"
             typedef int a;
             void foo() {
                 unsigned int;
@@ -1897,9 +2001,10 @@ fn test_ambiguous_declaration2() {
                 unsigned a;
                 a = 1;
             }",
-        env
-    )
-    .is_ok());
+            env
+        ),
+        Ok(TranslationUnit(Vec::new()))
+    );
 }
 
 #[test]
@@ -1921,13 +2026,15 @@ fn test_ambiguous_struct_field_declaration() {
     use parser::translation_unit;
     let env = &mut Env::new();
     // If struct field treated "a" as a type specifier instead of identifier, this would succeed.
-    assert!(translation_unit(
-        r"
+    assert_eq!(
+        translation_unit(
+            r"
             typedef int a;
             struct a { a a, b; };",
-        env
-    )
-    .is_ok());
+            env
+        ),
+        Ok(TranslationUnit(Vec::new()))
+    );
 }
 
 #[test]
@@ -1935,13 +2042,15 @@ fn test_struct_name_scope() {
     use parser::translation_unit;
     let env = &mut Env::new();
     // Struct fields maintain a separate
-    assert!(translation_unit(
-        r"
+    assert_eq!(
+        translation_unit(
+            r"
             typedef int a;
             struct a { a a; a b; };",
-        env
-    )
-    .is_ok());
+            env
+        ),
+        Ok(TranslationUnit(Vec::new()))
+    );
 }
 
 #[test]
@@ -2017,24 +2126,27 @@ fn test_enum_modifies_scope() {
 fn test_restores_scope_after_function_decl() {
     use parser::translation_unit;
     let env = &mut Env::new();
-    assert!(translation_unit(
-        r"
+    assert_eq!(
+        translation_unit(
+            r"
             typedef int a;
             int foo(a a) {}
             int bar(int a);
             _Atomic (a) b;
             ",
-        env
-    )
-    .is_ok());
+            env
+        ),
+        Ok(TranslationUnit(Vec::new()))
+    );
 }
 
 #[test]
 fn test_restores_scope_after_block() {
     use parser::translation_unit;
     let env = &mut Env::new();
-    assert!(translation_unit(
-        r"
+    assert_eq!(
+        translation_unit(
+            r"
             void foo() {
               typedef int a;
               {
@@ -2042,17 +2154,19 @@ fn test_restores_scope_after_block() {
               }
               _Atomic (a) b;
             }",
-        env
-    )
-    .is_ok());
+            env
+        ),
+        Ok(TranslationUnit(Vec::new()))
+    );
 }
 
 #[test]
 fn test_restores_scope_after_loops() {
     use parser::translation_unit;
     let env = &mut Env::new();
-    assert!(translation_unit(
-        r"
+    assert_eq!(
+        translation_unit(
+            r"
             typedef int a;
             void foo() {
                 for (a a;;)
@@ -2061,9 +2175,10 @@ fn test_restores_scope_after_loops() {
                 do { int a; } while(true);
                 _Atomic (a) b;
             }",
-        env
-    )
-    .is_ok());
+            env
+        ),
+        Ok(TranslationUnit(Vec::new()))
+    );
 }
 
 #[test]
@@ -2072,8 +2187,9 @@ fn test_restores_scope_after_selections() {
     use parser::translation_unit;
     let env = &mut Env::new();
     // Test that scope of "if" condition and statement is cleaned up.
-    assert!(translation_unit(
-        r"
+    assert_eq!(
+        translation_unit(
+            r"
             typedef int a, b;
             int x;
             void foo() {
@@ -2083,9 +2199,11 @@ fn test_restores_scope_after_selections() {
                 a x, y;
                 b z, w;
             }",
-        env
-    )
-    .is_ok());
+            env
+        ),
+        Ok(TranslationUnit(Vec::new()))
+    );
+
     // Test that "if" condition enum constants are defined within its scope.
     assert!(translation_unit(
         r"
@@ -2498,8 +2616,8 @@ fn test_compound_return() {
     use self::int::dec;
     use ast::CompoundLiteral;
     use ast::Designator::Member;
-    use parser::statement;
     use ast::TypeSpecifier::TypedefName;
+    use parser::statement;
 
     let env = &mut Env::with_gnu();
     env.add_typename("test_t");

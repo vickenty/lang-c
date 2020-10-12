@@ -426,22 +426,22 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
 
 fn print_float_format<'ast>(p: &mut Printer, n: &'ast FloatFormat) {
     match *n {
-        FloatFormat::Float  => p.w.write_str(" Float").unwrap(),
-        FloatFormat::Double  => p.w.write_str(" Double").unwrap(),
-        FloatFormat::LongDouble  => p.w.write_str(" LongDouble").unwrap(),
+        FloatFormat::Float => p.w.write_str(" Float").unwrap(),
+        FloatFormat::Double => p.w.write_str(" Double").unwrap(),
+        FloatFormat::LongDouble => p.w.write_str(" LongDouble").unwrap(),
         _ => {}
     }
 }
 fn print_declarator_kind<'ast>(p: &mut Printer, n: &'ast DeclaratorKind) {
     match *n {
-        DeclaratorKind::Abstract  => p.w.write_str(" Abstract").unwrap(),
+        DeclaratorKind::Abstract => p.w.write_str(" Abstract").unwrap(),
         _ => {}
     }
 }
 fn print_array_size<'ast>(p: &mut Printer, n: &'ast ArraySize) {
     match *n {
-        ArraySize::Unknown  => p.w.write_str(" Unknown").unwrap(),
-        ArraySize::VariableUnknown  => p.w.write_str(" VariableUnknown").unwrap(),
+        ArraySize::Unknown => p.w.write_str(" Unknown").unwrap(),
+        ArraySize::VariableUnknown => p.w.write_str(" VariableUnknown").unwrap(),
         ArraySize::VariableExpression(_) => p.w.write_str(" VariableExpression").unwrap(),
         ArraySize::StaticExpression(_) => p.w.write_str(" StaticExpression").unwrap(),
     }

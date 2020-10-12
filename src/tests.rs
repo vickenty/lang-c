@@ -1,11 +1,11 @@
+use std::env;
 use std::fs;
+use std::fs::DirEntry;
 use std::fs::File;
 use std::io;
-use std::mem;
-use std::env;
 use std::io::stdout;
 use std::io::{BufRead, BufReader, BufWriter, Write};
-use std::fs::DirEntry;
+use std::mem;
 use std::path::PathBuf;
 
 use env::Env;
@@ -41,11 +41,7 @@ impl Case {
         let mut in_exp = false;
 
         for line in file.lines() {
-            let target = if in_exp {
-                &mut expect
-            } else {
-                &mut source
-            };
+            let target = if in_exp { &mut expect } else { &mut source };
 
             let line = try!(line);
             let line = line.trim_right();

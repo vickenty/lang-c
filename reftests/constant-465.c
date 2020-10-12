@@ -1,0 +1,6 @@
+#pragma gnu
+'\xde'
+
+/*===
+Constant
+===*/

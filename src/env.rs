@@ -11,7 +11,7 @@ pub enum Symbol {
 }
 
 pub struct Env {
-    symbols: Vec<HashMap<String, Symbol>>,
+    pub symbols: Vec<HashMap<String, Symbol>>,
     pub extensions_gnu: bool,
     pub extensions_clang: bool,
     pub reserved: HashSet<&'static str>,

@@ -1,0 +1,7 @@
+#pragma gnu
+"\'\""
+
+/*===
+Expression
+    StringLiteral ["\"\\\'\\\"\""]
+===*/

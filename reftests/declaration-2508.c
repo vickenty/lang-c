@@ -1,0 +1,5 @@
+struct foo { } S;
+
+/*===
+~ERROR
+===*/

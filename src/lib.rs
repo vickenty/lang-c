@@ -13,6 +13,7 @@
 
 pub mod ast;
 pub mod driver;
+pub mod print;
 pub mod span;
 pub mod visit;
 

@@ -1,7 +1,12 @@
+use std::fs;
 use std::fs::File;
 use std::io;
+use std::mem;
+use std::env;
+use std::io::stdout;
 use std::io::{BufRead, BufReader, BufWriter, Write};
-use std::{fs::DirEntry, path::PathBuf};
+use std::fs::DirEntry;
+use std::path::PathBuf;
 
 use env::Env;
 use parser;
@@ -31,21 +36,27 @@ impl Case {
         let file = BufReader::new(try!(File::open(entry.path())));
 
         let mut pragma = Vec::new();
-        let mut source = String::new();
         let mut expect = String::new();
-        let mut target = &mut source;
+        let mut source = String::new();
+        let mut in_exp = false;
 
         for line in file.lines() {
+            let target = if in_exp {
+                &mut expect
+            } else {
+                &mut source
+            };
+
             let line = try!(line);
-            let line = line.trim_end();
+            let line = line.trim_right();
             if line.is_empty() || line.starts_with("//") {
                 continue;
             } else if line.starts_with("#pragma") {
                 pragma.push(Pragma::from_str(line).expect("unknown pragma"));
             } else if line == OUTPUT_START {
-                target = &mut expect;
+                in_exp = true;
             } else if line == OUTPUT_END {
-                target = &mut source;
+                in_exp = false;
             } else {
                 target.push_str(line);
                 target.push_str("\n");
@@ -66,7 +77,7 @@ impl Case {
         let mut env = None;
 
         for pragma in &self.pragma {
-            match pragma {
+            match *pragma {
                 Pragma::Gnu => env = Some(Env::with_gnu()),
                 Pragma::Clang => env = Some(Env::with_clang()),
                 _ => {}
@@ -76,8 +87,8 @@ impl Case {
         let mut env = env.unwrap_or_else(Env::with_core);
 
         for pragma in &self.pragma {
-            match pragma {
-                Pragma::Typedef(name) => env.add_typename(&name),
+            match *pragma {
+                Pragma::Typedef(ref name) => env.add_typename(&name),
                 _ => {}
             }
         }
@@ -90,8 +101,8 @@ impl Case {
         let pragma_fail = self
             .pragma
             .iter()
-            .filter(|p| match p {
-                Pragma::IsTypename(name) => !env.is_typename(name),
+            .filter(|p| match **p {
+                Pragma::IsTypename(ref name) => !env.is_typename(name),
                 _ => false,
             })
             .collect::<Vec<_>>();
@@ -100,17 +111,17 @@ impl Case {
         let success = output_matches && pragma_fail.is_empty();
 
         if !success {
-            eprintln!("\n{}:", self.name);
-            eprintln!("{}", self.source);
+            writeln!(stdout(), "\n{}:", self.name).unwrap();
+            writeln!(stdout(), "{}", self.source).unwrap();
             if let Some(e) = error {
-                eprintln!("ERROR:\n{}", e);
+                writeln!(stdout(), "ERROR:\n{}", e).unwrap();
             }
         }
 
         if !pragma_fail.is_empty() {
-            eprintln!("Failed checks: ");
+            writeln!(stdout(), "Failed checks: ").unwrap();
             for failed in &pragma_fail {
-                eprintln!("    {:?}", failed);
+                writeln!(stdout(), "    {:?}", failed).unwrap();
             }
         }
 
@@ -133,10 +144,10 @@ impl Case {
                         ""
                     }
                 };
-                eprintln!("{:w$} | {}", a, b, w = width);
+                writeln!(stdout(), "{:w$} | {}", a, b, w = width).unwrap();
             }
 
-            if std::env::var_os("TEST_UPDATE").is_some() {
+            if env::var_os("TEST_UPDATE").is_some() {
                 self.save(&actual).expect("failed to update test output");
             }
         }
@@ -149,20 +160,20 @@ impl Case {
         let mut file = BufReader::new(try!(File::open(&self.path)));
         let mut content = Vec::new();
         while try!(file.read_line(&mut buf)) > 0 {
-            content.push(std::mem::replace(&mut buf, String::new()));
+            content.push(mem::replace(&mut buf, String::new()));
         }
 
         let mut file = BufWriter::new(try!(File::create(&self.path)));
         let mut lines = content.into_iter();
         for line in &mut lines {
             try!(file.write_all(line.as_bytes()));
-            if line.trim_end() == OUTPUT_START {
+            if line.trim_right() == OUTPUT_START {
                 break;
             }
         }
         try!(file.write_all(actual.as_bytes()));
         for line in &mut lines {
-            if line.trim_end() == OUTPUT_END {
+            if line.trim_right() == OUTPUT_END {
                 try!(file.write_all(line.as_bytes()));
                 break;
             }
@@ -196,12 +207,12 @@ impl Kind {
     }
 
     fn parse_and_print(&self, source: &str, env: &mut Env) -> Result<String, parser::ParseError> {
-        let source = source.trim_end();
+        let source = source.trim_right();
 
         let mut s = "".to_string();
         {
             let mut p = Printer::new(&mut s);
-            match self {
+            match *self {
                 Kind::Constant => {
                     let n = try!(parser::constant(source, env));
                     p.visit_constant(&n, &Span::none());
@@ -279,7 +290,7 @@ impl Pragma {
 #[test]
 fn reftest_main() {
     let mut cases = Vec::new();
-    for entry in std::fs::read_dir("reftests").expect("listing reftests/") {
+    for entry in fs::read_dir("reftests").expect("listing reftests/") {
         let entry = entry.expect("failed to read reftests/ entry");
         let case = match Case::from_path(&entry) {
             Ok(case) => case,

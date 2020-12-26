@@ -8,8 +8,10 @@ use std::path::Path;
 use std::process::Command;
 
 use ast::TranslationUnit;
+use ast::Name;
 use env::Env;
 use parser::translation_unit;
+
 
 /// Parser configuration
 #[derive(Clone, Debug)]
@@ -67,11 +69,11 @@ pub enum Flavor {
 
 /// Result of a successful parse
 #[derive(Clone, Debug)]
-pub struct Parse {
+pub struct Parse<T: Name = String> {
     /// Pre-processed source text
     pub source: String,
     /// Root of the abstract syntax tree
-    pub unit: TranslationUnit,
+    pub unit: TranslationUnit<T>,
 }
 
 #[derive(Debug)]
@@ -149,15 +151,26 @@ impl fmt::Display for SyntaxError {
 
 /// Parse a C file
 pub fn parse<P: AsRef<Path>>(config: &Config, source: P) -> Result<Parse, Error> {
+    parse_ext(config, source)
+}
+
+/// Parse a C file using a custom type for identifiers (e.g. interned string)
+pub fn parse_ext<P: AsRef<Path>, T: Name>(config: &Config, source: P) -> Result<Parse<T>, Error> {
     let processed = match preprocess(config, source.as_ref()) {
         Ok(s) => s,
         Err(e) => return Err(Error::PreprocessorError(e)),
     };
 
-    Ok(try!(parse_preprocessed(config, processed)))
+    Ok(try!(parse_preprocessed_ext(config, processed)))
 }
 
+/// Parse Preprocessed Code in String
 pub fn parse_preprocessed(config: &Config, source: String) -> Result<Parse, SyntaxError> {
+    parse_preprocessed_ext(config, source)
+}
+
+/// Parse Preprocessed Code in String using a custom type for identifiers (e.g. interned string)
+pub fn parse_preprocessed_ext<T: Name>(config: &Config, source: String) -> Result<Parse<T>, SyntaxError> {
     let mut env = match config.flavor {
         Flavor::StdC11 => Env::with_core(),
         Flavor::GnuC11 => Env::with_gnu(),

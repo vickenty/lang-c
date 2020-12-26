@@ -10,20 +10,15 @@ pub enum Symbol {
     Identifier,
 }
 
-pub struct Env {
-    pub symbols: Vec<HashMap<String, Symbol>>,
+pub struct Env<T: Name> {
+    pub symbols: Vec<HashMap<T, Symbol>>,
     pub extensions_gnu: bool,
     pub extensions_clang: bool,
     pub reserved: HashSet<&'static str>,
 }
 
-impl Env {
-    #[cfg(test)]
-    pub fn new() -> Env {
-        Env::with_gnu()
-    }
-
-    pub fn with_core() -> Env {
+impl<T: Name> Env<T> {
+    pub fn with_core() -> Env<T> {
         let mut reserved = HashSet::default();
         reserved.extend(strings::RESERVED_C11.iter());
         Env {
@@ -34,10 +29,10 @@ impl Env {
         }
     }
 
-    pub fn with_gnu() -> Env {
+    pub fn with_gnu() -> Env<T> {
         let mut symbols = HashMap::default();
         let mut reserved = HashSet::default();
-        symbols.insert("__builtin_va_list".to_owned(), Symbol::Typename);
+        symbols.insert(T::get_from_str("__builtin_va_list"), Symbol::Typename);
         reserved.extend(strings::RESERVED_C11.iter());
         reserved.extend(strings::RESERVED_GNU.iter());
         Env {
@@ -48,10 +43,10 @@ impl Env {
         }
     }
 
-    pub fn with_clang() -> Env {
+    pub fn with_clang() -> Env<T> {
         let mut symbols = HashMap::default();
         let mut reserved = HashSet::default();
-        symbols.insert("__builtin_va_list".to_owned(), Symbol::Typename);
+        symbols.insert(T::get_from_str("__builtin_va_list"), Symbol::Typename);
         reserved.extend(strings::RESERVED_C11.iter());
         reserved.extend(strings::RESERVED_GNU.iter());
         reserved.extend(strings::RESERVED_CLANG.iter());
@@ -71,7 +66,7 @@ impl Env {
         self.symbols.pop().expect("more scope pops than pushes");
     }
 
-    pub fn is_typename(&self, ident: &str) -> bool {
+    pub fn is_typename(&self, ident: &T) -> bool {
         for scope in self.symbols.iter().rev() {
             if let Some(symbol) = scope.get(ident) {
                 return *symbol == Symbol::Typename;
@@ -80,7 +75,7 @@ impl Env {
         false
     }
 
-    pub fn handle_declarator(&mut self, d: &Node<Declarator>, sym: Symbol) {
+    pub fn handle_declarator(&mut self, d: &Node<Declarator<T>>, sym: Symbol) {
         if let Some(name) = find_declarator_name(&d.node.kind.node) {
             self.add_symbol(name, sym)
         }
@@ -91,7 +86,15 @@ impl Env {
             .symbols
             .last_mut()
             .expect("at least one scope should be always present");
-        scope.insert(s.to_string(), symbol);
+        scope.insert(T::get_from_str(s), symbol);
+    }
+
+    pub fn add_interned_symbol(&mut self, s: &T, symbol: Symbol) {
+        let scope = self
+            .symbols
+            .last_mut()
+            .expect("at least one scope should be always present");
+        scope.insert(s.clone(), symbol);
     }
 
     #[cfg(test)]
@@ -100,10 +103,10 @@ impl Env {
     }
 }
 
-fn find_declarator_name(d: &DeclaratorKind) -> Option<&str> {
+fn find_declarator_name<T: Name>(d: &DeclaratorKind<T>) -> Option<&str> {
     match d {
         &DeclaratorKind::Abstract => None,
-        &DeclaratorKind::Identifier(ref i) => Some(&i.node.name),
+        &DeclaratorKind::Identifier(ref i) => Some(i.node.name.recover_str()),
         &DeclaratorKind::Declarator(ref d) => find_declarator_name(&d.node.kind.node),
     }
 }

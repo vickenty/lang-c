@@ -70,7 +70,7 @@ impl Case {
     }
 
     fn run(&self) -> bool {
-        let mut env = None;
+        let mut env: Option<Env<String>> = None;
 
         for pragma in &self.pragma {
             match *pragma {
@@ -202,7 +202,7 @@ impl Kind {
         })
     }
 
-    fn parse_and_print(&self, source: &str, env: &mut Env) -> Result<String, parser::ParseError> {
+    fn parse_and_print(&self, source: &str, env: &mut Env<String>) -> Result<String, parser::ParseError> {
         let source = source.trim_right();
 
         let mut s = "".to_string();

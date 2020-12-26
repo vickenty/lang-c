@@ -22,14 +22,30 @@
 
 use span::Node;
 
+/// Trait that specifies types which can be used for Identifiers and type names
+pub trait Name: std::fmt::Debug + PartialEq + Eq + std::hash::Hash + Clone {
+    fn get_from_str<T: AsRef<str>>(string: T) -> Self;
+    fn recover_str(&self) -> &str;
+}
+
+impl Name for String {
+    fn get_from_str<T: AsRef<str>>(string: T) -> Self {
+        String::from(string.as_ref())
+    }
+
+    fn recover_str(&self) -> &str {
+        self.as_str()
+    }
+}
+
 // From 6.4 Lexical elements
 
 /// Variable, function and other names that are not type names
 ///
 /// (C11 6.4.2)
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct Identifier {
-    pub name: String,
+pub struct Identifier<T: Name = String> {
+    pub name: T,
 }
 
 /// Constant literals
@@ -156,7 +172,7 @@ pub type StringLiteral = Vec<String>;
 ///
 /// (C11 6.5)
 #[derive(Debug, PartialEq, Clone)]
-pub enum Expression {
+pub enum Expression<T: Name = String> {
     /// Identifier
     ///
     /// May be a variable, function name or enumerator. The latter is
@@ -164,7 +180,7 @@ pub enum Expression {
     /// as constants.
     ///
     /// (C11 6.5.1)
-    Identifier(Box<Node<Identifier>>),
+    Identifier(Box<Node<Identifier<T>>>),
     /// Numeric and character constants
     ///
     /// Enumerator constants, being valid identifiers, are reprented
@@ -181,36 +197,36 @@ pub enum Expression {
     /// Generic selection
     ///
     /// (C11 6.5.1.1)
-    GenericSelection(Box<Node<GenericSelection>>),
+    GenericSelection(Box<Node<GenericSelection<T>>>),
 
     /// Structure and union members
     ///
     /// Both direct (`.`) and indirect (`->`) access.
     ///
     /// (C11 6.5.2)
-    Member(Box<Node<MemberExpression>>),
+    Member(Box<Node<MemberExpression<T>>>),
 
     /// Function call expression
     ///
     /// (C11 6.5.2)
-    Call(Box<Node<CallExpression>>),
+    Call(Box<Node<CallExpression<T>>>),
 
     /// Compound literal
     ///
     /// (C11 6.5.2)
-    CompoundLiteral(Box<Node<CompoundLiteral>>),
+    CompoundLiteral(Box<Node<CompoundLiteral<T>>>),
 
     /// Size of a type
     ///
     /// Note: size of an expression is represented with `UnaryOperator::SizeOf`.
     ///
     /// (C11 6.5.3)
-    SizeOf(Box<Node<TypeName>>),
+    SizeOf(Box<Node<TypeName<T>>>),
 
     /// Alignment of a type
     ///
     /// (C11 6.5.3)
-    AlignOf(Box<Node<TypeName>>),
+    AlignOf(Box<Node<TypeName<T>>>),
 
     /// Unary operators
     ///
@@ -218,50 +234,50 @@ pub enum Expression {
     /// additional operands are represented by a separate entry in this enum.
     ///
     /// (C11 6.5.2, c11 6.5.3)
-    UnaryOperator(Box<Node<UnaryOperatorExpression>>),
+    UnaryOperator(Box<Node<UnaryOperatorExpression<T>>>),
 
     /// Cast expression
     ///
     /// `(type) expr`
     ///
     /// (C11 6.5.4)
-    Cast(Box<Node<CastExpression>>),
+    Cast(Box<Node<CastExpression<T>>>),
 
     /// Binary operators
     ///
     /// All of C binary operators that can be applied to two expressions.
     ///
     /// (C11 6.5.5 -- 6.5.16)
-    BinaryOperator(Box<Node<BinaryOperatorExpression>>),
+    BinaryOperator(Box<Node<BinaryOperatorExpression<T>>>),
 
     /// Conditional operator
     ///
     /// (C11 6.5.15)
-    Conditional(Box<Node<ConditionalExpression>>),
+    Conditional(Box<Node<ConditionalExpression<T>>>),
 
     /// Comma operator
     ///
     /// (C11 6.5.17)
-    Comma(Box<Vec<Node<Expression>>>),
+    Comma(Box<Vec<Node<Expression<T>>>>),
 
     /// Member offset expression
     ///
     /// Result of expansion of `offsetof` macro.
     ///
     /// (C11 7.19 §3).
-    OffsetOf(Box<Node<OffsetOfExpression>>),
+    OffsetOf(Box<Node<OffsetOfExpression<T>>>),
 
     /// Variable argument list access
     ///
     /// Result of expansion of `va_arg` macro.
     ///
     /// (C11 7.16.1.1).
-    VaArg(Box<Node<VaArgExpression>>),
+    VaArg(Box<Node<VaArgExpression<T>>>),
 
     /// Statement expression
     ///
     /// [GNU extension](https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html)
-    Statement(Box<Node<Statement>>),
+    Statement(Box<Node<Statement<T>>>),
 }
 
 /// Struct or union member access
@@ -277,27 +293,27 @@ pub enum MemberOperator {
 ///
 /// (C11 6.5.1.1)
 #[derive(Debug, PartialEq, Clone)]
-pub struct GenericSelection {
-    pub expression: Box<Node<Expression>>,
-    pub associations: Vec<Node<GenericAssociation>>,
+pub struct GenericSelection<T: Name = String> {
+    pub expression: Box<Node<Expression<T>>>,
+    pub associations: Vec<Node<GenericAssociation<T>>>,
 }
 
 /// Single element of a generic selection expression
 ///
 /// (C11 6.5.1.1)
 #[derive(Debug, PartialEq, Clone)]
-pub enum GenericAssociation {
-    Type(Node<GenericAssociationType>),
-    Default(Box<Node<Expression>>),
+pub enum GenericAssociation<T: Name = String> {
+    Type(Node<GenericAssociationType<T>>),
+    Default(Box<Node<Expression<T>>>),
 }
 
 /// Type match case in a generic selection expression
 ///
 /// (C11 6.5.1.1)
 #[derive(Debug, PartialEq, Clone)]
-pub struct GenericAssociationType {
-    pub type_name: Node<TypeName>,
-    pub expression: Box<Node<Expression>>,
+pub struct GenericAssociationType<T: Name = String> {
+    pub type_name: Node<TypeName<T>>,
+    pub expression: Box<Node<Expression<T>>>,
 }
 
 /// Structure and union members
@@ -306,28 +322,28 @@ pub struct GenericAssociationType {
 ///
 /// (C11 6.5.2)
 #[derive(Debug, PartialEq, Clone)]
-pub struct MemberExpression {
+pub struct MemberExpression<T: Name = String> {
     pub operator: Node<MemberOperator>,
-    pub expression: Box<Node<Expression>>,
-    pub identifier: Node<Identifier>,
+    pub expression: Box<Node<Expression<T>>>,
+    pub identifier: Node<Identifier<T>>,
 }
 
 /// Function call expression
 ///
 /// (C11 6.5.2)
 #[derive(Debug, PartialEq, Clone)]
-pub struct CallExpression {
-    pub callee: Box<Node<Expression>>,
-    pub arguments: Vec<Node<Expression>>,
+pub struct CallExpression<T: Name = String> {
+    pub callee: Box<Node<Expression<T>>>,
+    pub arguments: Vec<Node<Expression<T>>>,
 }
 
 /// Compound literal
 ///
 /// (C11 6.5.2)
 #[derive(Debug, PartialEq, Clone)]
-pub struct CompoundLiteral {
-    pub type_name: Node<TypeName>,
-    pub initializer_list: Vec<Node<InitializerListItem>>,
+pub struct CompoundLiteral<T: Name = String> {
+    pub type_name: Node<TypeName<T>>,
+    pub initializer_list: Vec<Node<InitializerListItem<T>>>,
 }
 
 /// All operators with one operand
@@ -366,9 +382,9 @@ pub enum UnaryOperator {
 ///
 /// (C11 6.5.2, c11 6.5.3)
 #[derive(Debug, PartialEq, Clone)]
-pub struct UnaryOperatorExpression {
+pub struct UnaryOperatorExpression<T: Name = String> {
     pub operator: Node<UnaryOperator>,
-    pub operand: Box<Node<Expression>>,
+    pub operand: Box<Node<Expression<T>>>,
 }
 
 /// Cast expression
@@ -377,9 +393,9 @@ pub struct UnaryOperatorExpression {
 ///
 /// (C11 6.5.4)
 #[derive(Debug, PartialEq, Clone)]
-pub struct CastExpression {
-    pub type_name: Node<TypeName>,
-    pub expression: Box<Node<Expression>>,
+pub struct CastExpression<T: Name = String> {
+    pub type_name: Node<TypeName<T>>,
+    pub expression: Box<Node<Expression<T>>>,
 }
 
 /// All operators with two operands
@@ -455,20 +471,20 @@ pub enum BinaryOperator {
 ///
 /// (C11 6.5.5 -- 6.5.16)
 #[derive(Debug, PartialEq, Clone)]
-pub struct BinaryOperatorExpression {
+pub struct BinaryOperatorExpression<T: Name = String> {
     pub operator: Node<BinaryOperator>,
-    pub lhs: Box<Node<Expression>>,
-    pub rhs: Box<Node<Expression>>,
+    pub lhs: Box<Node<Expression<T>>>,
+    pub rhs: Box<Node<Expression<T>>>,
 }
 
 /// Conditional operator
 ///
 /// (C11 6.5.15)
 #[derive(Debug, PartialEq, Clone)]
-pub struct ConditionalExpression {
-    pub condition: Box<Node<Expression>>,
-    pub then_expression: Box<Node<Expression>>,
-    pub else_expression: Box<Node<Expression>>,
+pub struct ConditionalExpression<T: Name = String> {
+    pub condition: Box<Node<Expression<T>>>,
+    pub then_expression: Box<Node<Expression<T>>>,
+    pub else_expression: Box<Node<Expression<T>>>,
 }
 
 /// Variable argument list access
@@ -477,9 +493,9 @@ pub struct ConditionalExpression {
 ///
 /// (C11 7.16.1.1).
 #[derive(Debug, PartialEq, Clone)]
-pub struct VaArgExpression {
-    pub va_list: Box<Node<Expression>>,
-    pub type_name: Node<TypeName>,
+pub struct VaArgExpression<T: Name = String> {
+    pub va_list: Box<Node<Expression<T>>>,
+    pub type_name: Node<TypeName<T>>,
 }
 
 /// Member offset expression
@@ -488,28 +504,28 @@ pub struct VaArgExpression {
 ///
 /// (C11 7.19 §3).
 #[derive(Debug, PartialEq, Clone)]
-pub struct OffsetOfExpression {
-    pub type_name: Node<TypeName>,
-    pub designator: Node<OffsetDesignator>,
+pub struct OffsetOfExpression<T: Name = String> {
+    pub type_name: Node<TypeName<T>>,
+    pub designator: Node<OffsetDesignator<T>>,
 }
 
 /// Offset designator in a `offsetof` macro expansion
 ///
 /// (C11 7.19 §3).
 #[derive(Debug, PartialEq, Clone)]
-pub struct OffsetDesignator {
-    pub base: Node<Identifier>,
-    pub members: Vec<Node<OffsetMember>>,
+pub struct OffsetDesignator<T: Name = String> {
+    pub base: Node<Identifier<T>>,
+    pub members: Vec<Node<OffsetMember<T>>>,
 }
 
 /// Single element of an offset designator
 ///
 /// (C11 7.19 §3).
 #[derive(Debug, PartialEq, Clone)]
-pub enum OffsetMember {
-    Member(Node<Identifier>),
-    IndirectMember(Node<Identifier>),
-    Index(Node<Expression>),
+pub enum OffsetMember<T: Name = String> {
+    Member(Node<Identifier<T>>),
+    IndirectMember(Node<Identifier<T>>),
+    Index(Node<Expression<T>>),
 }
 
 // From 6.7 Declarations
@@ -518,9 +534,9 @@ pub enum OffsetMember {
 ///
 /// (C11 6.7)
 #[derive(Debug, PartialEq, Clone)]
-pub struct Declaration {
-    pub specifiers: Vec<Node<DeclarationSpecifier>>,
-    pub declarators: Vec<Node<InitDeclarator>>,
+pub struct Declaration<T: Name = String> {
+    pub specifiers: Vec<Node<DeclarationSpecifier<T>>>,
+    pub declarators: Vec<Node<InitDeclarator<T>>>,
 }
 
 /// Common part of a declaration
@@ -529,23 +545,23 @@ pub struct Declaration {
 ///
 /// (C11 6.7)
 #[derive(Debug, PartialEq, Clone)]
-pub enum DeclarationSpecifier {
+pub enum DeclarationSpecifier<T: Name = String> {
     StorageClass(Node<StorageClassSpecifier>),
-    TypeSpecifier(Node<TypeSpecifier>),
+    TypeSpecifier(Node<TypeSpecifier<T>>),
     TypeQualifier(Node<TypeQualifier>),
     Function(Node<FunctionSpecifier>),
-    Alignment(Node<AlignmentSpecifier>),
+    Alignment(Node<AlignmentSpecifier<T>>),
     /// Vendor-specific declaration extensions that can be mixed with standard specifiers
-    Extension(Vec<Node<Extension>>),
+    Extension(Vec<Node<Extension<T>>>),
 }
 
 /// Defines a single name in a declaration
 ///
 /// (C11 6.7.6)
 #[derive(Debug, PartialEq, Clone)]
-pub struct InitDeclarator {
-    pub declarator: Node<Declarator>,
-    pub initializer: Option<Node<Initializer>>,
+pub struct InitDeclarator<T: Name = String> {
+    pub declarator: Node<Declarator<T>>,
+    pub initializer: Option<Node<Initializer<T>>>,
 }
 
 // From 6.7.1
@@ -575,7 +591,7 @@ pub enum StorageClassSpecifier {
 ///
 /// (C11 6.7.2)
 #[derive(Debug, PartialEq, Clone)]
-pub enum TypeSpecifier {
+pub enum TypeSpecifier<T: Name = String> {
     /// `void`
     Void,
     /// `char`
@@ -603,19 +619,19 @@ pub enum TypeSpecifier {
     /// `__complex`, `__complex__` (GNU extension)
     Complex,
     /// `_Atomic(typename)`
-    Atomic(Node<TypeName>),
-    /// `struct identifier { … }`
+    Atomic(Node<TypeName<T>>),
+    /// `struct identifier<T: Name = String> { … }`
     ///
-    /// `union identifier { … }`
-    Struct(Node<StructType>),
-    /// `enum identifier { … }`
-    Enum(Node<EnumType>),
+    /// `union identifier<T: Name = String> { … }`
+    Struct(Node<StructType<T>>),
+    /// `enum identifier<T: Name = String> { … }`
+    Enum(Node<EnumType<T>>),
     /// Name of a previously defined type
-    TypedefName(Node<Identifier>),
+    TypedefName(Node<Identifier<T>>),
     /// Specifies type of another type or expression
     ///
     /// [GNU extension](https://gcc.gnu.org/onlinedocs/gcc/Typeof.html)
-    TypeOf(Node<TypeOf>),
+    TypeOf(Node<TypeOf<T>>),
     /// Floating point types with guaranteed width and representation
     ///
     /// `_Float16`, `_Float32`, `_Float64`, `_Float128`
@@ -656,13 +672,13 @@ pub enum TS18661FloatFormat {
 ///
 /// (C11 6.7.2.1)
 #[derive(Debug, PartialEq, Clone)]
-pub struct StructType {
+pub struct StructType<T: Name = String> {
     pub kind: Node<StructKind>,
-    pub identifier: Option<Node<Identifier>>,
+    pub identifier: Option<Node<Identifier<T>>>,
     /// List of structure of union members, when present.
     ///
     /// A [GNU extension](https://gcc.gnu.org/onlinedocs/gcc-8.1.0/gcc/Empty-Structures.html) allows the list to be empty.
-    pub declarations: Option<Vec<Node<StructDeclaration>>>,
+    pub declarations: Option<Vec<Node<StructDeclaration<T>>>>,
 }
 
 /// The only difference between a `struct` and a `union`
@@ -678,16 +694,16 @@ pub enum StructKind {
 ///
 /// (C11 6.7.2.1)
 #[derive(Debug, PartialEq, Clone)]
-pub enum StructDeclaration {
-    Field(Node<StructField>),
-    StaticAssert(Node<StaticAssert>),
+pub enum StructDeclaration<T: Name = String> {
+    Field(Node<StructField<T>>),
+    StaticAssert(Node<StaticAssert<T>>),
 }
 
 /// Struct field declaration
 #[derive(Debug, PartialEq, Clone)]
-pub struct StructField {
-    pub specifiers: Vec<Node<SpecifierQualifier>>,
-    pub declarators: Vec<Node<StructDeclarator>>,
+pub struct StructField<T: Name = String> {
+    pub specifiers: Vec<Node<SpecifierQualifier<T>>>,
+    pub declarators: Vec<Node<StructDeclarator<T>>>,
 }
 
 /// Type and qualifiers for a struct declaration
@@ -696,8 +712,8 @@ pub struct StructField {
 ///
 /// (C11 6.7.2.1)
 #[derive(Debug, PartialEq, Clone)]
-pub enum SpecifierQualifier {
-    TypeSpecifier(Node<TypeSpecifier>),
+pub enum SpecifierQualifier<T: Name = String> {
+    TypeSpecifier(Node<TypeSpecifier<T>>),
     TypeQualifier(Node<TypeQualifier>),
 }
 
@@ -705,9 +721,9 @@ pub enum SpecifierQualifier {
 ///
 /// (C11 6.7.2.1)
 #[derive(Debug, PartialEq, Clone)]
-pub struct StructDeclarator {
-    pub declarator: Option<Node<Declarator>>,
-    pub bit_width: Option<Box<Node<Expression>>>,
+pub struct StructDeclarator<T: Name = String> {
+    pub declarator: Option<Node<Declarator<T>>>,
+    pub bit_width: Option<Box<Node<Expression<T>>>>,
 }
 
 // From 6.7.2.2
@@ -716,18 +732,18 @@ pub struct StructDeclarator {
 ///
 /// (C11 6.7.2.2)
 #[derive(Debug, PartialEq, Clone)]
-pub struct EnumType {
-    pub identifier: Option<Node<Identifier>>,
-    pub enumerators: Vec<Node<Enumerator>>,
+pub struct EnumType<T: Name = String> {
+    pub identifier: Option<Node<Identifier<T>>>,
+    pub enumerators: Vec<Node<Enumerator<T>>>,
 }
 
 /// Single constant inside a `enum` definition
 ///
 /// (C11 6.7.2.2)
 #[derive(Debug, PartialEq, Clone)]
-pub struct Enumerator {
-    pub identifier: Node<Identifier>,
-    pub expression: Option<Box<Node<Expression>>>,
+pub struct Enumerator<T: Name = String> {
+    pub identifier: Node<Identifier<T>>,
+    pub expression: Option<Box<Node<Expression<T>>>>,
 }
 
 // From 6.7.3
@@ -786,11 +802,11 @@ pub enum FunctionSpecifier {
 ///
 /// (C11 6.7.5)
 #[derive(Debug, PartialEq, Clone)]
-pub enum AlignmentSpecifier {
+pub enum AlignmentSpecifier<T: Name = String> {
     /// `_Alignas(typename)`
-    Type(Node<TypeName>),
+    Type(Node<TypeName<T>>),
     /// `_Alignas(expression)`
-    Constant(Box<Node<Expression>>),
+    Constant(Box<Node<Expression<T>>>),
 }
 
 // From 6.7.6 Declarators
@@ -801,20 +817,20 @@ pub enum AlignmentSpecifier {
 ///
 /// (C11 6.7.6, 6.7.7)
 #[derive(Debug, PartialEq, Clone)]
-pub struct Declarator {
+pub struct Declarator<T: Name = String> {
     /// What is being declared
-    pub kind: Node<DeclaratorKind>,
+    pub kind: Node<DeclaratorKind<T>>,
     /// Contains pointer, array and function declarator elements
-    pub derived: Vec<Node<DerivedDeclarator>>,
+    pub derived: Vec<Node<DerivedDeclarator<T>>>,
     /// Vendor-specific extensions
-    pub extensions: Vec<Node<Extension>>,
+    pub extensions: Vec<Node<Extension<T>>>,
 }
 
 /// Name of a declarator
 ///
 /// (C11 6.7.6, 6.7.7)
 #[derive(Debug, PartialEq, Clone)]
-pub enum DeclaratorKind {
+pub enum DeclaratorKind<T: Name = String> {
     /// Unnamed declarator
     ///
     /// E.g. part of a function prototype without parameter names.
@@ -822,40 +838,40 @@ pub enum DeclaratorKind {
     /// Named declarator
     ///
     /// E.g. a variable or a named function parameter.
-    Identifier(Node<Identifier>),
+    Identifier(Node<Identifier<T>>),
     /// Nested declarator
     ///
     /// Any group of parenthesis inside a declarator. E.g. pointer to
     /// a function.
-    Declarator(Box<Node<Declarator>>),
+    Declarator(Box<Node<Declarator<T>>>),
 }
 
 /// Modifies declarator type
 ///
 /// (C11 6.7.6)
 #[derive(Debug, PartialEq, Clone)]
-pub enum DerivedDeclarator {
+pub enum DerivedDeclarator<T: Name = String> {
     /// `* qualifiers …`
-    Pointer(Vec<Node<PointerQualifier>>),
+    Pointer(Vec<Node<PointerQualifier<T>>>),
     /// `… []`
-    Array(Node<ArrayDeclarator>),
+    Array(Node<ArrayDeclarator<T>>),
     /// `… ( parameters )`
-    Function(Node<FunctionDeclarator>),
+    Function(Node<FunctionDeclarator<T>>),
     /// `… ( identifiers )`
-    KRFunction(Vec<Node<Identifier>>),
+    KRFunction(Vec<Node<Identifier<T>>>),
 }
 
 /// Array part of a declarator
 #[derive(Debug, PartialEq, Clone)]
-pub struct ArrayDeclarator {
+pub struct ArrayDeclarator<T: Name = String> {
     pub qualifiers: Vec<Node<TypeQualifier>>,
-    pub size: ArraySize,
+    pub size: ArraySize<T>,
 }
 
 /// Function parameter part of a declarator
 #[derive(Debug, PartialEq, Clone)]
-pub struct FunctionDeclarator {
-    pub parameters: Vec<Node<ParameterDeclaration>>,
+pub struct FunctionDeclarator<T: Name = String> {
+    pub parameters: Vec<Node<ParameterDeclaration<T>>>,
     pub ellipsis: Ellipsis,
 }
 
@@ -863,24 +879,24 @@ pub struct FunctionDeclarator {
 ///
 /// (C11 6.7.6.1)
 #[derive(Debug, PartialEq, Clone)]
-pub enum PointerQualifier {
+pub enum PointerQualifier<T: Name = String> {
     TypeQualifier(Node<TypeQualifier>),
-    Extension(Vec<Node<Extension>>),
+    Extension(Vec<Node<Extension<T>>>),
 }
 
 /// Size of an array in a declaration
 ///
 /// (C11 6.7.6.2)
 #[derive(Debug, PartialEq, Clone)]
-pub enum ArraySize {
+pub enum ArraySize<T: Name = String> {
     /// `[]`
     Unknown,
     /// `[*]`
     VariableUnknown,
     /// `[10]`
-    VariableExpression(Box<Node<Expression>>),
+    VariableExpression(Box<Node<Expression<T>>>),
     /// `[static 10]`
-    StaticExpression(Box<Node<Expression>>),
+    StaticExpression(Box<Node<Expression<T>>>),
 }
 
 /// Complete parameter declaration in a function prototype or declaration
@@ -892,10 +908,10 @@ pub enum ArraySize {
 ///
 /// (C11 6.7.6.3)
 #[derive(Debug, PartialEq, Clone)]
-pub struct ParameterDeclaration {
-    pub specifiers: Vec<Node<DeclarationSpecifier>>,
-    pub declarator: Option<Node<Declarator>>,
-    pub extensions: Vec<Node<Extension>>,
+pub struct ParameterDeclaration<T: Name = String> {
+    pub specifiers: Vec<Node<DeclarationSpecifier<T>>>,
+    pub declarator: Option<Node<Declarator<T>>>,
+    pub extensions: Vec<Node<Extension<T>>>,
 }
 
 /// Whether function signature ends with a `...`
@@ -913,9 +929,9 @@ pub enum Ellipsis {
 ///
 /// (C11 6.7.7)
 #[derive(Debug, PartialEq, Clone)]
-pub struct TypeName {
-    pub specifiers: Vec<Node<SpecifierQualifier>>,
-    pub declarator: Option<Node<Declarator>>,
+pub struct TypeName<T: Name = String> {
+    pub specifiers: Vec<Node<SpecifierQualifier<T>>>,
+    pub declarator: Option<Node<Declarator<T>>>,
 }
 
 // From 6.7.9 Initialization
@@ -924,42 +940,42 @@ pub struct TypeName {
 ///
 /// (C11 6.7.9)
 #[derive(Debug, PartialEq, Clone)]
-pub enum Initializer {
-    Expression(Box<Node<Expression>>),
-    List(Vec<Node<InitializerListItem>>),
+pub enum Initializer<T: Name = String> {
+    Expression(Box<Node<Expression<T>>>),
+    List(Vec<Node<InitializerListItem<T>>>),
 }
 
 /// Initializes one field or array element in a initializer list
 ///
 /// (C11 6.7.9)
 #[derive(Debug, PartialEq, Clone)]
-pub struct InitializerListItem {
-    pub designation: Vec<Node<Designator>>,
-    pub initializer: Box<Node<Initializer>>,
+pub struct InitializerListItem<T: Name = String> {
+    pub designation: Vec<Node<Designator<T>>>,
+    pub initializer: Box<Node<Initializer<T>>>,
 }
 
 /// Single element of an designation in an initializer
 #[derive(Debug, PartialEq, Clone)]
-pub enum Designator {
+pub enum Designator<T: Name = String> {
     /// Array element
     ///
     /// `{ [expression] = … }`
     ///
     /// `{ [expression] … }` (obsolete GNU extension)
-    Index(Node<Expression>),
+    Index(Node<Expression<T>>),
 
     /// Struct or union member
     ///
     /// `{ .identifier = … }`
     ///
     /// `{ identifier: … }` (obsolete GNU extension)
-    Member(Node<Identifier>),
+    Member(Node<Identifier<T>>),
 
     /// Range of array elements
     ///
     /// `{ [from ... to] … }`
     /// ([GNU extension](https://gcc.gnu.org/onlinedocs/gcc/Designated-Inits.html#Designated-Inits))
-    Range(Node<RangeDesignator>),
+    Range(Node<RangeDesignator<T>>),
 }
 
 /// Range array designator in an initializer
@@ -968,9 +984,9 @@ pub enum Designator {
 ///
 /// ([GNU extension](https://gcc.gnu.org/onlinedocs/gcc/Designated-Inits.html#Designated-Inits))
 #[derive(Debug, PartialEq, Clone)]
-pub struct RangeDesignator {
-    pub from: Node<Expression>,
-    pub to: Node<Expression>,
+pub struct RangeDesignator<T: Name = String> {
+    pub from: Node<Expression<T>>,
+    pub to: Node<Expression<T>>,
 }
 
 // From 6.7.10 Static assertions
@@ -979,8 +995,8 @@ pub struct RangeDesignator {
 ///
 /// (C11 6.7.10)
 #[derive(Debug, PartialEq, Clone)]
-pub struct StaticAssert {
-    pub expression: Box<Node<Expression>>,
+pub struct StaticAssert<T: Name = String> {
+    pub expression: Box<Node<Expression<T>>>,
     pub message: Node<StringLiteral>,
 }
 
@@ -990,91 +1006,91 @@ pub struct StaticAssert {
 ///
 /// (C11 6.8)
 #[derive(Debug, PartialEq, Clone)]
-pub enum Statement {
-    Labeled(Node<LabeledStatement>),
-    Compound(Vec<Node<BlockItem>>),
-    Expression(Option<Box<Node<Expression>>>),
-    If(Node<IfStatement>),
-    Switch(Node<SwitchStatement>),
-    While(Node<WhileStatement>),
-    DoWhile(Node<DoWhileStatement>),
-    For(Node<ForStatement>),
-    Goto(Node<Identifier>),
+pub enum Statement<T: Name = String> {
+    Labeled(Node<LabeledStatement<T>>),
+    Compound(Vec<Node<BlockItem<T>>>),
+    Expression(Option<Box<Node<Expression<T>>>>),
+    If(Node<IfStatement<T>>),
+    Switch(Node<SwitchStatement<T>>),
+    While(Node<WhileStatement<T>>),
+    DoWhile(Node<DoWhileStatement<T>>),
+    For(Node<ForStatement<T>>),
+    Goto(Node<Identifier<T>>),
     Continue,
     Break,
-    Return(Option<Box<Node<Expression>>>),
+    Return(Option<Box<Node<Expression<T>>>>),
     /// Vendor specific inline assembly extensions
-    Asm(Node<AsmStatement>),
+    Asm(Node<AsmStatement<T>>),
 }
 
 /// Labeled statement
 ///
 /// (C11 6.8.1)
 #[derive(Debug, PartialEq, Clone)]
-pub struct LabeledStatement {
-    pub label: Node<Label>,
-    pub statement: Box<Node<Statement>>,
+pub struct LabeledStatement<T: Name = String> {
+    pub label: Node<Label<T>>,
+    pub statement: Box<Node<Statement<T>>>,
 }
 
 /// If statement
 ///
 /// (C11 6.8.4)
 #[derive(Debug, PartialEq, Clone)]
-pub struct IfStatement {
-    pub condition: Box<Node<Expression>>,
-    pub then_statement: Box<Node<Statement>>,
-    pub else_statement: Option<Box<Node<Statement>>>,
+pub struct IfStatement<T: Name = String> {
+    pub condition: Box<Node<Expression<T>>>,
+    pub then_statement: Box<Node<Statement<T>>>,
+    pub else_statement: Option<Box<Node<Statement<T>>>>,
 }
 
 /// Switch statement
 ///
 /// (C11 6.8.4)
 #[derive(Debug, PartialEq, Clone)]
-pub struct SwitchStatement {
-    pub expression: Box<Node<Expression>>,
-    pub statement: Box<Node<Statement>>,
+pub struct SwitchStatement<T: Name = String> {
+    pub expression: Box<Node<Expression<T>>>,
+    pub statement: Box<Node<Statement<T>>>,
 }
 
 /// While statement
 ///
 /// (C11 6.8.5)
 #[derive(Debug, PartialEq, Clone)]
-pub struct WhileStatement {
-    pub expression: Box<Node<Expression>>,
-    pub statement: Box<Node<Statement>>,
+pub struct WhileStatement<T: Name = String> {
+    pub expression: Box<Node<Expression<T>>>,
+    pub statement: Box<Node<Statement<T>>>,
 }
 
 /// Do statement
 ///
 /// (C11 6.8.5)
 #[derive(Debug, PartialEq, Clone)]
-pub struct DoWhileStatement {
-    pub statement: Box<Node<Statement>>,
-    pub expression: Box<Node<Expression>>,
+pub struct DoWhileStatement<T: Name = String> {
+    pub statement: Box<Node<Statement<T>>>,
+    pub expression: Box<Node<Expression<T>>>,
 }
 
 /// For statement
 ///
 /// (C11 6.8.5)
 #[derive(Debug, PartialEq, Clone)]
-pub struct ForStatement {
-    pub initializer: Node<ForInitializer>,
-    pub condition: Option<Box<Node<Expression>>>,
-    pub step: Option<Box<Node<Expression>>>,
-    pub statement: Box<Node<Statement>>,
+pub struct ForStatement<T: Name = String> {
+    pub initializer: Node<ForInitializer<T>>,
+    pub condition: Option<Box<Node<Expression<T>>>>,
+    pub step: Option<Box<Node<Expression<T>>>>,
+    pub statement: Box<Node<Statement<T>>>,
 }
 
 /// Statement labels for `goto` and `switch`
 #[derive(Debug, PartialEq, Clone)]
-pub enum Label {
+pub enum Label<T: Name = String> {
     /// Goto label
     ///
     /// `ident: …`
-    Identifier(Node<Identifier>),
+    Identifier(Node<Identifier<T>>),
     /// Case in a `switch` statement
     ///
     /// `case 'a': …`
-    Case(Box<Node<Expression>>),
+    Case(Box<Node<Expression<T>>>),
     /// Default case in a `switch` statement
     ///
     /// `default: …`
@@ -1083,25 +1099,25 @@ pub enum Label {
 
 /// First element of a `for` statement
 #[derive(Debug, PartialEq, Clone)]
-pub enum ForInitializer {
+pub enum ForInitializer<T: Name = String> {
     /// `for(; …)`
     Empty,
     /// `for(a = 1; …)`
-    Expression(Box<Node<Expression>>),
+    Expression(Box<Node<Expression<T>>>),
     /// `for(int a = 1; …)`
-    Declaration(Node<Declaration>),
+    Declaration(Node<Declaration<T>>),
     /// `for(_StaticAssert(…); …)`
-    StaticAssert(Node<StaticAssert>),
+    StaticAssert(Node<StaticAssert<T>>),
 }
 
 // From 6.8.2
 
 /// Element of a compound statement
 #[derive(Debug, PartialEq, Clone)]
-pub enum BlockItem {
-    Declaration(Node<Declaration>),
-    StaticAssert(Node<StaticAssert>),
-    Statement(Node<Statement>),
+pub enum BlockItem<T: Name = String> {
+    Declaration(Node<Declaration<T>>),
+    StaticAssert(Node<StaticAssert<T>>),
+    Statement(Node<Statement<T>>),
 }
 
 // From 6.9 External definitions
@@ -1110,42 +1126,42 @@ pub enum BlockItem {
 ///
 /// (C11 6.9)
 #[derive(Debug, PartialEq, Clone)]
-pub struct TranslationUnit(pub Vec<Node<ExternalDeclaration>>);
+pub struct TranslationUnit<T: Name = String>(pub Vec<Node<ExternalDeclaration<T>>>);
 
 /// Top-level elements of a C program
 ///
 /// (C11 6.9)
 #[derive(Debug, PartialEq, Clone)]
-pub enum ExternalDeclaration {
-    Declaration(Node<Declaration>),
-    StaticAssert(Node<StaticAssert>),
-    FunctionDefinition(Node<FunctionDefinition>),
+pub enum ExternalDeclaration<T: Name = String> {
+    Declaration(Node<Declaration<T>>),
+    StaticAssert(Node<StaticAssert<T>>),
+    FunctionDefinition(Node<FunctionDefinition<T>>),
 }
 
 /// Function definition
 ///
 /// (C11 6.9.1)
 #[derive(Debug, PartialEq, Clone)]
-pub struct FunctionDefinition {
+pub struct FunctionDefinition<T: Name = String> {
     /// Return type of the function, possibly mixed with other specifiers
-    pub specifiers: Vec<Node<DeclarationSpecifier>>,
+    pub specifiers: Vec<Node<DeclarationSpecifier<T>>>,
     /// Contains function name and parameter list
-    pub declarator: Node<Declarator>,
+    pub declarator: Node<Declarator<T>>,
     /// K&R style parameter type definitions (C11 6.9.1 §6)
-    pub declarations: Vec<Node<Declaration>>,
+    pub declarations: Vec<Node<Declaration<T>>>,
     /// Body of the function.
-    pub statement: Node<Statement>,
+    pub statement: Node<Statement<T>>,
 }
 
 // Syntax extensions
 
 /// Extended vendor-specific syntax that does not fit elsewhere
 #[derive(Debug, PartialEq, Clone)]
-pub enum Extension {
+pub enum Extension<T: Name = String> {
     /// Attributes
     ///
     /// [GNU extension](https://gcc.gnu.org/onlinedocs/gcc/Attribute-Syntax.html)
-    Attribute(Attribute),
+    Attribute(Attribute<T>),
     /// Assembler name for an object
     ///
     /// [GNU extension](https://gcc.gnu.org/onlinedocs/gcc/Asm-Labels.html)
@@ -1153,24 +1169,24 @@ pub enum Extension {
     /// Platform availability
     ///
     /// [Clang extension](https://clang.llvm.org/docs/AttributeReference.html#availability)
-    AvailabilityAttribute(Node<AvailabilityAttribute>),
+    AvailabilityAttribute(Node<AvailabilityAttribute<T>>),
 }
 
 /// Attributes
 ///
 /// [GNU extension](https://gcc.gnu.org/onlinedocs/gcc/Attribute-Syntax.html)
 #[derive(Debug, PartialEq, Clone)]
-pub struct Attribute {
+pub struct Attribute<T: Name = String> {
     pub name: Node<String>,
-    pub arguments: Vec<Node<Expression>>,
+    pub arguments: Vec<Node<Expression<T>>>,
 }
 
 /// Platform availability attribute
 ///
 /// [Clang extension](https://clang.llvm.org/docs/AttributeReference.html#availability)
 #[derive(Debug, PartialEq, Clone)]
-pub struct AvailabilityAttribute {
-    pub platform: Node<Identifier>,
+pub struct AvailabilityAttribute<T: Name = String> {
+    pub platform: Node<Identifier<T>>,
     pub clauses: Vec<Node<AvailabilityClause>>,
 }
 
@@ -1199,7 +1215,7 @@ pub struct AvailabilityVersion {
 
 /// Inline assembler
 #[derive(Debug, PartialEq, Clone)]
-pub enum AsmStatement {
+pub enum AsmStatement<T: Name = String> {
     /// Basic asm statement with just source code
     ///
     /// [GNU extension](https://gcc.gnu.org/onlinedocs/gcc/Basic-Asm.html)
@@ -1208,18 +1224,18 @@ pub enum AsmStatement {
     /// Extended statement that has access to C variables
     ///
     /// [GNU extension](https://gcc.gnu.org/onlinedocs/gcc/Extended-Asm.html)
-    GnuExtended(GnuExtendedAsmStatement),
+    GnuExtended(GnuExtendedAsmStatement<T>),
 }
 
 /// Extended statement that has access to C variables
 ///
 /// [GNU extension](https://gcc.gnu.org/onlinedocs/gcc/Extended-Asm.html)
 #[derive(Debug, PartialEq, Clone)]
-pub struct GnuExtendedAsmStatement {
+pub struct GnuExtendedAsmStatement<T: Name = String> {
     pub qualifier: Option<Node<TypeQualifier>>,
     pub template: Node<StringLiteral>,
-    pub outputs: Vec<Node<GnuAsmOperand>>,
-    pub inputs: Vec<Node<GnuAsmOperand>>,
+    pub outputs: Vec<Node<GnuAsmOperand<T>>>,
+    pub inputs: Vec<Node<GnuAsmOperand<T>>>,
     pub clobbers: Vec<Node<StringLiteral>>,
 }
 
@@ -1227,17 +1243,17 @@ pub struct GnuExtendedAsmStatement {
 ///
 /// [GNU extension](https://gcc.gnu.org/onlinedocs/gcc/Extended-Asm.html#Output-Operands)
 #[derive(Debug, PartialEq, Clone)]
-pub struct GnuAsmOperand {
-    pub symbolic_name: Option<Node<Identifier>>,
+pub struct GnuAsmOperand<T: Name = String> {
+    pub symbolic_name: Option<Node<Identifier<T>>>,
     pub constraints: Node<StringLiteral>,
-    pub variable_name: Node<Expression>,
+    pub variable_name: Node<Expression<T>>,
 }
 
 /// Type of an expression or type
 ///
 /// [GNU extension](https://gcc.gnu.org/onlinedocs/gcc/Typeof.html)
 #[derive(Debug, PartialEq, Clone)]
-pub enum TypeOf {
-    Expression(Node<Expression>),
-    Type(Node<TypeName>),
+pub enum TypeOf<T: Name = String> {
+    Expression(Node<Expression<T>>),
+    Type(Node<TypeName<T>>),
 }

@@ -30,16 +30,16 @@ pub struct ParseError {
 pub type ParseResult<T> = Result<T, ParseError>;
 impl ::std::fmt::Display for ParseError {
     fn fmt(&self, fmt: &mut ::std::fmt::Formatter) -> ::std::result::Result<(), ::std::fmt::Error> {
-        try!(write!(fmt, "error at {}:{}: expected ", self.line, self.column));
+        write!(fmt, "error at {}:{}: expected ", self.line, self.column)?;
         if self.expected.len() == 0 {
-            try!(write!(fmt, "EOF"));
+            write!(fmt, "EOF")?;
         } else if self.expected.len() == 1 {
-            try!(write!(fmt, "`{}`", escape_default(self.expected.iter().next().unwrap())));
+            write!(fmt, "`{}`", escape_default(self.expected.iter().next().unwrap()))?;
         } else {
             let mut iter = self.expected.iter();
-            try!(write!(fmt, "one of `{}`", escape_default(iter.next().unwrap())));
+            write!(fmt, "one of `{}`", escape_default(iter.next().unwrap()))?;
             for elem in iter {
-                try!(write!(fmt, ", `{}`", escape_default(elem)));
+                write!(fmt, ", `{}`", escape_default(elem))?;
             }
         }
         Ok(())
@@ -50,7 +50,7 @@ impl ::std::error::Error for ParseError {
         "parse error"
     }
 }
-fn slice_eq(input: &str, state: &mut ParseState, pos: usize, m: &'static str) -> RuleResult<()> {
+fn slice_eq(input: &str, state: &mut ParseState<'_, impl Name>, pos: usize, m: &'static str) -> RuleResult<()> {
     #![inline]
     #![allow(dead_code)]
     let l = m.len();
@@ -60,7 +60,7 @@ fn slice_eq(input: &str, state: &mut ParseState, pos: usize, m: &'static str) ->
         state.mark_failure(pos, m)
     }
 }
-fn slice_eq_case_insensitive(input: &str, state: &mut ParseState, pos: usize, m: &'static str) -> RuleResult<()> {
+fn slice_eq_case_insensitive(input: &str, state: &mut ParseState<'_, impl Name>, pos: usize, m: &'static str) -> RuleResult<()> {
     #![inline]
     #![allow(dead_code)]
     let mut used = 0usize;
@@ -74,7 +74,7 @@ fn slice_eq_case_insensitive(input: &str, state: &mut ParseState, pos: usize, m:
     }
     Matched(pos + used, ())
 }
-fn any_char(input: &str, state: &mut ParseState, pos: usize) -> RuleResult<()> {
+fn any_char(input: &str, state: &mut ParseState<'_, impl Name>, pos: usize) -> RuleResult<()> {
     #![inline]
     #![allow(dead_code)]
     if input.len() > pos {
@@ -90,7 +90,7 @@ fn pos_to_line(input: &str, pos: usize) -> (usize, usize) {
     let col = before.chars().rev().take_while(|&c| c != '\n').count() + 1;
     (line, col)
 }
-impl<'input> ParseState<'input> {
+impl<'input, T: Name> ParseState<'input, T> {
     fn mark_failure(&mut self, pos: usize, expected: &'static str) -> RuleResult<()> {
         if self.suppress_fail == 0 {
             if pos > self.max_err_pos {
@@ -104,20 +104,20 @@ impl<'input> ParseState<'input> {
         Failed
     }
 }
-struct ParseState<'input> {
+struct ParseState<'input, T: Name> {
     max_err_pos: usize,
     suppress_fail: usize,
     expected: ::std::collections::HashSet<&'static str>,
     _phantom: ::std::marker::PhantomData<&'input ()>,
-    postfix_expression0_cache: ::std::collections::HashMap<usize, RuleResult<Expression>>,
+    postfix_expression0_cache: ::std::collections::HashMap<usize, RuleResult<Expression<T>>>,
 }
-impl<'input> ParseState<'input> {
-    fn new() -> ParseState<'input> {
+impl<'input, T: Name> ParseState<'input, T> {
+    fn new() -> ParseState<'input, T> {
         ParseState { max_err_pos: 0, suppress_fail: 0, expected: ::std::collections::HashSet::new(), _phantom: ::std::marker::PhantomData, postfix_expression0_cache: ::std::collections::HashMap::new() }
     }
 }
 
-fn __parse__<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<()> {
+fn __parse__<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<()> {
     #![allow(non_snake_case, unused)]
     {
         __state.suppress_fail += 1;
@@ -176,7 +176,7 @@ fn __parse__<'input>(__input: &'input str, __state: &mut ParseState<'input>, __p
     }
 }
 
-fn __parse_directive<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<()> {
+fn __parse_directive<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<()> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = slice_eq(__input, __state, __pos, "#");
@@ -210,7 +210,7 @@ fn __parse_directive<'input>(__input: &'input str, __state: &mut ParseState<'inp
     }
 }
 
-fn __parse_identifier<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Node<Identifier>> {
+fn __parse_identifier<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Node<Identifier<T>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = Matched(__pos, __pos);
@@ -233,7 +233,7 @@ fn __parse_identifier<'input>(__input: &'input str, __state: &mut ParseState<'in
     }
 }
 
-fn __parse_identifier0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Identifier> {
+fn __parse_identifier0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Identifier<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -284,7 +284,7 @@ fn __parse_identifier0<'input>(__input: &'input str, __state: &mut ParseState<'i
             Matched(__pos, n) => {
                 match {
                     if !env.reserved.contains(n) {
-                        Ok(Identifier { name: n.into() })
+                        Ok(Identifier { name: T::get_from_str(n) })
                     } else {
                         Err("identifier")
                     }
@@ -301,7 +301,7 @@ fn __parse_identifier0<'input>(__input: &'input str, __state: &mut ParseState<'i
     }
 }
 
-fn __parse_ohx<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<()> {
+fn __parse_ohx<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<()> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = slice_eq(__input, __state, __pos, "0");
@@ -322,7 +322,7 @@ fn __parse_ohx<'input>(__input: &'input str, __state: &mut ParseState<'input>, _
     }
 }
 
-fn __parse_obb<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<()> {
+fn __parse_obb<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<()> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = slice_eq(__input, __state, __pos, "0");
@@ -343,7 +343,7 @@ fn __parse_obb<'input>(__input: &'input str, __state: &mut ParseState<'input>, _
     }
 }
 
-fn __parse_dec<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<()> {
+fn __parse_dec<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<()> {
     #![allow(non_snake_case, unused)]
     if __input.len() > __pos {
         let (__ch, __next) = char_range_at(__input, __pos);
@@ -356,7 +356,7 @@ fn __parse_dec<'input>(__input: &'input str, __state: &mut ParseState<'input>, _
     }
 }
 
-fn __parse_oct<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<()> {
+fn __parse_oct<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<()> {
     #![allow(non_snake_case, unused)]
     if __input.len() > __pos {
         let (__ch, __next) = char_range_at(__input, __pos);
@@ -369,7 +369,7 @@ fn __parse_oct<'input>(__input: &'input str, __state: &mut ParseState<'input>, _
     }
 }
 
-fn __parse_hex<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<()> {
+fn __parse_hex<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<()> {
     #![allow(non_snake_case, unused)]
     if __input.len() > __pos {
         let (__ch, __next) = char_range_at(__input, __pos);
@@ -382,7 +382,7 @@ fn __parse_hex<'input>(__input: &'input str, __state: &mut ParseState<'input>, _
     }
 }
 
-fn __parse_bin<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<()> {
+fn __parse_bin<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<()> {
     #![allow(non_snake_case, unused)]
     if __input.len() > __pos {
         let (__ch, __next) = char_range_at(__input, __pos);
@@ -395,7 +395,7 @@ fn __parse_bin<'input>(__input: &'input str, __state: &mut ParseState<'input>, _
     }
 }
 
-fn __parse_constant<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Constant> {
+fn __parse_constant<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Constant> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -462,7 +462,7 @@ fn __parse_constant<'input>(__input: &'input str, __state: &mut ParseState<'inpu
     }
 }
 
-fn __parse_numeric_constant<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Constant> {
+fn __parse_numeric_constant<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Constant> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -485,7 +485,7 @@ fn __parse_numeric_constant<'input>(__input: &'input str, __state: &mut ParseSta
     }
 }
 
-fn __parse_integer_constant<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Integer> {
+fn __parse_integer_constant<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Integer> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = __parse_integer_number(__input, __state, __pos, env);
@@ -505,7 +505,7 @@ fn __parse_integer_constant<'input>(__input: &'input str, __state: &mut ParseSta
     }
 }
 
-fn __parse_integer_number<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<(IntegerBase, &'input str)> {
+fn __parse_integer_number<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<(IntegerBase, &'input str)> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -724,7 +724,7 @@ fn __parse_integer_number<'input>(__input: &'input str, __state: &mut ParseState
     }
 }
 
-fn __parse_integer_suffix<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<IntegerSuffix> {
+fn __parse_integer_suffix<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<IntegerSuffix> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -743,7 +743,7 @@ fn __parse_integer_suffix<'input>(__input: &'input str, __state: &mut ParseState
     }
 }
 
-fn __parse_integer_suffix_inner<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<IntegerSuffix> {
+fn __parse_integer_suffix_inner<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<IntegerSuffix> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -823,7 +823,7 @@ fn __parse_integer_suffix_inner<'input>(__input: &'input str, __state: &mut Pars
     }
 }
 
-fn __parse_float_constant<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Float> {
+fn __parse_float_constant<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Float> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = __parse_float_number(__input, __state, __pos, env);
@@ -843,7 +843,7 @@ fn __parse_float_constant<'input>(__input: &'input str, __state: &mut ParseState
     }
 }
 
-fn __parse_float_number<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<(FloatBase, &'input str)> {
+fn __parse_float_number<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<(FloatBase, &'input str)> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -884,7 +884,7 @@ fn __parse_float_number<'input>(__input: &'input str, __state: &mut ParseState<'
     }
 }
 
-fn __parse_float_decimal<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<()> {
+fn __parse_float_decimal<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<()> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -1021,7 +1021,7 @@ fn __parse_float_decimal<'input>(__input: &'input str, __state: &mut ParseState<
     }
 }
 
-fn __parse_float_decimal_exp<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<()> {
+fn __parse_float_decimal_exp<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<()> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = if __input.len() > __pos {
@@ -1078,7 +1078,7 @@ fn __parse_float_decimal_exp<'input>(__input: &'input str, __state: &mut ParseSt
     }
 }
 
-fn __parse_float_hexadecimal<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<()> {
+fn __parse_float_hexadecimal<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<()> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -1209,7 +1209,7 @@ fn __parse_float_hexadecimal<'input>(__input: &'input str, __state: &mut ParseSt
     }
 }
 
-fn __parse_float_binary_exp<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<()> {
+fn __parse_float_binary_exp<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<()> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = if __input.len() > __pos {
@@ -1266,7 +1266,7 @@ fn __parse_float_binary_exp<'input>(__input: &'input str, __state: &mut ParseSta
     }
 }
 
-fn __parse_float_suffix<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<FloatSuffix> {
+fn __parse_float_suffix<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<FloatSuffix> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -1285,7 +1285,7 @@ fn __parse_float_suffix<'input>(__input: &'input str, __state: &mut ParseState<'
     }
 }
 
-fn __parse_float_suffix_inner<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<FloatSuffix> {
+fn __parse_float_suffix_inner<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<FloatSuffix> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -1379,7 +1379,7 @@ fn __parse_float_suffix_inner<'input>(__input: &'input str, __state: &mut ParseS
     }
 }
 
-fn __parse_float_format<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<FloatFormat> {
+fn __parse_float_format<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<FloatFormat> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -1436,7 +1436,7 @@ fn __parse_float_format<'input>(__input: &'input str, __state: &mut ParseState<'
     }
 }
 
-fn __parse_character_constant<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<String> {
+fn __parse_character_constant<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<String> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -1503,7 +1503,7 @@ fn __parse_character_constant<'input>(__input: &'input str, __state: &mut ParseS
     }
 }
 
-fn __parse_character<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<()> {
+fn __parse_character<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<()> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = if __input.len() > __pos {
@@ -1522,7 +1522,7 @@ fn __parse_character<'input>(__input: &'input str, __state: &mut ParseState<'inp
     }
 }
 
-fn __parse_escape_sequence<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<()> {
+fn __parse_escape_sequence<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<()> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = slice_eq(__input, __state, __pos, "\\");
@@ -1604,7 +1604,7 @@ fn __parse_escape_sequence<'input>(__input: &'input str, __state: &mut ParseStat
     }
 }
 
-fn __parse_string_literal<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Node<Vec<String>>> {
+fn __parse_string_literal<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Node<Vec<String>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -1669,7 +1669,7 @@ fn __parse_string_literal<'input>(__input: &'input str, __state: &mut ParseState
     }
 }
 
-fn __parse_string_literal0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<String> {
+fn __parse_string_literal0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<String> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -1722,7 +1722,7 @@ fn __parse_string_literal0<'input>(__input: &'input str, __state: &mut ParseStat
     }
 }
 
-fn __parse_encoding_prefix<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<()> {
+fn __parse_encoding_prefix<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<()> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = slice_eq(__input, __state, __pos, "u8");
@@ -1743,7 +1743,7 @@ fn __parse_encoding_prefix<'input>(__input: &'input str, __state: &mut ParseStat
     }
 }
 
-fn __parse_string_char<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<()> {
+fn __parse_string_char<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<()> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = if __input.len() > __pos {
@@ -1762,7 +1762,7 @@ fn __parse_string_char<'input>(__input: &'input str, __state: &mut ParseState<'i
     }
 }
 
-fn __parse_primary_expression<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Box<Node<Expression>>> {
+fn __parse_primary_expression<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Box<Node<Expression<T>>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -1791,7 +1791,7 @@ fn __parse_primary_expression<'input>(__input: &'input str, __state: &mut ParseS
     }
 }
 
-fn __parse_primary_expression0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Expression> {
+fn __parse_primary_expression0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Expression<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -1936,7 +1936,7 @@ fn __parse_primary_expression0<'input>(__input: &'input str, __state: &mut Parse
     }
 }
 
-fn __parse_generic_selection<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<GenericSelection> {
+fn __parse_generic_selection<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<GenericSelection<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -2106,7 +2106,7 @@ fn __parse_generic_selection<'input>(__input: &'input str, __state: &mut ParseSt
     }
 }
 
-fn __parse_generic_association<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<GenericAssociation> {
+fn __parse_generic_association<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<GenericAssociation<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -2213,7 +2213,7 @@ fn __parse_generic_association<'input>(__input: &'input str, __state: &mut Parse
     }
 }
 
-fn __parse_postfix_expression<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Box<Node<Expression>>> {
+fn __parse_postfix_expression<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Box<Node<Expression<T>>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -2242,7 +2242,7 @@ fn __parse_postfix_expression<'input>(__input: &'input str, __state: &mut ParseS
     }
 }
 
-fn __parse_postfix_expression0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Expression> {
+fn __parse_postfix_expression0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Expression<T>> {
     #![allow(non_snake_case, unused)]
     if let Some(entry) = __state.postfix_expression0_cache.get(&__pos) {
         return entry.clone();
@@ -2338,7 +2338,7 @@ fn __parse_postfix_expression0<'input>(__input: &'input str, __state: &mut Parse
     __rule_result
 }
 
-fn __parse_postfix_expression1<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Expression> {
+fn __parse_postfix_expression1<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Expression<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = __parse_compound_literal(__input, __state, __pos, env);
@@ -2349,7 +2349,7 @@ fn __parse_postfix_expression1<'input>(__input: &'input str, __state: &mut Parse
     }
 }
 
-fn __parse_postfix_expressionT<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Operation> {
+fn __parse_postfix_expressionT<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Operation<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = __parse_index_operator(__input, __state, __pos, env);
@@ -2524,7 +2524,7 @@ fn __parse_postfix_expressionT<'input>(__input: &'input str, __state: &mut Parse
     }
 }
 
-fn __parse_index_operator<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Operation> {
+fn __parse_index_operator<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Operation<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -2553,7 +2553,7 @@ fn __parse_index_operator<'input>(__input: &'input str, __state: &mut ParseState
     }
 }
 
-fn __parse_index_operator0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Node<Expression>> {
+fn __parse_index_operator0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Node<Expression<T>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = slice_eq(__input, __state, __pos, "[");
@@ -2606,7 +2606,7 @@ fn __parse_index_operator0<'input>(__input: &'input str, __state: &mut ParseStat
     }
 }
 
-fn __parse_member_operator<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<MemberOperator> {
+fn __parse_member_operator<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<MemberOperator> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -2629,7 +2629,7 @@ fn __parse_member_operator<'input>(__input: &'input str, __state: &mut ParseStat
     }
 }
 
-fn __parse_postfix_operator<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<UnaryOperator> {
+fn __parse_postfix_operator<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<UnaryOperator> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -2652,7 +2652,7 @@ fn __parse_postfix_operator<'input>(__input: &'input str, __state: &mut ParseSta
     }
 }
 
-fn __parse_compound_literal<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Expression> {
+fn __parse_compound_literal<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Expression<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -2681,7 +2681,7 @@ fn __parse_compound_literal<'input>(__input: &'input str, __state: &mut ParseSta
     }
 }
 
-fn __parse_compound_literal_inner<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<CompoundLiteral> {
+fn __parse_compound_literal_inner<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<CompoundLiteral<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = slice_eq(__input, __state, __pos, "(");
@@ -2833,7 +2833,7 @@ fn __parse_compound_literal_inner<'input>(__input: &'input str, __state: &mut Pa
     }
 }
 
-fn __parse_unary_expression<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Box<Node<Expression>>> {
+fn __parse_unary_expression<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Box<Node<Expression<T>>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -2862,7 +2862,7 @@ fn __parse_unary_expression<'input>(__input: &'input str, __state: &mut ParseSta
     }
 }
 
-fn __parse_unary_expression0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Expression> {
+fn __parse_unary_expression0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Expression<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = __parse_postfix_expression0(__input, __state, __pos, env);
@@ -2968,7 +2968,7 @@ fn __parse_unary_expression0<'input>(__input: &'input str, __state: &mut ParseSt
     }
 }
 
-fn __parse_unary_prefix<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Expression> {
+fn __parse_unary_prefix<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Expression<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -2997,7 +2997,7 @@ fn __parse_unary_prefix<'input>(__input: &'input str, __state: &mut ParseState<'
     }
 }
 
-fn __parse_unary_prefix_inner<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<UnaryOperatorExpression> {
+fn __parse_unary_prefix_inner<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<UnaryOperatorExpression<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -3038,7 +3038,7 @@ fn __parse_unary_prefix_inner<'input>(__input: &'input str, __state: &mut ParseS
     }
 }
 
-fn __parse_prefix_operator<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<UnaryOperator> {
+fn __parse_prefix_operator<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<UnaryOperator> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -3106,7 +3106,7 @@ fn __parse_prefix_operator<'input>(__input: &'input str, __state: &mut ParseStat
     }
 }
 
-fn __parse_unary_cast<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Expression> {
+fn __parse_unary_cast<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Expression<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -3135,7 +3135,7 @@ fn __parse_unary_cast<'input>(__input: &'input str, __state: &mut ParseState<'in
     }
 }
 
-fn __parse_unary_cast_inner<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<UnaryOperatorExpression> {
+fn __parse_unary_cast_inner<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<UnaryOperatorExpression<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -3176,7 +3176,7 @@ fn __parse_unary_cast_inner<'input>(__input: &'input str, __state: &mut ParseSta
     }
 }
 
-fn __parse_unary_operator<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<UnaryOperator> {
+fn __parse_unary_operator<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<UnaryOperator> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -3261,7 +3261,7 @@ fn __parse_unary_operator<'input>(__input: &'input str, __state: &mut ParseState
     }
 }
 
-fn __parse_sizeof_expression<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Expression> {
+fn __parse_sizeof_expression<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Expression<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -3341,7 +3341,7 @@ fn __parse_sizeof_expression<'input>(__input: &'input str, __state: &mut ParseSt
     }
 }
 
-fn __parse_alignof_expression<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Expression> {
+fn __parse_alignof_expression<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Expression<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -3456,7 +3456,7 @@ fn __parse_alignof_expression<'input>(__input: &'input str, __state: &mut ParseS
     }
 }
 
-fn __parse_cast_expression<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Box<Node<Expression>>> {
+fn __parse_cast_expression<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Box<Node<Expression<T>>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -3485,7 +3485,7 @@ fn __parse_cast_expression<'input>(__input: &'input str, __state: &mut ParseStat
     }
 }
 
-fn __parse_cast_expression0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Expression> {
+fn __parse_cast_expression0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Expression<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -3520,7 +3520,7 @@ fn __parse_cast_expression0<'input>(__input: &'input str, __state: &mut ParseSta
     }
 }
 
-fn __parse_cast_expression_inner<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<CastExpression> {
+fn __parse_cast_expression_inner<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<CastExpression<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = slice_eq(__input, __state, __pos, "(");
@@ -3567,7 +3567,7 @@ fn __parse_cast_expression_inner<'input>(__input: &'input str, __state: &mut Par
     }
 }
 
-fn __parse_binary_expression<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Box<Node<Expression>>> {
+fn __parse_binary_expression<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Box<Node<Expression<T>>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = __parse_binary_expression0(__input, __state, __pos, env);
@@ -3578,10 +3578,10 @@ fn __parse_binary_expression<'input>(__input: &'input str, __state: &mut ParseSt
     }
 }
 
-fn __parse_binary_expression0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Node<Expression>> {
+fn __parse_binary_expression0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Node<Expression<T>>> {
     #![allow(non_snake_case, unused)]
     {
-        fn __infix_parse<'input>(__min_prec: i32, __input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Node<Expression>> {
+        fn __infix_parse<'input, T: Name>(__min_prec: i32, __input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Node<Expression<T>>> {
             if let Matched(__pos, mut __infix_result) = __parse_binary_operand(__input, __state, __pos, env) {
                 let mut __repeat_pos = __pos;
                 loop {
@@ -4423,7 +4423,7 @@ fn __parse_binary_expression0<'input>(__input: &'input str, __state: &mut ParseS
     }
 }
 
-fn __parse_binary_operand<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Node<Expression>> {
+fn __parse_binary_operand<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Node<Expression<T>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = Matched(__pos, __pos);
@@ -4446,7 +4446,7 @@ fn __parse_binary_operand<'input>(__input: &'input str, __state: &mut ParseState
     }
 }
 
-fn __parse_conditional_expression<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Box<Node<Expression>>> {
+fn __parse_conditional_expression<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Box<Node<Expression<T>>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -4475,7 +4475,7 @@ fn __parse_conditional_expression<'input>(__input: &'input str, __state: &mut Pa
     }
 }
 
-fn __parse_conditional_expression0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Expression> {
+fn __parse_conditional_expression0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Expression<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = __parse_binary_expression0(__input, __state, __pos, env);
@@ -4508,7 +4508,7 @@ fn __parse_conditional_expression0<'input>(__input: &'input str, __state: &mut P
     }
 }
 
-fn __parse_conditional_expressionT<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<(Box<Node<Expression>>, Box<Node<Expression>>)> {
+fn __parse_conditional_expressionT<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<(Box<Node<Expression<T>>>, Box<Node<Expression<T>>>)> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = slice_eq(__input, __state, __pos, "?");
@@ -4591,7 +4591,7 @@ fn __parse_conditional_expressionT<'input>(__input: &'input str, __state: &mut P
     }
 }
 
-fn __parse_assignment_expression<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Box<Node<Expression>>> {
+fn __parse_assignment_expression<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Box<Node<Expression<T>>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -4620,7 +4620,7 @@ fn __parse_assignment_expression<'input>(__input: &'input str, __state: &mut Par
     }
 }
 
-fn __parse_assignment_expression0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Expression> {
+fn __parse_assignment_expression0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Expression<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -4655,7 +4655,7 @@ fn __parse_assignment_expression0<'input>(__input: &'input str, __state: &mut Pa
     }
 }
 
-fn __parse_assignment_expression_inner<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<BinaryOperatorExpression> {
+fn __parse_assignment_expression_inner<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<BinaryOperatorExpression<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = __parse_unary_expression(__input, __state, __pos, env);
@@ -4708,7 +4708,7 @@ fn __parse_assignment_expression_inner<'input>(__input: &'input str, __state: &m
     }
 }
 
-fn __parse_assignment_operator<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<BinaryOperator> {
+fn __parse_assignment_operator<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<BinaryOperator> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -4839,7 +4839,7 @@ fn __parse_assignment_operator<'input>(__input: &'input str, __state: &mut Parse
     }
 }
 
-fn __parse_expression<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Box<Node<Expression>>> {
+fn __parse_expression<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Box<Node<Expression<T>>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -4868,7 +4868,7 @@ fn __parse_expression<'input>(__input: &'input str, __state: &mut ParseState<'in
     }
 }
 
-fn __parse_expression0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Expression> {
+fn __parse_expression0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Expression<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -4949,7 +4949,7 @@ fn __parse_expression0<'input>(__input: &'input str, __state: &mut ParseState<'i
     }
 }
 
-fn __parse_expressionT<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Node<Expression>> {
+fn __parse_expressionT<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Node<Expression<T>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = slice_eq(__input, __state, __pos, ",");
@@ -4990,17 +4990,17 @@ fn __parse_expressionT<'input>(__input: &'input str, __state: &mut ParseState<'i
     }
 }
 
-fn __parse_constant_expression<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Box<Node<Expression>>> {
+fn __parse_constant_expression<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Box<Node<Expression<T>>>> {
     #![allow(non_snake_case, unused)]
     __parse_conditional_expression(__input, __state, __pos, env)
 }
 
-fn __parse_constant_expression0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Expression> {
+fn __parse_constant_expression0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Expression<T>> {
     #![allow(non_snake_case, unused)]
     __parse_conditional_expression0(__input, __state, __pos, env)
 }
 
-fn __parse_declaration<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Node<Declaration>> {
+fn __parse_declaration<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Node<Declaration<T>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = Matched(__pos, __pos);
@@ -5023,7 +5023,7 @@ fn __parse_declaration<'input>(__input: &'input str, __state: &mut ParseState<'i
     }
 }
 
-fn __parse_declaration0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Declaration> {
+fn __parse_declaration0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Declaration<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = match {
@@ -5114,7 +5114,7 @@ fn __parse_declaration0<'input>(__input: &'input str, __state: &mut ParseState<'
     }
 }
 
-fn __parse_declaration1<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<(Vec<Node<DeclarationSpecifier>>, Vec<Node<InitDeclarator>>)> {
+fn __parse_declaration1<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<(Vec<Node<DeclarationSpecifier<T>>>, Vec<Node<InitDeclarator<T>>>)> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = __parse_declaration_specifiers_unique(__input, __state, __pos, env);
@@ -5137,7 +5137,7 @@ fn __parse_declaration1<'input>(__input: &'input str, __state: &mut ParseState<'
     }
 }
 
-fn __parse_declaration2<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<(Vec<Node<DeclarationSpecifier>>, Vec<Node<InitDeclarator>>)> {
+fn __parse_declaration2<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<(Vec<Node<DeclarationSpecifier<T>>>, Vec<Node<InitDeclarator<T>>>)> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -5340,7 +5340,7 @@ fn __parse_declaration2<'input>(__input: &'input str, __state: &mut ParseState<'
     }
 }
 
-fn __parse_declaration_typedef_tail<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<(Vec<Node<DeclarationSpecifier>>, Vec<Node<InitDeclarator>>)> {
+fn __parse_declaration_typedef_tail<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<(Vec<Node<DeclarationSpecifier<T>>>, Vec<Node<InitDeclarator<T>>>)> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = __parse_declaration_specifiers_unique(__input, __state, __pos, env);
@@ -5363,7 +5363,7 @@ fn __parse_declaration_typedef_tail<'input>(__input: &'input str, __state: &mut 
     }
 }
 
-fn __parse_declaration_typedef_tail0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<(Vec<Node<DeclarationSpecifier>>, Vec<Node<InitDeclarator>>)> {
+fn __parse_declaration_typedef_tail0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<(Vec<Node<DeclarationSpecifier<T>>>, Vec<Node<InitDeclarator<T>>>)> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -5446,7 +5446,7 @@ fn __parse_declaration_typedef_tail0<'input>(__input: &'input str, __state: &mut
     }
 }
 
-fn __parse_declaration_unique_type<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Vec<Node<DeclarationSpecifier>>> {
+fn __parse_declaration_unique_type<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Vec<Node<DeclarationSpecifier<T>>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -5475,7 +5475,7 @@ fn __parse_declaration_unique_type<'input>(__input: &'input str, __state: &mut P
     }
 }
 
-fn __parse_declaration_nonunique_type<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Vec<Node<DeclarationSpecifier>>> {
+fn __parse_declaration_nonunique_type<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Vec<Node<DeclarationSpecifier<T>>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -5504,7 +5504,7 @@ fn __parse_declaration_nonunique_type<'input>(__input: &'input str, __state: &mu
     }
 }
 
-fn __parse_declaration_specifiers<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Vec<Node<DeclarationSpecifier>>> {
+fn __parse_declaration_specifiers<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Vec<Node<DeclarationSpecifier<T>>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = __parse_declaration_specifiers_unique(__input, __state, __pos, env);
@@ -5527,7 +5527,7 @@ fn __parse_declaration_specifiers<'input>(__input: &'input str, __state: &mut Pa
     }
 }
 
-fn __parse_declaration_specifiers_tail<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Vec<Node<DeclarationSpecifier>>> {
+fn __parse_declaration_specifiers_tail<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Vec<Node<DeclarationSpecifier<T>>>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -5574,7 +5574,7 @@ fn __parse_declaration_specifiers_tail<'input>(__input: &'input str, __state: &m
     }
 }
 
-fn __parse_declaration_specifiers_unique<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Vec<Node<DeclarationSpecifier>>> {
+fn __parse_declaration_specifiers_unique<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Vec<Node<DeclarationSpecifier<T>>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -5629,7 +5629,7 @@ fn __parse_declaration_specifiers_unique<'input>(__input: &'input str, __state: 
     }
 }
 
-fn __parse_declaration_specifiers_nonunique<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Vec<Node<DeclarationSpecifier>>> {
+fn __parse_declaration_specifiers_nonunique<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Vec<Node<DeclarationSpecifier<T>>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -5690,7 +5690,7 @@ fn __parse_declaration_specifiers_nonunique<'input>(__input: &'input str, __stat
     }
 }
 
-fn __parse_declaration_specifier_nontype<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<DeclarationSpecifier> {
+fn __parse_declaration_specifier_nontype<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<DeclarationSpecifier<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -5769,7 +5769,7 @@ fn __parse_declaration_specifier_nontype<'input>(__input: &'input str, __state: 
     }
 }
 
-fn __parse_declaration_typedef<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Vec<Node<DeclarationSpecifier>>> {
+fn __parse_declaration_typedef<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Vec<Node<DeclarationSpecifier<T>>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -5798,7 +5798,7 @@ fn __parse_declaration_typedef<'input>(__input: &'input str, __state: &mut Parse
     }
 }
 
-fn __parse_declaration_typedef0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<DeclarationSpecifier> {
+fn __parse_declaration_typedef0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<DeclarationSpecifier<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = __parse_storage_class_typedef(__input, __state, __pos, env);
@@ -5809,7 +5809,7 @@ fn __parse_declaration_typedef0<'input>(__input: &'input str, __state: &mut Pars
     }
 }
 
-fn __parse_declaration_specifier_unique_type0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<DeclarationSpecifier> {
+fn __parse_declaration_specifier_unique_type0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<DeclarationSpecifier<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -5838,7 +5838,7 @@ fn __parse_declaration_specifier_unique_type0<'input>(__input: &'input str, __st
     }
 }
 
-fn __parse_declaration_specifier_nonunique_type0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<DeclarationSpecifier> {
+fn __parse_declaration_specifier_nonunique_type0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<DeclarationSpecifier<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -5867,7 +5867,7 @@ fn __parse_declaration_specifier_nonunique_type0<'input>(__input: &'input str, _
     }
 }
 
-fn __parse_declaration_init_declarators<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Vec<Node<InitDeclarator>>> {
+fn __parse_declaration_init_declarators<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Vec<Node<InitDeclarator<T>>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -5934,7 +5934,7 @@ fn __parse_declaration_init_declarators<'input>(__input: &'input str, __state: &
     }
 }
 
-fn __parse_declaration_type_declarators<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Vec<Node<InitDeclarator>>> {
+fn __parse_declaration_type_declarators<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Vec<Node<InitDeclarator<T>>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -6001,7 +6001,7 @@ fn __parse_declaration_type_declarators<'input>(__input: &'input str, __state: &
     }
 }
 
-fn __parse_init_declarator<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<InitDeclarator> {
+fn __parse_init_declarator<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<InitDeclarator<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = __parse_init_declarator_declarator(__input, __state, __pos, env);
@@ -6080,7 +6080,7 @@ fn __parse_init_declarator<'input>(__input: &'input str, __state: &mut ParseStat
     }
 }
 
-fn __parse_init_declarator_declarator<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Node<Declarator>> {
+fn __parse_init_declarator_declarator<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Node<Declarator<T>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = __parse_declarator(__input, __state, __pos, env);
@@ -6094,7 +6094,7 @@ fn __parse_init_declarator_declarator<'input>(__input: &'input str, __state: &mu
     }
 }
 
-fn __parse_init_declarator_init<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Initializer> {
+fn __parse_init_declarator_init<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Initializer<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = slice_eq(__input, __state, __pos, "=");
@@ -6117,7 +6117,7 @@ fn __parse_init_declarator_init<'input>(__input: &'input str, __state: &mut Pars
     }
 }
 
-fn __parse_init_declarator_gnu<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Vec<Node<Extension>>> {
+fn __parse_init_declarator_gnu<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Vec<Node<Extension<T>>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = match __parse_asm_label(__input, __state, __pos, env) {
@@ -6143,7 +6143,7 @@ fn __parse_init_declarator_gnu<'input>(__input: &'input str, __state: &mut Parse
     }
 }
 
-fn __parse_type_declarator<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<InitDeclarator> {
+fn __parse_type_declarator<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<InitDeclarator<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = __parse_declarator(__input, __state, __pos, env);
@@ -6192,7 +6192,7 @@ fn __parse_type_declarator<'input>(__input: &'input str, __state: &mut ParseStat
     }
 }
 
-fn __parse_storage_class_specifier<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Node<StorageClassSpecifier>> {
+fn __parse_storage_class_specifier<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Node<StorageClassSpecifier>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = Matched(__pos, __pos);
@@ -6215,7 +6215,7 @@ fn __parse_storage_class_specifier<'input>(__input: &'input str, __state: &mut P
     }
 }
 
-fn __parse_storage_class_specifier0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<StorageClassSpecifier> {
+fn __parse_storage_class_specifier0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<StorageClassSpecifier> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -6439,7 +6439,7 @@ fn __parse_storage_class_specifier0<'input>(__input: &'input str, __state: &mut 
     }
 }
 
-fn __parse_storage_class_typedef<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Node<StorageClassSpecifier>> {
+fn __parse_storage_class_typedef<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Node<StorageClassSpecifier>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = Matched(__pos, __pos);
@@ -6462,7 +6462,7 @@ fn __parse_storage_class_typedef<'input>(__input: &'input str, __state: &mut Par
     }
 }
 
-fn __parse_storage_class_typedef0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<StorageClassSpecifier> {
+fn __parse_storage_class_typedef0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<StorageClassSpecifier> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -6506,7 +6506,7 @@ fn __parse_storage_class_typedef0<'input>(__input: &'input str, __state: &mut Pa
     }
 }
 
-fn __parse_type_specifier_unique<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<TypeSpecifier> {
+fn __parse_type_specifier_unique<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<TypeSpecifier<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -6748,7 +6748,7 @@ fn __parse_type_specifier_unique<'input>(__input: &'input str, __state: &mut Par
     }
 }
 
-fn __parse_type_specifier_nonunique<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<TypeSpecifier> {
+fn __parse_type_specifier_nonunique<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<TypeSpecifier<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -7293,7 +7293,7 @@ fn __parse_type_specifier_nonunique<'input>(__input: &'input str, __state: &mut 
     }
 }
 
-fn __parse_struct_or_union_specifier<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<StructType> {
+fn __parse_struct_or_union_specifier<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<StructType<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -7391,7 +7391,7 @@ fn __parse_struct_or_union_specifier<'input>(__input: &'input str, __state: &mut
     }
 }
 
-fn __parse_struct_or_union_body<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Option<Vec<Node<StructDeclaration>>>> {
+fn __parse_struct_or_union_body<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Option<Vec<Node<StructDeclaration<T>>>>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -7530,7 +7530,7 @@ fn __parse_struct_or_union_body<'input>(__input: &'input str, __state: &mut Pars
     }
 }
 
-fn __parse_struct_or_union<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<StructKind> {
+fn __parse_struct_or_union<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<StructKind> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -7619,7 +7619,7 @@ fn __parse_struct_or_union<'input>(__input: &'input str, __state: &mut ParseStat
     }
 }
 
-fn __parse_struct_declaration<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<StructDeclaration> {
+fn __parse_struct_declaration<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<StructDeclaration<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -7737,7 +7737,7 @@ fn __parse_struct_declaration<'input>(__input: &'input str, __state: &mut ParseS
     }
 }
 
-fn __parse_struct_field<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<StructField> {
+fn __parse_struct_field<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<StructField<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = __parse_specifier_qualifiers(__input, __state, __pos, env);
@@ -7834,7 +7834,7 @@ fn __parse_struct_field<'input>(__input: &'input str, __state: &mut ParseState<'
     }
 }
 
-fn __parse_specifier_qualifiers<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Vec<Node<SpecifierQualifier>>> {
+fn __parse_specifier_qualifiers<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Vec<Node<SpecifierQualifier<T>>>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -8175,7 +8175,7 @@ fn __parse_specifier_qualifiers<'input>(__input: &'input str, __state: &mut Pars
     }
 }
 
-fn __parse_specifier_qualifier_unique_type0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<SpecifierQualifier> {
+fn __parse_specifier_qualifier_unique_type0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<SpecifierQualifier<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -8204,7 +8204,7 @@ fn __parse_specifier_qualifier_unique_type0<'input>(__input: &'input str, __stat
     }
 }
 
-fn __parse_specifier_qualifier_nonunique_type0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<SpecifierQualifier> {
+fn __parse_specifier_qualifier_nonunique_type0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<SpecifierQualifier<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -8233,7 +8233,7 @@ fn __parse_specifier_qualifier_nonunique_type0<'input>(__input: &'input str, __s
     }
 }
 
-fn __parse_specifier_qualifier_qualifier0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<SpecifierQualifier> {
+fn __parse_specifier_qualifier_qualifier0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<SpecifierQualifier<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = __parse_type_qualifier(__input, __state, __pos, env);
@@ -8244,7 +8244,7 @@ fn __parse_specifier_qualifier_qualifier0<'input>(__input: &'input str, __state:
     }
 }
 
-fn __parse_struct_declarator<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<StructDeclarator> {
+fn __parse_struct_declarator<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<StructDeclarator<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -8358,7 +8358,7 @@ fn __parse_struct_declarator<'input>(__input: &'input str, __state: &mut ParseSt
     }
 }
 
-fn __parse_enum_specifier<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<EnumType> {
+fn __parse_enum_specifier<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<EnumType<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -8591,7 +8591,7 @@ fn __parse_enum_specifier<'input>(__input: &'input str, __state: &mut ParseState
     }
 }
 
-fn __parse_enumerator<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Enumerator> {
+fn __parse_enumerator<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Enumerator<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = __parse_identifier(__input, __state, __pos, env);
@@ -8606,7 +8606,7 @@ fn __parse_enumerator<'input>(__input: &'input str, __state: &mut ParseState<'in
                         };
                         match __seq_res {
                             Matched(__pos, e) => Matched(__pos, {
-                                env.add_symbol(&i.node.name, Symbol::Identifier);
+                                env.add_interned_symbol(&i.node.name, Symbol::Identifier);
                                 Enumerator { identifier: i, expression: e }
                             }),
                             Failed => Failed,
@@ -8620,7 +8620,7 @@ fn __parse_enumerator<'input>(__input: &'input str, __state: &mut ParseState<'in
     }
 }
 
-fn __parse_enumerator_constant<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Box<Node<Expression>>> {
+fn __parse_enumerator_constant<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Box<Node<Expression<T>>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = slice_eq(__input, __state, __pos, "=");
@@ -8643,7 +8643,7 @@ fn __parse_enumerator_constant<'input>(__input: &'input str, __state: &mut Parse
     }
 }
 
-fn __parse_type_qualifier<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Node<TypeQualifier>> {
+fn __parse_type_qualifier<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Node<TypeQualifier>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = Matched(__pos, __pos);
@@ -8666,7 +8666,7 @@ fn __parse_type_qualifier<'input>(__input: &'input str, __state: &mut ParseState
     }
 }
 
-fn __parse_type_qualifier0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<TypeQualifier> {
+fn __parse_type_qualifier0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<TypeQualifier> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -9156,7 +9156,7 @@ fn __parse_type_qualifier0<'input>(__input: &'input str, __state: &mut ParseStat
     }
 }
 
-fn __parse_function_specifier<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Node<FunctionSpecifier>> {
+fn __parse_function_specifier<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Node<FunctionSpecifier>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = Matched(__pos, __pos);
@@ -9179,7 +9179,7 @@ fn __parse_function_specifier<'input>(__input: &'input str, __state: &mut ParseS
     }
 }
 
-fn __parse_function_specifier0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<FunctionSpecifier> {
+fn __parse_function_specifier0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<FunctionSpecifier> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -9303,7 +9303,7 @@ fn __parse_function_specifier0<'input>(__input: &'input str, __state: &mut Parse
     }
 }
 
-fn __parse_alignment_specifier<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Node<AlignmentSpecifier>> {
+fn __parse_alignment_specifier<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Node<AlignmentSpecifier<T>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = Matched(__pos, __pos);
@@ -9326,7 +9326,7 @@ fn __parse_alignment_specifier<'input>(__input: &'input str, __state: &mut Parse
     }
 }
 
-fn __parse_alignment_specifier0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<AlignmentSpecifier> {
+fn __parse_alignment_specifier0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<AlignmentSpecifier<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -9487,7 +9487,7 @@ fn __parse_alignment_specifier0<'input>(__input: &'input str, __state: &mut Pars
     }
 }
 
-fn __parse_declarator<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Node<Declarator>> {
+fn __parse_declarator<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Node<Declarator<T>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = Matched(__pos, __pos);
@@ -9510,7 +9510,7 @@ fn __parse_declarator<'input>(__input: &'input str, __state: &mut ParseState<'in
     }
 }
 
-fn __parse_declarator0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Declarator> {
+fn __parse_declarator0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Declarator<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = match {
@@ -9674,7 +9674,7 @@ fn __parse_declarator0<'input>(__input: &'input str, __state: &mut ParseState<'i
     }
 }
 
-fn __parse_direct_declarator<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<DeclaratorKind> {
+fn __parse_direct_declarator<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<DeclaratorKind<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -9721,7 +9721,7 @@ fn __parse_direct_declarator<'input>(__input: &'input str, __state: &mut ParseSt
     }
 }
 
-fn __parse_derived_declarator<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<DerivedDeclarator> {
+fn __parse_derived_declarator<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<DerivedDeclarator<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -9924,7 +9924,7 @@ fn __parse_derived_declarator<'input>(__input: &'input str, __state: &mut ParseS
     }
 }
 
-fn __parse_array_declarator<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<ArrayDeclarator> {
+fn __parse_array_declarator<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<ArrayDeclarator<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -10345,7 +10345,7 @@ fn __parse_array_declarator<'input>(__input: &'input str, __state: &mut ParseSta
     }
 }
 
-fn __parse_function_declarator<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<FunctionDeclarator> {
+fn __parse_function_declarator<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<FunctionDeclarator<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -10416,7 +10416,7 @@ fn __parse_function_declarator<'input>(__input: &'input str, __state: &mut Parse
     }
 }
 
-fn __parse_pointer<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Node<DerivedDeclarator>> {
+fn __parse_pointer<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Node<DerivedDeclarator<T>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = Matched(__pos, __pos);
@@ -10439,7 +10439,7 @@ fn __parse_pointer<'input>(__input: &'input str, __state: &mut ParseState<'input
     }
 }
 
-fn __parse_pointer0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<DerivedDeclarator> {
+fn __parse_pointer0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<DerivedDeclarator<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = slice_eq(__input, __state, __pos, "*");
@@ -10512,7 +10512,7 @@ fn __parse_pointer0<'input>(__input: &'input str, __state: &mut ParseState<'inpu
     }
 }
 
-fn __parse_pointer_qualifier<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<PointerQualifier> {
+fn __parse_pointer_qualifier<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<PointerQualifier<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -10555,7 +10555,7 @@ fn __parse_pointer_qualifier<'input>(__input: &'input str, __state: &mut ParseSt
     }
 }
 
-fn __parse_ellipsis<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Ellipsis> {
+fn __parse_ellipsis<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Ellipsis> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -10584,7 +10584,7 @@ fn __parse_ellipsis<'input>(__input: &'input str, __state: &mut ParseState<'inpu
     }
 }
 
-fn __parse_parameter_declaration<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Node<ParameterDeclaration>> {
+fn __parse_parameter_declaration<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Node<ParameterDeclaration<T>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = Matched(__pos, __pos);
@@ -10607,7 +10607,7 @@ fn __parse_parameter_declaration<'input>(__input: &'input str, __state: &mut Par
     }
 }
 
-fn __parse_parameter_declaration0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<ParameterDeclaration> {
+fn __parse_parameter_declaration0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<ParameterDeclaration<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = __parse_declaration_specifiers(__input, __state, __pos, env);
@@ -10665,7 +10665,7 @@ fn __parse_parameter_declaration0<'input>(__input: &'input str, __state: &mut Pa
     }
 }
 
-fn __parse_parameter_declarator<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Option<Node<Declarator>>> {
+fn __parse_parameter_declarator<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Option<Node<Declarator<T>>>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -10697,7 +10697,7 @@ fn __parse_parameter_declarator<'input>(__input: &'input str, __state: &mut Pars
     }
 }
 
-fn __parse_type_name<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Node<TypeName>> {
+fn __parse_type_name<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Node<TypeName<T>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = Matched(__pos, __pos);
@@ -10720,7 +10720,7 @@ fn __parse_type_name<'input>(__input: &'input str, __state: &mut ParseState<'inp
     }
 }
 
-fn __parse_type_name0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<TypeName> {
+fn __parse_type_name0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<TypeName<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = __parse_specifier_qualifiers(__input, __state, __pos, env);
@@ -10746,7 +10746,7 @@ fn __parse_type_name0<'input>(__input: &'input str, __state: &mut ParseState<'in
     }
 }
 
-fn __parse_abstract_declarator<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Node<Declarator>> {
+fn __parse_abstract_declarator<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Node<Declarator<T>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = Matched(__pos, __pos);
@@ -10769,7 +10769,7 @@ fn __parse_abstract_declarator<'input>(__input: &'input str, __state: &mut Parse
     }
 }
 
-fn __parse_abstract_declarator0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Declarator> {
+fn __parse_abstract_declarator0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Declarator<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -11038,7 +11038,7 @@ fn __parse_abstract_declarator0<'input>(__input: &'input str, __state: &mut Pars
     }
 }
 
-fn __parse_direct_abstract_declarator<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<DeclaratorKind> {
+fn __parse_direct_abstract_declarator<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<DeclaratorKind<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = slice_eq(__input, __state, __pos, "(");
@@ -11073,7 +11073,7 @@ fn __parse_direct_abstract_declarator<'input>(__input: &'input str, __state: &mu
     }
 }
 
-fn __parse_derived_abstract_declarator<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Node<DerivedDeclarator>> {
+fn __parse_derived_abstract_declarator<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Node<DerivedDeclarator<T>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = Matched(__pos, __pos);
@@ -11096,7 +11096,7 @@ fn __parse_derived_abstract_declarator<'input>(__input: &'input str, __state: &m
     }
 }
 
-fn __parse_derived_abstract_declarator0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<DerivedDeclarator> {
+fn __parse_derived_abstract_declarator0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<DerivedDeclarator<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -11191,7 +11191,7 @@ fn __parse_derived_abstract_declarator0<'input>(__input: &'input str, __state: &
     }
 }
 
-fn __parse_abstract_array_declarator<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<ArrayDeclarator> {
+fn __parse_abstract_array_declarator<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<ArrayDeclarator<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -11568,7 +11568,7 @@ fn __parse_abstract_array_declarator<'input>(__input: &'input str, __state: &mut
     }
 }
 
-fn __parse_abstract_function_declarator<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<FunctionDeclarator> {
+fn __parse_abstract_function_declarator<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<FunctionDeclarator<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -11645,7 +11645,7 @@ fn __parse_abstract_function_declarator<'input>(__input: &'input str, __state: &
     }
 }
 
-fn __parse_typedef_name<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Node<Identifier>> {
+fn __parse_typedef_name<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Node<Identifier<T>>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -11664,7 +11664,7 @@ fn __parse_typedef_name<'input>(__input: &'input str, __state: &mut ParseState<'
     }
 }
 
-fn __parse_typedef_name0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Node<Identifier>> {
+fn __parse_typedef_name0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Node<Identifier<T>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = __parse_identifier(__input, __state, __pos, env);
@@ -11689,7 +11689,7 @@ fn __parse_typedef_name0<'input>(__input: &'input str, __state: &mut ParseState<
     }
 }
 
-fn __parse_initializer<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Initializer> {
+fn __parse_initializer<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Initializer<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -11861,7 +11861,7 @@ fn __parse_initializer<'input>(__input: &'input str, __state: &mut ParseState<'i
     }
 }
 
-fn __parse_initializer_list_item<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<InitializerListItem> {
+fn __parse_initializer_list_item<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<InitializerListItem<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = match __parse_designation(__input, __state, __pos, env) {
@@ -11905,7 +11905,7 @@ fn __parse_initializer_list_item<'input>(__input: &'input str, __state: &mut Par
     }
 }
 
-fn __parse_designation<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Vec<Node<Designator>>> {
+fn __parse_designation<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Vec<Node<Designator<T>>>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -12082,7 +12082,7 @@ fn __parse_designation<'input>(__input: &'input str, __state: &mut ParseState<'i
     }
 }
 
-fn __parse_colon_designation<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Designator> {
+fn __parse_colon_designation<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Designator<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = __parse_identifier(__input, __state, __pos, env);
@@ -12105,7 +12105,7 @@ fn __parse_colon_designation<'input>(__input: &'input str, __state: &mut ParseSt
     }
 }
 
-fn __parse_designator<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Designator> {
+fn __parse_designator<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Designator<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -12140,7 +12140,7 @@ fn __parse_designator<'input>(__input: &'input str, __state: &mut ParseState<'in
     }
 }
 
-fn __parse_array_designator<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Designator> {
+fn __parse_array_designator<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Designator<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = slice_eq(__input, __state, __pos, "[");
@@ -12230,7 +12230,7 @@ fn __parse_array_designator<'input>(__input: &'input str, __state: &mut ParseSta
     }
 }
 
-fn __parse_range_designator_ext<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Node<Expression>> {
+fn __parse_range_designator_ext<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Node<Expression<T>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = slice_eq(__input, __state, __pos, "...");
@@ -12271,7 +12271,7 @@ fn __parse_range_designator_ext<'input>(__input: &'input str, __state: &mut Pars
     }
 }
 
-fn __parse_static_assert<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Node<StaticAssert>> {
+fn __parse_static_assert<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Node<StaticAssert<T>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = Matched(__pos, __pos);
@@ -12294,7 +12294,7 @@ fn __parse_static_assert<'input>(__input: &'input str, __state: &mut ParseState<
     }
 }
 
-fn __parse_static_assert0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<StaticAssert> {
+fn __parse_static_assert0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<StaticAssert<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = match {
@@ -12478,7 +12478,7 @@ fn __parse_static_assert0<'input>(__input: &'input str, __state: &mut ParseState
     }
 }
 
-fn __parse_statement<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Box<Node<Statement>>> {
+fn __parse_statement<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Box<Node<Statement<T>>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -12507,7 +12507,7 @@ fn __parse_statement<'input>(__input: &'input str, __state: &mut ParseState<'inp
     }
 }
 
-fn __parse_statement0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Statement> {
+fn __parse_statement0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Statement<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -12676,7 +12676,7 @@ fn __parse_statement0<'input>(__input: &'input str, __state: &mut ParseState<'in
     }
 }
 
-fn __parse_labeled_statement<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<LabeledStatement> {
+fn __parse_labeled_statement<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<LabeledStatement<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -12729,7 +12729,7 @@ fn __parse_labeled_statement<'input>(__input: &'input str, __state: &mut ParseSt
     }
 }
 
-fn __parse_label<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Label> {
+fn __parse_label<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Label<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -12842,7 +12842,7 @@ fn __parse_label<'input>(__input: &'input str, __state: &mut ParseState<'input>,
     }
 }
 
-fn __parse_compound_statement<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Statement> {
+fn __parse_compound_statement<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Statement<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = slice_eq(__input, __state, __pos, "{");
@@ -12927,7 +12927,7 @@ fn __parse_compound_statement<'input>(__input: &'input str, __state: &mut ParseS
     }
 }
 
-fn __parse_block_item<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<BlockItem> {
+fn __parse_block_item<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<BlockItem<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -12980,7 +12980,7 @@ fn __parse_block_item<'input>(__input: &'input str, __state: &mut ParseState<'in
     }
 }
 
-fn __parse_expression_statement<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Statement> {
+fn __parse_expression_statement<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Statement<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = match __parse_expression(__input, __state, __pos, env) {
@@ -13006,7 +13006,7 @@ fn __parse_expression_statement<'input>(__input: &'input str, __state: &mut Pars
     }
 }
 
-fn __parse_selection_statement<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Statement> {
+fn __parse_selection_statement<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Statement<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -13065,7 +13065,7 @@ fn __parse_selection_statement<'input>(__input: &'input str, __state: &mut Parse
     }
 }
 
-fn __parse_if_statement<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<IfStatement> {
+fn __parse_if_statement<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<IfStatement<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -13172,7 +13172,7 @@ fn __parse_if_statement<'input>(__input: &'input str, __state: &mut ParseState<'
     }
 }
 
-fn __parse_else_statement<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Box<Node<Statement>>> {
+fn __parse_else_statement<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Box<Node<Statement<T>>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -13228,7 +13228,7 @@ fn __parse_else_statement<'input>(__input: &'input str, __state: &mut ParseState
     }
 }
 
-fn __parse_switch_statement<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<SwitchStatement> {
+fn __parse_switch_statement<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<SwitchStatement<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -13320,7 +13320,7 @@ fn __parse_switch_statement<'input>(__input: &'input str, __state: &mut ParseSta
     }
 }
 
-fn __parse_iteration_statement<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Statement> {
+fn __parse_iteration_statement<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Statement<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -13409,7 +13409,7 @@ fn __parse_iteration_statement<'input>(__input: &'input str, __state: &mut Parse
     }
 }
 
-fn __parse_while_statement<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<WhileStatement> {
+fn __parse_while_statement<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<WhileStatement<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -13501,7 +13501,7 @@ fn __parse_while_statement<'input>(__input: &'input str, __state: &mut ParseStat
     }
 }
 
-fn __parse_do_while_statement<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<DoWhileStatement> {
+fn __parse_do_while_statement<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<DoWhileStatement<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -13650,7 +13650,7 @@ fn __parse_do_while_statement<'input>(__input: &'input str, __state: &mut ParseS
     }
 }
 
-fn __parse_for_statement<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<ForStatement> {
+fn __parse_for_statement<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<ForStatement<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -13802,7 +13802,7 @@ fn __parse_for_statement<'input>(__input: &'input str, __state: &mut ParseState<
     }
 }
 
-fn __parse_for_initializer<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<ForInitializer> {
+fn __parse_for_initializer<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<ForInitializer<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -13861,7 +13861,7 @@ fn __parse_for_initializer<'input>(__input: &'input str, __state: &mut ParseStat
     }
 }
 
-fn __parse_jump_statement<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Statement> {
+fn __parse_jump_statement<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Statement<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -14115,7 +14115,7 @@ fn __parse_jump_statement<'input>(__input: &'input str, __state: &mut ParseState
     }
 }
 
-fn __parse_translation_unit<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<TranslationUnit> {
+fn __parse_translation_unit<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<TranslationUnit<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = match __parse_directive(__input, __state, __pos, env) {
@@ -14197,7 +14197,7 @@ fn __parse_translation_unit<'input>(__input: &'input str, __state: &mut ParseSta
     }
 }
 
-fn __parse_external_declaration<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<ExternalDeclaration> {
+fn __parse_external_declaration<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<ExternalDeclaration<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -14278,7 +14278,7 @@ fn __parse_external_declaration<'input>(__input: &'input str, __state: &mut Pars
     }
 }
 
-fn __parse_function_definition<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<FunctionDefinition> {
+fn __parse_function_definition<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<FunctionDefinition<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = match {
@@ -14443,7 +14443,7 @@ fn __parse_function_definition<'input>(__input: &'input str, __state: &mut Parse
     }
 }
 
-fn __parse_gnu_guard<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<()> {
+fn __parse_gnu_guard<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<()> {
     #![allow(non_snake_case, unused)]
     match {
         if env.extensions_gnu {
@@ -14460,7 +14460,7 @@ fn __parse_gnu_guard<'input>(__input: &'input str, __state: &mut ParseState<'inp
     }
 }
 
-fn __parse_attribute_specifier_list<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Vec<Node<Extension>>> {
+fn __parse_attribute_specifier_list<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Vec<Node<Extension<T>>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -14503,7 +14503,7 @@ fn __parse_attribute_specifier_list<'input>(__input: &'input str, __state: &mut 
     }
 }
 
-fn __parse_attribute_specifier<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Vec<Node<Extension>>> {
+fn __parse_attribute_specifier<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Vec<Node<Extension<T>>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -14645,7 +14645,7 @@ fn __parse_attribute_specifier<'input>(__input: &'input str, __state: &mut Parse
     }
 }
 
-fn __parse_attribute<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Extension> {
+fn __parse_attribute<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Extension<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -14739,7 +14739,7 @@ fn __parse_attribute<'input>(__input: &'input str, __state: &mut ParseState<'inp
     }
 }
 
-fn __parse_attribute_name<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<String> {
+fn __parse_attribute_name<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<String> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -14798,7 +14798,7 @@ fn __parse_attribute_name<'input>(__input: &'input str, __state: &mut ParseState
     }
 }
 
-fn __parse_attribute_parameters<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Vec<Node<Expression>>> {
+fn __parse_attribute_parameters<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Vec<Node<Expression<T>>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = slice_eq(__input, __state, __pos, "(");
@@ -14895,7 +14895,7 @@ fn __parse_attribute_parameters<'input>(__input: &'input str, __state: &mut Pars
     }
 }
 
-fn __parse_attr_availability<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<AvailabilityAttribute> {
+fn __parse_attr_availability<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<AvailabilityAttribute<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -15065,7 +15065,7 @@ fn __parse_attr_availability<'input>(__input: &'input str, __state: &mut ParseSt
     }
 }
 
-fn __parse_attr_availability_clause<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<AvailabilityClause> {
+fn __parse_attr_availability_clause<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<AvailabilityClause> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -15508,7 +15508,7 @@ fn __parse_attr_availability_clause<'input>(__input: &'input str, __state: &mut 
     }
 }
 
-fn __parse_attr_availability_version<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<AvailabilityVersion> {
+fn __parse_attr_availability_version<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<AvailabilityVersion> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -15630,7 +15630,7 @@ fn __parse_attr_availability_version<'input>(__input: &'input str, __state: &mut
     }
 }
 
-fn __parse_asm_label<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Node<Extension>> {
+fn __parse_asm_label<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Node<Extension<T>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = Matched(__pos, __pos);
@@ -15653,7 +15653,7 @@ fn __parse_asm_label<'input>(__input: &'input str, __state: &mut ParseState<'inp
     }
 }
 
-fn __parse_asm_label0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Extension> {
+fn __parse_asm_label0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Extension<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = __parse_asm_label_keyword(__input, __state, __pos, env);
@@ -15700,7 +15700,7 @@ fn __parse_asm_label0<'input>(__input: &'input str, __state: &mut ParseState<'in
     }
 }
 
-fn __parse_asm_label_keyword<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<()> {
+fn __parse_asm_label_keyword<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<()> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -15800,7 +15800,7 @@ fn __parse_asm_label_keyword<'input>(__input: &'input str, __state: &mut ParseSt
     }
 }
 
-fn __parse_asm_statement<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Statement> {
+fn __parse_asm_statement<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Statement<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -15829,7 +15829,7 @@ fn __parse_asm_statement<'input>(__input: &'input str, __state: &mut ParseState<
     }
 }
 
-fn __parse_asm_statement0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<AsmStatement> {
+fn __parse_asm_statement0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<AsmStatement<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -16115,7 +16115,7 @@ fn __parse_asm_statement0<'input>(__input: &'input str, __state: &mut ParseState
     }
 }
 
-fn __parse_asm_operand_list<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Vec<Node<GnuAsmOperand>>> {
+fn __parse_asm_operand_list<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Vec<Node<GnuAsmOperand<T>>>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -16182,7 +16182,7 @@ fn __parse_asm_operand_list<'input>(__input: &'input str, __state: &mut ParseSta
     }
 }
 
-fn __parse_asm_operand<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<GnuAsmOperand> {
+fn __parse_asm_operand<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<GnuAsmOperand<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = match {
@@ -16292,7 +16292,7 @@ fn __parse_asm_operand<'input>(__input: &'input str, __state: &mut ParseState<'i
     }
 }
 
-fn __parse_gnu_primary_expression<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Expression> {
+fn __parse_gnu_primary_expression<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Expression<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = __parse_statement_expression(__input, __state, __pos, env);
@@ -16315,7 +16315,7 @@ fn __parse_gnu_primary_expression<'input>(__input: &'input str, __state: &mut Pa
     }
 }
 
-fn __parse_statement_expression<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Expression> {
+fn __parse_statement_expression<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Expression<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = slice_eq(__input, __state, __pos, "(");
@@ -16396,7 +16396,7 @@ fn __parse_statement_expression<'input>(__input: &'input str, __state: &mut Pars
     }
 }
 
-fn __parse_va_arg_expression<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Expression> {
+fn __parse_va_arg_expression<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Expression<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -16425,7 +16425,7 @@ fn __parse_va_arg_expression<'input>(__input: &'input str, __state: &mut ParseSt
     }
 }
 
-fn __parse_va_arg_expression_inner<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<VaArgExpression> {
+fn __parse_va_arg_expression_inner<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<VaArgExpression<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -16529,7 +16529,7 @@ fn __parse_va_arg_expression_inner<'input>(__input: &'input str, __state: &mut P
     }
 }
 
-fn __parse_keyword_expression<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Expression> {
+fn __parse_keyword_expression<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Expression<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -16559,7 +16559,7 @@ fn __parse_keyword_expression<'input>(__input: &'input str, __state: &mut ParseS
         };
         match __seq_res {
             Matched(__pos, k) => Matched(__pos, {
-                let ident = Identifier { name: k.node.to_string() };
+                let ident = Identifier { name: T::get_from_str(k.node) };
                 Expression::Identifier(Box::new(Node::new(ident, k.span)))
             }),
             Failed => Failed,
@@ -16567,7 +16567,7 @@ fn __parse_keyword_expression<'input>(__input: &'input str, __state: &mut ParseS
     }
 }
 
-fn __parse_keyword_expression0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<()> {
+fn __parse_keyword_expression0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<()> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -16683,7 +16683,7 @@ fn __parse_keyword_expression0<'input>(__input: &'input str, __state: &mut Parse
     }
 }
 
-fn __parse_offsetof_expression<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Expression> {
+fn __parse_offsetof_expression<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<Expression<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -16712,7 +16712,7 @@ fn __parse_offsetof_expression<'input>(__input: &'input str, __state: &mut Parse
     }
 }
 
-fn __parse_offsetof_expression_inner<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<OffsetOfExpression> {
+fn __parse_offsetof_expression_inner<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<OffsetOfExpression<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -16834,7 +16834,7 @@ fn __parse_offsetof_expression_inner<'input>(__input: &'input str, __state: &mut
     }
 }
 
-fn __parse_offsetof_designator<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<OffsetDesignator> {
+fn __parse_offsetof_designator<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<OffsetDesignator<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = __parse_identifier(__input, __state, __pos, env);
@@ -16907,7 +16907,7 @@ fn __parse_offsetof_designator<'input>(__input: &'input str, __state: &mut Parse
     }
 }
 
-fn __parse_offsetof_member<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<OffsetMember> {
+fn __parse_offsetof_member<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<OffsetMember<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -17008,7 +17008,7 @@ fn __parse_offsetof_member<'input>(__input: &'input str, __state: &mut ParseStat
     }
 }
 
-fn __parse_typeof_specifier<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<TypeSpecifier> {
+fn __parse_typeof_specifier<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<TypeSpecifier<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -17121,7 +17121,7 @@ fn __parse_typeof_specifier<'input>(__input: &'input str, __state: &mut ParseSta
     }
 }
 
-fn __parse_typeof_specifier0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<TypeOf> {
+fn __parse_typeof_specifier0<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<TypeOf<T>> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -17162,7 +17162,7 @@ fn __parse_typeof_specifier0<'input>(__input: &'input str, __state: &mut ParseSt
     }
 }
 
-fn __parse_ts18661_float_type_specifier<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<TS18661FloatType> {
+fn __parse_ts18661_float_type_specifier<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<TS18661FloatType> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = __parse_ts18661_binary_float(__input, __state, __pos, env);
@@ -17173,7 +17173,7 @@ fn __parse_ts18661_float_type_specifier<'input>(__input: &'input str, __state: &
     }
 }
 
-fn __parse_ts18661_binary_float<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<TS18661FloatType> {
+fn __parse_ts18661_binary_float<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<TS18661FloatType> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = slice_eq(__input, __state, __pos, "_Float");
@@ -17199,7 +17199,7 @@ fn __parse_ts18661_binary_float<'input>(__input: &'input str, __state: &mut Pars
     }
 }
 
-fn __parse_ts18661_binary_width<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<usize> {
+fn __parse_ts18661_binary_width<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<usize> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -17234,7 +17234,7 @@ fn __parse_ts18661_binary_width<'input>(__input: &'input str, __state: &mut Pars
     }
 }
 
-fn __parse_ts18661_decimal_float<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<TS18661FloatType> {
+fn __parse_ts18661_decimal_float<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<TS18661FloatType> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = slice_eq(__input, __state, __pos, "_Decimal");
@@ -17260,7 +17260,7 @@ fn __parse_ts18661_decimal_float<'input>(__input: &'input str, __state: &mut Par
     }
 }
 
-fn __parse_ts18661_decimal_width<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<usize> {
+fn __parse_ts18661_decimal_width<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<usize> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -17289,7 +17289,7 @@ fn __parse_ts18661_decimal_width<'input>(__input: &'input str, __state: &mut Par
     }
 }
 
-fn __parse_ts18661_float_suffix<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<TS18661FloatType> {
+fn __parse_ts18661_float_suffix<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<TS18661FloatType> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
@@ -17412,7 +17412,7 @@ fn __parse_ts18661_float_suffix<'input>(__input: &'input str, __state: &mut Pars
     }
 }
 
-fn __parse_clang_guard<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<()> {
+fn __parse_clang_guard<'input, T: Name>(__input: &'input str, __state: &mut ParseState<'input, T>, __pos: usize, env: &mut Env<T>) -> RuleResult<()> {
     #![allow(non_snake_case, unused)]
     match {
         if env.extensions_clang {
@@ -17429,7 +17429,7 @@ fn __parse_clang_guard<'input>(__input: &'input str, __state: &mut ParseState<'i
     }
 }
 
-pub fn constant<'input>(__input: &'input str, env: &mut Env) -> ParseResult<Constant> {
+pub fn constant<'input, T: Name>(__input: &'input str, env: &mut Env<T>) -> ParseResult<Constant> {
     #![allow(non_snake_case, unused)]
     let mut __state = ParseState::new();
     match __parse_constant(__input, &mut __state, 0, env) {
@@ -17444,7 +17444,7 @@ pub fn constant<'input>(__input: &'input str, env: &mut Env) -> ParseResult<Cons
     Err(ParseError { line: __line, column: __col, offset: __state.max_err_pos, expected: __state.expected })
 }
 
-pub fn string_literal<'input>(__input: &'input str, env: &mut Env) -> ParseResult<Node<Vec<String>>> {
+pub fn string_literal<'input, T: Name>(__input: &'input str, env: &mut Env<T>) -> ParseResult<Node<Vec<String>>> {
     #![allow(non_snake_case, unused)]
     let mut __state = ParseState::new();
     match __parse_string_literal(__input, &mut __state, 0, env) {
@@ -17459,7 +17459,7 @@ pub fn string_literal<'input>(__input: &'input str, env: &mut Env) -> ParseResul
     Err(ParseError { line: __line, column: __col, offset: __state.max_err_pos, expected: __state.expected })
 }
 
-pub fn expression<'input>(__input: &'input str, env: &mut Env) -> ParseResult<Box<Node<Expression>>> {
+pub fn expression<'input, T: Name>(__input: &'input str, env: &mut Env<T>) -> ParseResult<Box<Node<Expression<T>>>> {
     #![allow(non_snake_case, unused)]
     let mut __state = ParseState::new();
     match __parse_expression(__input, &mut __state, 0, env) {
@@ -17474,7 +17474,7 @@ pub fn expression<'input>(__input: &'input str, env: &mut Env) -> ParseResult<Bo
     Err(ParseError { line: __line, column: __col, offset: __state.max_err_pos, expected: __state.expected })
 }
 
-pub fn declaration<'input>(__input: &'input str, env: &mut Env) -> ParseResult<Node<Declaration>> {
+pub fn declaration<'input, T: Name>(__input: &'input str, env: &mut Env<T>) -> ParseResult<Node<Declaration<T>>> {
     #![allow(non_snake_case, unused)]
     let mut __state = ParseState::new();
     match __parse_declaration(__input, &mut __state, 0, env) {
@@ -17489,7 +17489,7 @@ pub fn declaration<'input>(__input: &'input str, env: &mut Env) -> ParseResult<N
     Err(ParseError { line: __line, column: __col, offset: __state.max_err_pos, expected: __state.expected })
 }
 
-pub fn statement<'input>(__input: &'input str, env: &mut Env) -> ParseResult<Box<Node<Statement>>> {
+pub fn statement<'input, T: Name>(__input: &'input str, env: &mut Env<T>) -> ParseResult<Box<Node<Statement<T>>>> {
     #![allow(non_snake_case, unused)]
     let mut __state = ParseState::new();
     match __parse_statement(__input, &mut __state, 0, env) {
@@ -17504,7 +17504,7 @@ pub fn statement<'input>(__input: &'input str, env: &mut Env) -> ParseResult<Box
     Err(ParseError { line: __line, column: __col, offset: __state.max_err_pos, expected: __state.expected })
 }
 
-pub fn translation_unit<'input>(__input: &'input str, env: &mut Env) -> ParseResult<TranslationUnit> {
+pub fn translation_unit<'input, T: Name>(__input: &'input str, env: &mut Env<T>) -> ParseResult<TranslationUnit<T>> {
     #![allow(non_snake_case, unused)]
     let mut __state = ParseState::new();
     match __parse_translation_unit(__input, &mut __state, 0, env) {

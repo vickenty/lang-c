@@ -21,8 +21,8 @@
 use ast::*;
 use span::Span;
 
-pub trait Visit<'ast> {
-    fn visit_identifier(&mut self, identifier: &'ast Identifier, span: &'ast Span) {
+pub trait Visit<'ast, T: Name = String> {
+    fn visit_identifier(&mut self, identifier: &'ast Identifier<T>, span: &'ast Span) {
         visit_identifier(self, identifier, span)
     }
 
@@ -66,7 +66,7 @@ pub trait Visit<'ast> {
         visit_string_literal(self, string_literal, span)
     }
 
-    fn visit_expression(&mut self, expression: &'ast Expression, span: &'ast Span) {
+    fn visit_expression(&mut self, expression: &'ast Expression<T>, span: &'ast Span) {
         visit_expression(self, expression, span)
     }
 
@@ -76,7 +76,7 @@ pub trait Visit<'ast> {
 
     fn visit_generic_selection(
         &mut self,
-        generic_selection: &'ast GenericSelection,
+        generic_selection: &'ast GenericSelection<T>,
         span: &'ast Span,
     ) {
         visit_generic_selection(self, generic_selection, span)
@@ -84,7 +84,7 @@ pub trait Visit<'ast> {
 
     fn visit_generic_association(
         &mut self,
-        generic_association: &'ast GenericAssociation,
+        generic_association: &'ast GenericAssociation<T>,
         span: &'ast Span,
     ) {
         visit_generic_association(self, generic_association, span)
@@ -92,7 +92,7 @@ pub trait Visit<'ast> {
 
     fn visit_generic_association_type(
         &mut self,
-        generic_association_type: &'ast GenericAssociationType,
+        generic_association_type: &'ast GenericAssociationType<T>,
         span: &'ast Span,
     ) {
         visit_generic_association_type(self, generic_association_type, span)
@@ -100,19 +100,19 @@ pub trait Visit<'ast> {
 
     fn visit_member_expression(
         &mut self,
-        member_expression: &'ast MemberExpression,
+        member_expression: &'ast MemberExpression<T>,
         span: &'ast Span,
     ) {
         visit_member_expression(self, member_expression, span)
     }
 
-    fn visit_call_expression(&mut self, call_expression: &'ast CallExpression, span: &'ast Span) {
+    fn visit_call_expression(&mut self, call_expression: &'ast CallExpression<T>, span: &'ast Span) {
         visit_call_expression(self, call_expression, span)
     }
 
     fn visit_compound_literal(
         &mut self,
-        compound_literal: &'ast CompoundLiteral,
+        compound_literal: &'ast CompoundLiteral<T>,
         span: &'ast Span,
     ) {
         visit_compound_literal(self, compound_literal, span)
@@ -124,13 +124,13 @@ pub trait Visit<'ast> {
 
     fn visit_unary_operator_expression(
         &mut self,
-        unary_operator_expression: &'ast UnaryOperatorExpression,
+        unary_operator_expression: &'ast UnaryOperatorExpression<T>,
         span: &'ast Span,
     ) {
         visit_unary_operator_expression(self, unary_operator_expression, span)
     }
 
-    fn visit_cast_expression(&mut self, cast_expression: &'ast CastExpression, span: &'ast Span) {
+    fn visit_cast_expression(&mut self, cast_expression: &'ast CastExpression<T>, span: &'ast Span) {
         visit_cast_expression(self, cast_expression, span)
     }
 
@@ -140,7 +140,7 @@ pub trait Visit<'ast> {
 
     fn visit_binary_operator_expression(
         &mut self,
-        binary_operator_expression: &'ast BinaryOperatorExpression,
+        binary_operator_expression: &'ast BinaryOperatorExpression<T>,
         span: &'ast Span,
     ) {
         visit_binary_operator_expression(self, binary_operator_expression, span)
@@ -148,7 +148,7 @@ pub trait Visit<'ast> {
 
     fn visit_conditional_expression(
         &mut self,
-        conditional_expression: &'ast ConditionalExpression,
+        conditional_expression: &'ast ConditionalExpression<T>,
         span: &'ast Span,
     ) {
         visit_conditional_expression(self, conditional_expression, span)
@@ -156,7 +156,7 @@ pub trait Visit<'ast> {
 
     fn visit_va_arg_expression(
         &mut self,
-        va_arg_expression: &'ast VaArgExpression,
+        va_arg_expression: &'ast VaArgExpression<T>,
         span: &'ast Span,
     ) {
         visit_va_arg_expression(self, va_arg_expression, span)
@@ -164,7 +164,7 @@ pub trait Visit<'ast> {
 
     fn visit_offset_of_expression(
         &mut self,
-        offset_of_expression: &'ast OffsetOfExpression,
+        offset_of_expression: &'ast OffsetOfExpression<T>,
         span: &'ast Span,
     ) {
         visit_offset_of_expression(self, offset_of_expression, span)
@@ -172,29 +172,29 @@ pub trait Visit<'ast> {
 
     fn visit_offset_designator(
         &mut self,
-        offset_designator: &'ast OffsetDesignator,
+        offset_designator: &'ast OffsetDesignator<T>,
         span: &'ast Span,
     ) {
         visit_offset_designator(self, offset_designator, span)
     }
 
-    fn visit_offset_member(&mut self, offset_member: &'ast OffsetMember, span: &'ast Span) {
+    fn visit_offset_member(&mut self, offset_member: &'ast OffsetMember<T>, span: &'ast Span) {
         visit_offset_member(self, offset_member, span)
     }
 
-    fn visit_declaration(&mut self, declaration: &'ast Declaration, span: &'ast Span) {
+    fn visit_declaration(&mut self, declaration: &'ast Declaration<T>, span: &'ast Span) {
         visit_declaration(self, declaration, span)
     }
 
     fn visit_declaration_specifier(
         &mut self,
-        declaration_specifier: &'ast DeclarationSpecifier,
+        declaration_specifier: &'ast DeclarationSpecifier<T>,
         span: &'ast Span,
     ) {
         visit_declaration_specifier(self, declaration_specifier, span)
     }
 
-    fn visit_init_declarator(&mut self, init_declarator: &'ast InitDeclarator, span: &'ast Span) {
+    fn visit_init_declarator(&mut self, init_declarator: &'ast InitDeclarator<T>, span: &'ast Span) {
         visit_init_declarator(self, init_declarator, span)
     }
 
@@ -206,7 +206,7 @@ pub trait Visit<'ast> {
         visit_storage_class_specifier(self, storage_class_specifier, span)
     }
 
-    fn visit_type_specifier(&mut self, type_specifier: &'ast TypeSpecifier, span: &'ast Span) {
+    fn visit_type_specifier(&mut self, type_specifier: &'ast TypeSpecifier<T>, span: &'ast Span) {
         visit_type_specifier(self, type_specifier, span)
     }
 
@@ -226,7 +226,7 @@ pub trait Visit<'ast> {
         visit_ts18661_float_format(self, ts18661_float_format, span)
     }
 
-    fn visit_struct_type(&mut self, struct_type: &'ast StructType, span: &'ast Span) {
+    fn visit_struct_type(&mut self, struct_type: &'ast StructType<T>, span: &'ast Span) {
         visit_struct_type(self, struct_type, span)
     }
 
@@ -236,19 +236,19 @@ pub trait Visit<'ast> {
 
     fn visit_struct_declaration(
         &mut self,
-        struct_declaration: &'ast StructDeclaration,
+        struct_declaration: &'ast StructDeclaration<T>,
         span: &'ast Span,
     ) {
         visit_struct_declaration(self, struct_declaration, span)
     }
 
-    fn visit_struct_field(&mut self, struct_field: &'ast StructField, span: &'ast Span) {
+    fn visit_struct_field(&mut self, struct_field: &'ast StructField<T>, span: &'ast Span) {
         visit_struct_field(self, struct_field, span)
     }
 
     fn visit_specifier_qualifier(
         &mut self,
-        specifier_qualifier: &'ast SpecifierQualifier,
+        specifier_qualifier: &'ast SpecifierQualifier<T>,
         span: &'ast Span,
     ) {
         visit_specifier_qualifier(self, specifier_qualifier, span)
@@ -256,17 +256,17 @@ pub trait Visit<'ast> {
 
     fn visit_struct_declarator(
         &mut self,
-        struct_declarator: &'ast StructDeclarator,
+        struct_declarator: &'ast StructDeclarator<T>,
         span: &'ast Span,
     ) {
         visit_struct_declarator(self, struct_declarator, span)
     }
 
-    fn visit_enum_type(&mut self, enum_type: &'ast EnumType, span: &'ast Span) {
+    fn visit_enum_type(&mut self, enum_type: &'ast EnumType<T>, span: &'ast Span) {
         visit_enum_type(self, enum_type, span)
     }
 
-    fn visit_enumerator(&mut self, enumerator: &'ast Enumerator, span: &'ast Span) {
+    fn visit_enumerator(&mut self, enumerator: &'ast Enumerator<T>, span: &'ast Span) {
         visit_enumerator(self, enumerator, span)
     }
 
@@ -284,23 +284,23 @@ pub trait Visit<'ast> {
 
     fn visit_alignment_specifier(
         &mut self,
-        alignment_specifier: &'ast AlignmentSpecifier,
+        alignment_specifier: &'ast AlignmentSpecifier<T>,
         span: &'ast Span,
     ) {
         visit_alignment_specifier(self, alignment_specifier, span)
     }
 
-    fn visit_declarator(&mut self, declarator: &'ast Declarator, span: &'ast Span) {
+    fn visit_declarator(&mut self, declarator: &'ast Declarator<T>, span: &'ast Span) {
         visit_declarator(self, declarator, span)
     }
 
-    fn visit_declarator_kind(&mut self, declarator_kind: &'ast DeclaratorKind, span: &'ast Span) {
+    fn visit_declarator_kind(&mut self, declarator_kind: &'ast DeclaratorKind<T>, span: &'ast Span) {
         visit_declarator_kind(self, declarator_kind, span)
     }
 
     fn visit_derived_declarator(
         &mut self,
-        derived_declarator: &'ast DerivedDeclarator,
+        derived_declarator: &'ast DerivedDeclarator<T>,
         span: &'ast Span,
     ) {
         visit_derived_declarator(self, derived_declarator, span)
@@ -308,7 +308,7 @@ pub trait Visit<'ast> {
 
     fn visit_array_declarator(
         &mut self,
-        array_declarator: &'ast ArrayDeclarator,
+        array_declarator: &'ast ArrayDeclarator<T>,
         span: &'ast Span,
     ) {
         visit_array_declarator(self, array_declarator, span)
@@ -316,7 +316,7 @@ pub trait Visit<'ast> {
 
     fn visit_function_declarator(
         &mut self,
-        function_declarator: &'ast FunctionDeclarator,
+        function_declarator: &'ast FunctionDeclarator<T>,
         span: &'ast Span,
     ) {
         visit_function_declarator(self, function_declarator, span)
@@ -324,19 +324,19 @@ pub trait Visit<'ast> {
 
     fn visit_pointer_qualifier(
         &mut self,
-        pointer_qualifier: &'ast PointerQualifier,
+        pointer_qualifier: &'ast PointerQualifier<T>,
         span: &'ast Span,
     ) {
         visit_pointer_qualifier(self, pointer_qualifier, span)
     }
 
-    fn visit_array_size(&mut self, array_size: &'ast ArraySize, span: &'ast Span) {
+    fn visit_array_size(&mut self, array_size: &'ast ArraySize<T>, span: &'ast Span) {
         visit_array_size(self, array_size, span)
     }
 
     fn visit_parameter_declaration(
         &mut self,
-        parameter_declaration: &'ast ParameterDeclaration,
+        parameter_declaration: &'ast ParameterDeclaration<T>,
         span: &'ast Span,
     ) {
         visit_parameter_declaration(self, parameter_declaration, span)
@@ -346,97 +346,97 @@ pub trait Visit<'ast> {
         visit_ellipsis(self, ellipsis, span)
     }
 
-    fn visit_type_name(&mut self, type_name: &'ast TypeName, span: &'ast Span) {
+    fn visit_type_name(&mut self, type_name: &'ast TypeName<T>, span: &'ast Span) {
         visit_type_name(self, type_name, span)
     }
 
-    fn visit_initializer(&mut self, initializer: &'ast Initializer, span: &'ast Span) {
+    fn visit_initializer(&mut self, initializer: &'ast Initializer<T>, span: &'ast Span) {
         visit_initializer(self, initializer, span)
     }
 
     fn visit_initializer_list_item(
         &mut self,
-        initializer_list_item: &'ast InitializerListItem,
+        initializer_list_item: &'ast InitializerListItem<T>,
         span: &'ast Span,
     ) {
         visit_initializer_list_item(self, initializer_list_item, span)
     }
 
-    fn visit_designator(&mut self, designator: &'ast Designator, span: &'ast Span) {
+    fn visit_designator(&mut self, designator: &'ast Designator<T>, span: &'ast Span) {
         visit_designator(self, designator, span)
     }
 
     fn visit_range_designator(
         &mut self,
-        range_designator: &'ast RangeDesignator,
+        range_designator: &'ast RangeDesignator<T>,
         span: &'ast Span,
     ) {
         visit_range_designator(self, range_designator, span)
     }
 
-    fn visit_static_assert(&mut self, static_assert: &'ast StaticAssert, span: &'ast Span) {
+    fn visit_static_assert(&mut self, static_assert: &'ast StaticAssert<T>, span: &'ast Span) {
         visit_static_assert(self, static_assert, span)
     }
 
-    fn visit_statement(&mut self, statement: &'ast Statement, span: &'ast Span) {
+    fn visit_statement(&mut self, statement: &'ast Statement<T>, span: &'ast Span) {
         visit_statement(self, statement, span)
     }
 
     fn visit_labeled_statement(
         &mut self,
-        labeled_statement: &'ast LabeledStatement,
+        labeled_statement: &'ast LabeledStatement<T>,
         span: &'ast Span,
     ) {
         visit_labeled_statement(self, labeled_statement, span)
     }
 
-    fn visit_if_statement(&mut self, if_statement: &'ast IfStatement, span: &'ast Span) {
+    fn visit_if_statement(&mut self, if_statement: &'ast IfStatement<T>, span: &'ast Span) {
         visit_if_statement(self, if_statement, span)
     }
 
     fn visit_switch_statement(
         &mut self,
-        switch_statement: &'ast SwitchStatement,
+        switch_statement: &'ast SwitchStatement<T>,
         span: &'ast Span,
     ) {
         visit_switch_statement(self, switch_statement, span)
     }
 
-    fn visit_while_statement(&mut self, while_statement: &'ast WhileStatement, span: &'ast Span) {
+    fn visit_while_statement(&mut self, while_statement: &'ast WhileStatement<T>, span: &'ast Span) {
         visit_while_statement(self, while_statement, span)
     }
 
     fn visit_do_while_statement(
         &mut self,
-        do_while_statement: &'ast DoWhileStatement,
+        do_while_statement: &'ast DoWhileStatement<T>,
         span: &'ast Span,
     ) {
         visit_do_while_statement(self, do_while_statement, span)
     }
 
-    fn visit_for_statement(&mut self, for_statement: &'ast ForStatement, span: &'ast Span) {
+    fn visit_for_statement(&mut self, for_statement: &'ast ForStatement<T>, span: &'ast Span) {
         visit_for_statement(self, for_statement, span)
     }
 
-    fn visit_label(&mut self, label: &'ast Label, span: &'ast Span) {
+    fn visit_label(&mut self, label: &'ast Label<T>, span: &'ast Span) {
         visit_label(self, label, span)
     }
 
-    fn visit_for_initializer(&mut self, for_initializer: &'ast ForInitializer, span: &'ast Span) {
+    fn visit_for_initializer(&mut self, for_initializer: &'ast ForInitializer<T>, span: &'ast Span) {
         visit_for_initializer(self, for_initializer, span)
     }
 
-    fn visit_block_item(&mut self, block_item: &'ast BlockItem, span: &'ast Span) {
+    fn visit_block_item(&mut self, block_item: &'ast BlockItem<T>, span: &'ast Span) {
         visit_block_item(self, block_item, span)
     }
 
-    fn visit_translation_unit(&mut self, translation_unit: &'ast TranslationUnit) {
+    fn visit_translation_unit(&mut self, translation_unit: &'ast TranslationUnit<T>) {
         visit_translation_unit(self, translation_unit)
     }
 
     fn visit_external_declaration(
         &mut self,
-        external_declaration: &'ast ExternalDeclaration,
+        external_declaration: &'ast ExternalDeclaration<T>,
         span: &'ast Span,
     ) {
         visit_external_declaration(self, external_declaration, span)
@@ -444,27 +444,27 @@ pub trait Visit<'ast> {
 
     fn visit_function_definition(
         &mut self,
-        function_definition: &'ast FunctionDefinition,
+        function_definition: &'ast FunctionDefinition<T>,
         span: &'ast Span,
     ) {
         visit_function_definition(self, function_definition, span)
     }
 
-    fn visit_extension(&mut self, extension: &'ast Extension, span: &'ast Span) {
+    fn visit_extension(&mut self, extension: &'ast Extension<T>, span: &'ast Span) {
         visit_extension(self, extension, span)
     }
 
-    fn visit_attribute(&mut self, attribute: &'ast Attribute, span: &'ast Span) {
+    fn visit_attribute(&mut self, attribute: &'ast Attribute<T>, span: &'ast Span) {
         visit_attribute(self, attribute, span)
     }
 
-    fn visit_asm_statement(&mut self, asm_statement: &'ast AsmStatement, span: &'ast Span) {
+    fn visit_asm_statement(&mut self, asm_statement: &'ast AsmStatement<T>, span: &'ast Span) {
         visit_asm_statement(self, asm_statement, span)
     }
 
     fn visit_availability_attribute(
         &mut self,
-        availability: &'ast AvailabilityAttribute,
+        availability: &'ast AvailabilityAttribute<T>,
         span: &'ast Span,
     ) {
         visit_availability_attribute(self, availability, span)
@@ -474,29 +474,29 @@ pub trait Visit<'ast> {
 
     fn visit_gnu_extended_asm_statement(
         &mut self,
-        gnu_extended_asm_statement: &'ast GnuExtendedAsmStatement,
+        gnu_extended_asm_statement: &'ast GnuExtendedAsmStatement<T>,
         span: &'ast Span,
     ) {
         visit_gnu_extended_asm_statement(self, gnu_extended_asm_statement, span)
     }
 
-    fn visit_gnu_asm_operand(&mut self, gnu_asm_operand: &'ast GnuAsmOperand, span: &'ast Span) {
+    fn visit_gnu_asm_operand(&mut self, gnu_asm_operand: &'ast GnuAsmOperand<T>, span: &'ast Span) {
         visit_gnu_asm_operand(self, gnu_asm_operand, span)
     }
 
-    fn visit_type_of(&mut self, type_of: &'ast TypeOf, span: &'ast Span) {
+    fn visit_type_of(&mut self, type_of: &'ast TypeOf<T>, span: &'ast Span) {
         visit_type_of(self, type_of, span)
     }
 }
 
-pub fn visit_identifier<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_identifier<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     _visitor: &mut V,
-    _identifier: &'ast Identifier,
+    _identifier: &'ast Identifier<T>,
     _span: &'ast Span,
 ) {
 }
 
-pub fn visit_constant<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_constant<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
     constant: &'ast Constant,
     span: &'ast Span,
@@ -508,7 +508,7 @@ pub fn visit_constant<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_integer<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_integer<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
     integer: &'ast Integer,
     span: &'ast Span,
@@ -517,14 +517,14 @@ pub fn visit_integer<'ast, V: Visit<'ast> + ?Sized>(
     visitor.visit_integer_suffix(&integer.suffix, span);
 }
 
-pub fn visit_integer_base<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_integer_base<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     _visitor: &mut V,
     _integer_base: &'ast IntegerBase,
     _span: &'ast Span,
 ) {
 }
 
-pub fn visit_integer_suffix<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_integer_suffix<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
     integer_suffix: &'ast IntegerSuffix,
     span: &'ast Span,
@@ -532,14 +532,14 @@ pub fn visit_integer_suffix<'ast, V: Visit<'ast> + ?Sized>(
     visitor.visit_integer_size(&integer_suffix.size, span);
 }
 
-pub fn visit_integer_size<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_integer_size<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     _visitor: &mut V,
     _integer_size: &'ast IntegerSize,
     _span: &'ast Span,
 ) {
 }
 
-pub fn visit_float<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_float<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
     float: &'ast Float,
     span: &'ast Span,
@@ -548,14 +548,14 @@ pub fn visit_float<'ast, V: Visit<'ast> + ?Sized>(
     visitor.visit_float_suffix(&float.suffix, span);
 }
 
-pub fn visit_float_base<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_float_base<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     _visitor: &mut V,
     _float_base: &'ast FloatBase,
     _span: &'ast Span,
 ) {
 }
 
-pub fn visit_float_suffix<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_float_suffix<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
     float_suffix: &'ast FloatSuffix,
     span: &'ast Span,
@@ -563,7 +563,7 @@ pub fn visit_float_suffix<'ast, V: Visit<'ast> + ?Sized>(
     visitor.visit_float_format(&float_suffix.format, span);
 }
 
-pub fn visit_float_format<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_float_format<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
     float_format: &'ast FloatFormat,
     span: &'ast Span,
@@ -574,16 +574,16 @@ pub fn visit_float_format<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_string_literal<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_string_literal<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     _visitor: &mut V,
     _string_literal: &'ast StringLiteral,
     _span: &'ast Span,
 ) {
 }
 
-pub fn visit_expression<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_expression<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    expression: &'ast Expression,
+    expression: &'ast Expression<T>,
     _span: &'ast Span,
 ) {
     match *expression {
@@ -615,16 +615,16 @@ pub fn visit_expression<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_member_operator<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_member_operator<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     _visitor: &mut V,
     _member_operator: &'ast MemberOperator,
     _span: &'ast Span,
 ) {
 }
 
-pub fn visit_generic_selection<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_generic_selection<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    generic_selection: &'ast GenericSelection,
+    generic_selection: &'ast GenericSelection<T>,
     _span: &'ast Span,
 ) {
     visitor.visit_expression(
@@ -636,9 +636,9 @@ pub fn visit_generic_selection<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_generic_association<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_generic_association<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    generic_association: &'ast GenericAssociation,
+    generic_association: &'ast GenericAssociation<T>,
     _span: &'ast Span,
 ) {
     match *generic_association {
@@ -647,9 +647,9 @@ pub fn visit_generic_association<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_generic_association_type<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_generic_association_type<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    generic_association_type: &'ast GenericAssociationType,
+    generic_association_type: &'ast GenericAssociationType<T>,
     _span: &'ast Span,
 ) {
     visitor.visit_type_name(
@@ -662,9 +662,9 @@ pub fn visit_generic_association_type<'ast, V: Visit<'ast> + ?Sized>(
     );
 }
 
-pub fn visit_member_expression<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_member_expression<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    member_expression: &'ast MemberExpression,
+    member_expression: &'ast MemberExpression<T>,
     _span: &'ast Span,
 ) {
     visitor.visit_member_operator(
@@ -681,9 +681,9 @@ pub fn visit_member_expression<'ast, V: Visit<'ast> + ?Sized>(
     );
 }
 
-pub fn visit_call_expression<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_call_expression<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    call_expression: &'ast CallExpression,
+    call_expression: &'ast CallExpression<T>,
     _span: &'ast Span,
 ) {
     visitor.visit_expression(&call_expression.callee.node, &call_expression.callee.span);
@@ -692,9 +692,9 @@ pub fn visit_call_expression<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_compound_literal<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_compound_literal<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    compound_literal: &'ast CompoundLiteral,
+    compound_literal: &'ast CompoundLiteral<T>,
     _span: &'ast Span,
 ) {
     visitor.visit_type_name(
@@ -706,16 +706,16 @@ pub fn visit_compound_literal<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_unary_operator<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_unary_operator<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     _visitor: &mut V,
     _unary_operator: &'ast UnaryOperator,
     _span: &'ast Span,
 ) {
 }
 
-pub fn visit_unary_operator_expression<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_unary_operator_expression<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    unary_operator_expression: &'ast UnaryOperatorExpression,
+    unary_operator_expression: &'ast UnaryOperatorExpression<T>,
     _span: &'ast Span,
 ) {
     match unary_operator_expression.operator.node {
@@ -742,9 +742,9 @@ pub fn visit_unary_operator_expression<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_cast_expression<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_cast_expression<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    cast_expression: &'ast CastExpression,
+    cast_expression: &'ast CastExpression<T>,
     _span: &'ast Span,
 ) {
     visitor.visit_type_name(
@@ -757,16 +757,16 @@ pub fn visit_cast_expression<'ast, V: Visit<'ast> + ?Sized>(
     );
 }
 
-pub fn visit_binary_operator<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_binary_operator<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     _visitor: &mut V,
     _binary_operator: &'ast BinaryOperator,
     _span: &'ast Span,
 ) {
 }
 
-pub fn visit_binary_operator_expression<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_binary_operator_expression<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    binary_operator_expression: &'ast BinaryOperatorExpression,
+    binary_operator_expression: &'ast BinaryOperatorExpression<T>,
     _span: &'ast Span,
 ) {
     visitor.visit_expression(
@@ -783,9 +783,9 @@ pub fn visit_binary_operator_expression<'ast, V: Visit<'ast> + ?Sized>(
     );
 }
 
-pub fn visit_conditional_expression<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_conditional_expression<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    conditional_expression: &'ast ConditionalExpression,
+    conditional_expression: &'ast ConditionalExpression<T>,
     _span: &'ast Span,
 ) {
     visitor.visit_expression(
@@ -802,9 +802,9 @@ pub fn visit_conditional_expression<'ast, V: Visit<'ast> + ?Sized>(
     );
 }
 
-pub fn visit_va_arg_expression<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_va_arg_expression<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    va_arg_expression: &'ast VaArgExpression,
+    va_arg_expression: &'ast VaArgExpression<T>,
     _span: &'ast Span,
 ) {
     visitor.visit_expression(
@@ -817,9 +817,9 @@ pub fn visit_va_arg_expression<'ast, V: Visit<'ast> + ?Sized>(
     );
 }
 
-pub fn visit_offset_of_expression<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_offset_of_expression<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    offset_of_expression: &'ast OffsetOfExpression,
+    offset_of_expression: &'ast OffsetOfExpression<T>,
     _span: &'ast Span,
 ) {
     visitor.visit_type_name(
@@ -832,9 +832,9 @@ pub fn visit_offset_of_expression<'ast, V: Visit<'ast> + ?Sized>(
     );
 }
 
-pub fn visit_offset_designator<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_offset_designator<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    offset_designator: &'ast OffsetDesignator,
+    offset_designator: &'ast OffsetDesignator<T>,
     _span: &'ast Span,
 ) {
     visitor.visit_identifier(&offset_designator.base.node, &offset_designator.base.span);
@@ -843,9 +843,9 @@ pub fn visit_offset_designator<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_offset_member<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_offset_member<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    offset_member: &'ast OffsetMember,
+    offset_member: &'ast OffsetMember<T>,
     _span: &'ast Span,
 ) {
     match *offset_member {
@@ -855,9 +855,9 @@ pub fn visit_offset_member<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_declaration<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_declaration<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    declaration: &'ast Declaration,
+    declaration: &'ast Declaration<T>,
     _span: &'ast Span,
 ) {
     for specifier in &declaration.specifiers {
@@ -869,9 +869,9 @@ pub fn visit_declaration<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_declaration_specifier<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_declaration_specifier<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    declaration_specifier: &'ast DeclarationSpecifier,
+    declaration_specifier: &'ast DeclarationSpecifier<T>,
     _span: &'ast Span,
 ) {
     match *declaration_specifier {
@@ -896,9 +896,9 @@ pub fn visit_declaration_specifier<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_init_declarator<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_init_declarator<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    init_declarator: &'ast InitDeclarator,
+    init_declarator: &'ast InitDeclarator<T>,
     _span: &'ast Span,
 ) {
     visitor.visit_declarator(
@@ -910,16 +910,16 @@ pub fn visit_init_declarator<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_storage_class_specifier<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_storage_class_specifier<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     _visitor: &mut V,
     _storage_class_specifier: &'ast StorageClassSpecifier,
     _span: &'ast Span,
 ) {
 }
 
-pub fn visit_type_specifier<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_type_specifier<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    type_specifier: &'ast TypeSpecifier,
+    type_specifier: &'ast TypeSpecifier<T>,
     span: &'ast Span,
 ) {
     match *type_specifier {
@@ -933,7 +933,7 @@ pub fn visit_type_specifier<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_ts18661_float_type<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_ts18661_float_type<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
     ts18661_float_type: &'ast TS18661FloatType,
     span: &'ast Span,
@@ -941,16 +941,16 @@ pub fn visit_ts18661_float_type<'ast, V: Visit<'ast> + ?Sized>(
     visitor.visit_ts18661_float_format(&ts18661_float_type.format, span);
 }
 
-pub fn visit_ts18661_float_format<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_ts18661_float_format<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     _visitor: &mut V,
     _ts18661_float_format: &'ast TS18661FloatFormat,
     _span: &'ast Span,
 ) {
 }
 
-pub fn visit_struct_type<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_struct_type<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    struct_type: &'ast StructType,
+    struct_type: &'ast StructType<T>,
     _span: &'ast Span,
 ) {
     visitor.visit_struct_kind(&struct_type.kind.node, &struct_type.kind.span);
@@ -964,16 +964,16 @@ pub fn visit_struct_type<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_struct_kind<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_struct_kind<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     _visitor: &mut V,
     _struct_kind: &'ast StructKind,
     _span: &'ast Span,
 ) {
 }
 
-pub fn visit_struct_declaration<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_struct_declaration<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    struct_declaration: &'ast StructDeclaration,
+    struct_declaration: &'ast StructDeclaration<T>,
     _span: &'ast Span,
 ) {
     match *struct_declaration {
@@ -982,9 +982,9 @@ pub fn visit_struct_declaration<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_struct_field<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_struct_field<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    struct_field: &'ast StructField,
+    struct_field: &'ast StructField<T>,
     _span: &'ast Span,
 ) {
     for specifier in &struct_field.specifiers {
@@ -995,9 +995,9 @@ pub fn visit_struct_field<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_specifier_qualifier<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_specifier_qualifier<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    specifier_qualifier: &'ast SpecifierQualifier,
+    specifier_qualifier: &'ast SpecifierQualifier<T>,
     _span: &'ast Span,
 ) {
     match *specifier_qualifier {
@@ -1006,9 +1006,9 @@ pub fn visit_specifier_qualifier<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_struct_declarator<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_struct_declarator<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    struct_declarator: &'ast StructDeclarator,
+    struct_declarator: &'ast StructDeclarator<T>,
     _span: &'ast Span,
 ) {
     if let Some(ref declarator) = struct_declarator.declarator {
@@ -1019,9 +1019,9 @@ pub fn visit_struct_declarator<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_enum_type<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_enum_type<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    enum_type: &'ast EnumType,
+    enum_type: &'ast EnumType<T>,
     _span: &'ast Span,
 ) {
     if let Some(ref identifier) = enum_type.identifier {
@@ -1032,9 +1032,9 @@ pub fn visit_enum_type<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_enumerator<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_enumerator<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    enumerator: &'ast Enumerator,
+    enumerator: &'ast Enumerator<T>,
     _span: &'ast Span,
 ) {
     visitor.visit_identifier(&enumerator.identifier.node, &enumerator.identifier.span);
@@ -1043,23 +1043,23 @@ pub fn visit_enumerator<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_type_qualifier<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_type_qualifier<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     _visitor: &mut V,
     _type_qualifier: &'ast TypeQualifier,
     _span: &'ast Span,
 ) {
 }
 
-pub fn visit_function_specifier<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_function_specifier<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     _visitor: &mut V,
     _function_specifier: &'ast FunctionSpecifier,
     _span: &'ast Span,
 ) {
 }
 
-pub fn visit_alignment_specifier<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_alignment_specifier<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    alignment_specifier: &'ast AlignmentSpecifier,
+    alignment_specifier: &'ast AlignmentSpecifier<T>,
     _span: &'ast Span,
 ) {
     match *alignment_specifier {
@@ -1068,9 +1068,9 @@ pub fn visit_alignment_specifier<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_declarator<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_declarator<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    declarator: &'ast Declarator,
+    declarator: &'ast Declarator<T>,
     _span: &'ast Span,
 ) {
     visitor.visit_declarator_kind(&declarator.kind.node, &declarator.kind.span);
@@ -1082,9 +1082,9 @@ pub fn visit_declarator<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_declarator_kind<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_declarator_kind<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    declarator_kind: &'ast DeclaratorKind,
+    declarator_kind: &'ast DeclaratorKind<T>,
     _span: &'ast Span,
 ) {
     match *declarator_kind {
@@ -1094,9 +1094,9 @@ pub fn visit_declarator_kind<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_derived_declarator<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_derived_declarator<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    derived_declarator: &'ast DerivedDeclarator,
+    derived_declarator: &'ast DerivedDeclarator<T>,
     _span: &'ast Span,
 ) {
     match *derived_declarator {
@@ -1115,9 +1115,9 @@ pub fn visit_derived_declarator<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_array_declarator<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_array_declarator<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    array_declarator: &'ast ArrayDeclarator,
+    array_declarator: &'ast ArrayDeclarator<T>,
     span: &'ast Span,
 ) {
     for qualifier in &array_declarator.qualifiers {
@@ -1126,9 +1126,9 @@ pub fn visit_array_declarator<'ast, V: Visit<'ast> + ?Sized>(
     visitor.visit_array_size(&array_declarator.size, span)
 }
 
-pub fn visit_function_declarator<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_function_declarator<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    function_declarator: &'ast FunctionDeclarator,
+    function_declarator: &'ast FunctionDeclarator<T>,
     span: &'ast Span,
 ) {
     for parameter in &function_declarator.parameters {
@@ -1137,9 +1137,9 @@ pub fn visit_function_declarator<'ast, V: Visit<'ast> + ?Sized>(
     visitor.visit_ellipsis(&function_declarator.ellipsis, span);
 }
 
-pub fn visit_pointer_qualifier<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_pointer_qualifier<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    pointer_qualifier: &'ast PointerQualifier,
+    pointer_qualifier: &'ast PointerQualifier<T>,
     _span: &'ast Span,
 ) {
     match *pointer_qualifier {
@@ -1152,9 +1152,9 @@ pub fn visit_pointer_qualifier<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_array_size<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_array_size<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    array_size: &'ast ArraySize,
+    array_size: &'ast ArraySize<T>,
     _span: &'ast Span,
 ) {
     match *array_size {
@@ -1164,9 +1164,9 @@ pub fn visit_array_size<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_parameter_declaration<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_parameter_declaration<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    parameter_declaration: &'ast ParameterDeclaration,
+    parameter_declaration: &'ast ParameterDeclaration<T>,
     _span: &'ast Span,
 ) {
     for specifier in &parameter_declaration.specifiers {
@@ -1180,16 +1180,16 @@ pub fn visit_parameter_declaration<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_ellipsis<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_ellipsis<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     _visitor: &mut V,
     _ellipsis: &'ast Ellipsis,
     _span: &'ast Span,
 ) {
 }
 
-pub fn visit_type_name<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_type_name<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    type_name: &'ast TypeName,
+    type_name: &'ast TypeName<T>,
     _span: &'ast Span,
 ) {
     for specifier in &type_name.specifiers {
@@ -1200,9 +1200,9 @@ pub fn visit_type_name<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_initializer<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_initializer<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    initializer: &'ast Initializer,
+    initializer: &'ast Initializer<T>,
     _span: &'ast Span,
 ) {
     match *initializer {
@@ -1215,9 +1215,9 @@ pub fn visit_initializer<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_initializer_list_item<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_initializer_list_item<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    initializer_list_item: &'ast InitializerListItem,
+    initializer_list_item: &'ast InitializerListItem<T>,
     _span: &'ast Span,
 ) {
     for designation in &initializer_list_item.designation {
@@ -1229,9 +1229,9 @@ pub fn visit_initializer_list_item<'ast, V: Visit<'ast> + ?Sized>(
     );
 }
 
-pub fn visit_designator<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_designator<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    designator: &'ast Designator,
+    designator: &'ast Designator<T>,
     _span: &'ast Span,
 ) {
     match *designator {
@@ -1241,18 +1241,18 @@ pub fn visit_designator<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_range_designator<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_range_designator<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    range_designator: &'ast RangeDesignator,
+    range_designator: &'ast RangeDesignator<T>,
     _span: &'ast Span,
 ) {
     visitor.visit_expression(&range_designator.from.node, &range_designator.from.span);
     visitor.visit_expression(&range_designator.to.node, &range_designator.to.span);
 }
 
-pub fn visit_static_assert<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_static_assert<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    static_assert: &'ast StaticAssert,
+    static_assert: &'ast StaticAssert<T>,
     _span: &'ast Span,
 ) {
     visitor.visit_expression(
@@ -1262,9 +1262,9 @@ pub fn visit_static_assert<'ast, V: Visit<'ast> + ?Sized>(
     visitor.visit_string_literal(&static_assert.message.node, &static_assert.message.span);
 }
 
-pub fn visit_statement<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_statement<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    statement: &'ast Statement,
+    statement: &'ast Statement<T>,
     _span: &'ast Span,
 ) {
     match *statement {
@@ -1291,9 +1291,9 @@ pub fn visit_statement<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_labeled_statement<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_labeled_statement<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    labeled_statement: &'ast LabeledStatement,
+    labeled_statement: &'ast LabeledStatement<T>,
     _span: &'ast Span,
 ) {
     visitor.visit_label(&labeled_statement.label.node, &labeled_statement.label.span);
@@ -1303,9 +1303,9 @@ pub fn visit_labeled_statement<'ast, V: Visit<'ast> + ?Sized>(
     );
 }
 
-pub fn visit_if_statement<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_if_statement<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    if_statement: &'ast IfStatement,
+    if_statement: &'ast IfStatement<T>,
     _span: &'ast Span,
 ) {
     visitor.visit_expression(&if_statement.condition.node, &if_statement.condition.span);
@@ -1318,9 +1318,9 @@ pub fn visit_if_statement<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_switch_statement<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_switch_statement<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    switch_statement: &'ast SwitchStatement,
+    switch_statement: &'ast SwitchStatement<T>,
     _span: &'ast Span,
 ) {
     visitor.visit_expression(
@@ -1333,9 +1333,9 @@ pub fn visit_switch_statement<'ast, V: Visit<'ast> + ?Sized>(
     );
 }
 
-pub fn visit_while_statement<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_while_statement<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    while_statement: &'ast WhileStatement,
+    while_statement: &'ast WhileStatement<T>,
     _span: &'ast Span,
 ) {
     visitor.visit_expression(
@@ -1348,9 +1348,9 @@ pub fn visit_while_statement<'ast, V: Visit<'ast> + ?Sized>(
     );
 }
 
-pub fn visit_do_while_statement<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_do_while_statement<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    do_while_statement: &'ast DoWhileStatement,
+    do_while_statement: &'ast DoWhileStatement<T>,
     _span: &'ast Span,
 ) {
     visitor.visit_statement(
@@ -1363,9 +1363,9 @@ pub fn visit_do_while_statement<'ast, V: Visit<'ast> + ?Sized>(
     );
 }
 
-pub fn visit_for_statement<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_for_statement<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    for_statement: &'ast ForStatement,
+    for_statement: &'ast ForStatement<T>,
     _span: &'ast Span,
 ) {
     visitor.visit_for_initializer(
@@ -1381,9 +1381,9 @@ pub fn visit_for_statement<'ast, V: Visit<'ast> + ?Sized>(
     visitor.visit_statement(&for_statement.statement.node, &for_statement.statement.span);
 }
 
-pub fn visit_label<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_label<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    label: &'ast Label,
+    label: &'ast Label<T>,
     _span: &'ast Span,
 ) {
     match *label {
@@ -1393,9 +1393,9 @@ pub fn visit_label<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_for_initializer<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_for_initializer<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    for_initializer: &'ast ForInitializer,
+    for_initializer: &'ast ForInitializer<T>,
     _span: &'ast Span,
 ) {
     match *for_initializer {
@@ -1406,9 +1406,9 @@ pub fn visit_for_initializer<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_block_item<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_block_item<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    block_item: &'ast BlockItem,
+    block_item: &'ast BlockItem<T>,
     _span: &'ast Span,
 ) {
     match *block_item {
@@ -1418,18 +1418,18 @@ pub fn visit_block_item<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_translation_unit<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_translation_unit<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    translation_unit: &'ast TranslationUnit,
+    translation_unit: &'ast TranslationUnit<T>,
 ) {
     for element in &translation_unit.0 {
         visitor.visit_external_declaration(&element.node, &element.span);
     }
 }
 
-pub fn visit_external_declaration<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_external_declaration<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    external_declaration: &'ast ExternalDeclaration,
+    external_declaration: &'ast ExternalDeclaration<T>,
     _span: &'ast Span,
 ) {
     match *external_declaration {
@@ -1441,9 +1441,9 @@ pub fn visit_external_declaration<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_function_definition<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_function_definition<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    function_definition: &'ast FunctionDefinition,
+    function_definition: &'ast FunctionDefinition<T>,
     _span: &'ast Span,
 ) {
     for specifier in &function_definition.specifiers {
@@ -1462,9 +1462,9 @@ pub fn visit_function_definition<'ast, V: Visit<'ast> + ?Sized>(
     );
 }
 
-pub fn visit_extension<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_extension<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    extension: &'ast Extension,
+    extension: &'ast Extension<T>,
     span: &'ast Span,
 ) {
     match *extension {
@@ -1476,9 +1476,9 @@ pub fn visit_extension<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_attribute<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_attribute<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    attribute: &'ast Attribute,
+    attribute: &'ast Attribute<T>,
     _span: &'ast Span,
 ) {
     for argument in &attribute.arguments {
@@ -1486,9 +1486,9 @@ pub fn visit_attribute<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_asm_statement<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_asm_statement<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    asm_statement: &'ast AsmStatement,
+    asm_statement: &'ast AsmStatement<T>,
     span: &'ast Span,
 ) {
     match *asm_statement {
@@ -1497,9 +1497,9 @@ pub fn visit_asm_statement<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_availability_attribute<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_availability_attribute<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    availability: &'ast AvailabilityAttribute,
+    availability: &'ast AvailabilityAttribute<T>,
     _span: &'ast Span,
 ) {
     for clause in &availability.clauses {
@@ -1507,9 +1507,9 @@ pub fn visit_availability_attribute<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_gnu_extended_asm_statement<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_gnu_extended_asm_statement<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    gnu_extended_asm_statement: &'ast GnuExtendedAsmStatement,
+    gnu_extended_asm_statement: &'ast GnuExtendedAsmStatement<T>,
     _span: &'ast Span,
 ) {
     if let Some(ref qualifier) = gnu_extended_asm_statement.qualifier {
@@ -1530,9 +1530,9 @@ pub fn visit_gnu_extended_asm_statement<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
-pub fn visit_gnu_asm_operand<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_gnu_asm_operand<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    gnu_asm_operand: &'ast GnuAsmOperand,
+    gnu_asm_operand: &'ast GnuAsmOperand<T>,
     _span: &'ast Span,
 ) {
     if let Some(ref name) = gnu_asm_operand.symbolic_name {
@@ -1548,9 +1548,9 @@ pub fn visit_gnu_asm_operand<'ast, V: Visit<'ast> + ?Sized>(
     );
 }
 
-pub fn visit_type_of<'ast, V: Visit<'ast> + ?Sized>(
+pub fn visit_type_of<'ast, V: Visit<'ast, T> + ?Sized, T: Name>(
     visitor: &mut V,
-    type_of: &'ast TypeOf,
+    type_of: &'ast TypeOf<T>,
     _span: &'ast Span,
 ) {
     match *type_of {

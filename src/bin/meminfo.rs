@@ -6,59 +6,55 @@ macro_rules! ps {
     ($( $t:ty )+) => ({ $(println!("{:3}  {}", size_of::<$t>(), stringify!($t));)+ })
 }
 
-fn print_all<T: Name>() {
+fn main() {
     ps! {
-        TypeOf<T>
-        Identifier<T>
+        TypeOf
+        Identifier
         Constant
         Integer
         Float
-        Expression<T>
+        Expression
         MemberOperator
-        GenericAssociation<T>
+        GenericAssociation
         UnaryOperator
         BinaryOperator
-        OffsetDesignator<T>
-        OffsetMember<T>
-        Declaration<T>
-        DeclarationSpecifier<T>
-        InitDeclarator<T>
+        OffsetDesignator
+        OffsetMember
+        Declaration
+        DeclarationSpecifier
+        InitDeclarator
         StorageClassSpecifier
-        TypeSpecifier<T>
-        StructType<T>
-        StructDeclaration<T>
-        SpecifierQualifier<T>
-        StructDeclarator<T>
-        Enumerator<T>
+        TypeSpecifier
+        StructType
+        StructDeclaration
+        SpecifierQualifier
+        StructDeclarator
+        Enumerator
         TypeQualifier
         FunctionSpecifier
-        AlignmentSpecifier<T>
-        Declarator<T>
-        DeclaratorKind<T>
-        DerivedDeclarator<T>
-        PointerQualifier<T>
-        ArraySize<T>
-        ParameterDeclaration<T>
+        AlignmentSpecifier
+        Declarator
+        DeclaratorKind
+        DerivedDeclarator
+        PointerQualifier
+        ArraySize
+        ParameterDeclaration
         Ellipsis
-        TypeName<T>
-        Initializer<T>
-        InitializerListItem<T>
-        Designator<T>
-        StaticAssert<T>
-        Statement<T>
-        Label<T>
-        ForInitializer<T>
-        BlockItem<T>
-        TranslationUnit<T>
-        ExternalDeclaration<T>
-        FunctionDefinition<T>
-        Extension<T>
-        AsmStatement<T>
-        GnuAsmOperand<T>
-        TypeOf<T>
+        TypeName
+        Initializer
+        InitializerListItem
+        Designator
+        StaticAssert
+        Statement
+        Label
+        ForInitializer
+        BlockItem
+        TranslationUnit
+        ExternalDeclaration
+        FunctionDefinition
+        Extension
+        AsmStatement
+        GnuAsmOperand
+        TypeOf
     }
-}
-
-fn main() {
-    print_all::<String>();
 }

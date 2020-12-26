@@ -202,7 +202,11 @@ impl Kind {
         })
     }
 
-    fn parse_and_print(&self, source: &str, env: &mut Env<String>) -> Result<String, parser::ParseError> {
+    fn parse_and_print(
+        &self,
+        source: &str,
+        env: &mut Env<String>,
+    ) -> Result<String, parser::ParseError> {
         let source = source.trim_right();
 
         let mut s = "".to_string();

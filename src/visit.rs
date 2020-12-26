@@ -106,7 +106,11 @@ pub trait Visit<'ast, T: Name = String> {
         visit_member_expression(self, member_expression, span)
     }
 
-    fn visit_call_expression(&mut self, call_expression: &'ast CallExpression<T>, span: &'ast Span) {
+    fn visit_call_expression(
+        &mut self,
+        call_expression: &'ast CallExpression<T>,
+        span: &'ast Span,
+    ) {
         visit_call_expression(self, call_expression, span)
     }
 
@@ -130,7 +134,11 @@ pub trait Visit<'ast, T: Name = String> {
         visit_unary_operator_expression(self, unary_operator_expression, span)
     }
 
-    fn visit_cast_expression(&mut self, cast_expression: &'ast CastExpression<T>, span: &'ast Span) {
+    fn visit_cast_expression(
+        &mut self,
+        cast_expression: &'ast CastExpression<T>,
+        span: &'ast Span,
+    ) {
         visit_cast_expression(self, cast_expression, span)
     }
 
@@ -194,7 +202,11 @@ pub trait Visit<'ast, T: Name = String> {
         visit_declaration_specifier(self, declaration_specifier, span)
     }
 
-    fn visit_init_declarator(&mut self, init_declarator: &'ast InitDeclarator<T>, span: &'ast Span) {
+    fn visit_init_declarator(
+        &mut self,
+        init_declarator: &'ast InitDeclarator<T>,
+        span: &'ast Span,
+    ) {
         visit_init_declarator(self, init_declarator, span)
     }
 
@@ -294,7 +306,11 @@ pub trait Visit<'ast, T: Name = String> {
         visit_declarator(self, declarator, span)
     }
 
-    fn visit_declarator_kind(&mut self, declarator_kind: &'ast DeclaratorKind<T>, span: &'ast Span) {
+    fn visit_declarator_kind(
+        &mut self,
+        declarator_kind: &'ast DeclaratorKind<T>,
+        span: &'ast Span,
+    ) {
         visit_declarator_kind(self, declarator_kind, span)
     }
 
@@ -402,7 +418,11 @@ pub trait Visit<'ast, T: Name = String> {
         visit_switch_statement(self, switch_statement, span)
     }
 
-    fn visit_while_statement(&mut self, while_statement: &'ast WhileStatement<T>, span: &'ast Span) {
+    fn visit_while_statement(
+        &mut self,
+        while_statement: &'ast WhileStatement<T>,
+        span: &'ast Span,
+    ) {
         visit_while_statement(self, while_statement, span)
     }
 
@@ -422,7 +442,11 @@ pub trait Visit<'ast, T: Name = String> {
         visit_label(self, label, span)
     }
 
-    fn visit_for_initializer(&mut self, for_initializer: &'ast ForInitializer<T>, span: &'ast Span) {
+    fn visit_for_initializer(
+        &mut self,
+        for_initializer: &'ast ForInitializer<T>,
+        span: &'ast Span,
+    ) {
         visit_for_initializer(self, for_initializer, span)
     }
 

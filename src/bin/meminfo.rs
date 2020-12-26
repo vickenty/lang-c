@@ -59,6 +59,6 @@ fn print_all<T: Name>() {
     }
 }
 
-fn main () {
+fn main() {
     print_all::<String>();
 }

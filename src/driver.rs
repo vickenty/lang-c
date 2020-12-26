@@ -7,11 +7,10 @@ use std::io;
 use std::path::Path;
 use std::process::Command;
 
-use ast::TranslationUnit;
 use ast::Name;
+use ast::TranslationUnit;
 use env::Env;
 use parser::translation_unit;
-
 
 /// Parser configuration
 #[derive(Clone, Debug)]
@@ -170,7 +169,10 @@ pub fn parse_preprocessed(config: &Config, source: String) -> Result<Parse, Synt
 }
 
 /// Parse Preprocessed Code in String using a custom type for identifiers (e.g. interned string)
-pub fn parse_preprocessed_ext<T: Name>(config: &Config, source: String) -> Result<Parse<T>, SyntaxError> {
+pub fn parse_preprocessed_ext<T: Name>(
+    config: &Config,
+    source: String,
+) -> Result<Parse<T>, SyntaxError> {
     let mut env = match config.flavor {
         Flavor::StdC11 => Env::with_core(),
         Flavor::GnuC11 => Env::with_gnu(),

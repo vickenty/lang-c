@@ -171,7 +171,11 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
         self.name("BinaryOperatorExpression");
         visit_binary_operator_expression(&mut self.block(), n, span);
     }
-    fn visit_conditional_expression(&mut self, n: &'ast ConditionalExpression<String>, span: &'ast Span) {
+    fn visit_conditional_expression(
+        &mut self,
+        n: &'ast ConditionalExpression<String>,
+        span: &'ast Span,
+    ) {
         self.name("ConditionalExpression");
         visit_conditional_expression(&mut self.block(), n, span);
     }
@@ -179,7 +183,11 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
         self.name("VaArgExpression");
         visit_va_arg_expression(&mut self.block(), n, span);
     }
-    fn visit_offset_of_expression(&mut self, n: &'ast OffsetOfExpression<String>, span: &'ast Span) {
+    fn visit_offset_of_expression(
+        &mut self,
+        n: &'ast OffsetOfExpression<String>,
+        span: &'ast Span,
+    ) {
         self.name("OffsetOfExpression");
         visit_offset_of_expression(&mut self.block(), n, span);
     }
@@ -196,7 +204,11 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
         self.name("Declaration");
         visit_declaration(&mut self.block(), n, span);
     }
-    fn visit_declaration_specifier(&mut self, n: &'ast DeclarationSpecifier<String>, span: &'ast Span) {
+    fn visit_declaration_specifier(
+        &mut self,
+        n: &'ast DeclarationSpecifier<String>,
+        span: &'ast Span,
+    ) {
         self.name("DeclarationSpecifier");
         visit_declaration_specifier(&mut self.block(), n, span);
     }
@@ -301,7 +313,11 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
         print_array_size(self, n);
         visit_array_size(&mut self.block(), n, span);
     }
-    fn visit_parameter_declaration(&mut self, n: &'ast ParameterDeclaration<String>, span: &'ast Span) {
+    fn visit_parameter_declaration(
+        &mut self,
+        n: &'ast ParameterDeclaration<String>,
+        span: &'ast Span,
+    ) {
         self.name("ParameterDeclaration");
         visit_parameter_declaration(&mut self.block(), n, span);
     }
@@ -318,7 +334,11 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
         self.name("Initializer");
         visit_initializer(&mut self.block(), n, span);
     }
-    fn visit_initializer_list_item(&mut self, n: &'ast InitializerListItem<String>, span: &'ast Span) {
+    fn visit_initializer_list_item(
+        &mut self,
+        n: &'ast InitializerListItem<String>,
+        span: &'ast Span,
+    ) {
         self.name("InitializerListItem");
         visit_initializer_list_item(&mut self.block(), n, span);
     }
@@ -377,7 +397,11 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
         self.name("BlockItem");
         visit_block_item(&mut self.block(), n, span);
     }
-    fn visit_external_declaration(&mut self, n: &'ast ExternalDeclaration<String>, span: &'ast Span) {
+    fn visit_external_declaration(
+        &mut self,
+        n: &'ast ExternalDeclaration<String>,
+        span: &'ast Span,
+    ) {
         self.name("ExternalDeclaration");
         visit_external_declaration(&mut self.block(), n, span);
     }
@@ -398,7 +422,11 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
         self.name("AsmStatement");
         visit_asm_statement(&mut self.block(), n, span);
     }
-    fn visit_availability_attribute(&mut self, n: &'ast AvailabilityAttribute<String>, span: &'ast Span) {
+    fn visit_availability_attribute(
+        &mut self,
+        n: &'ast AvailabilityAttribute<String>,
+        span: &'ast Span,
+    ) {
         self.name("AvailabilityAttribute");
         visit_availability_attribute(&mut self.block(), n, span);
     }

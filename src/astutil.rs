@@ -47,7 +47,10 @@ fn apply_op<T: Name>(a: Node<Expression<T>>, op: Node<Operation<T>>) -> Node<Exp
     Node::new(expr, span)
 }
 
-pub fn apply_ops<T: Name>(ops: Vec<Node<Operation<T>>>, expr: Node<Expression<T>>) -> Node<Expression<T>> {
+pub fn apply_ops<T: Name>(
+    ops: Vec<Node<Operation<T>>>,
+    expr: Node<Expression<T>>,
+) -> Node<Expression<T>> {
     ops.into_iter().fold(expr, apply_op)
 }
 
@@ -76,7 +79,10 @@ pub fn infix<T: Name>(
     )
 }
 
-pub fn with_ext<T: Name>(mut d: Node<Declarator<T>>, e: Option<Vec<Node<Extension<T>>>>) -> Node<Declarator<T>> {
+pub fn with_ext<T: Name>(
+    mut d: Node<Declarator<T>>,
+    e: Option<Vec<Node<Extension<T>>>>,
+) -> Node<Declarator<T>> {
     if let Some(e) = e {
         d.node.extensions.extend(e);
     }

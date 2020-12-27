@@ -77,10 +77,11 @@ impl<T: Name> Env<T> {
 
     pub fn handle_declarator(&mut self, d: &Node<Declarator<T>>, sym: Symbol) {
         if let Some(name) = find_declarator_name(&d.node.kind.node) {
-            self.add_symbol(name, sym)
+            self.add_interned_symbol(&name, sym)
         }
     }
 
+    #[cfg(test)]
     pub fn add_symbol(&mut self, s: &str, symbol: Symbol) {
         let scope = self
             .symbols
@@ -103,10 +104,10 @@ impl<T: Name> Env<T> {
     }
 }
 
-fn find_declarator_name<T: Name>(d: &DeclaratorKind<T>) -> Option<&str> {
+fn find_declarator_name<T: Name>(d: &DeclaratorKind<T>) -> Option<&T> {
     match d {
         &DeclaratorKind::Abstract => None,
-        &DeclaratorKind::Identifier(ref i) => Some(i.node.name.recover_str()),
+        &DeclaratorKind::Identifier(ref i) => Some(&i.node.name),
         &DeclaratorKind::Declarator(ref d) => find_declarator_name(&d.node.kind.node),
     }
 }

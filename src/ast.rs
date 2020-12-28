@@ -23,7 +23,7 @@
 use span::Node;
 
 /// Trait that specifies types which can be used for Identifiers and type names
-pub trait Name: std::fmt::Debug + PartialEq + Eq + std::hash::Hash + Clone {
+pub trait Name: ::std::fmt::Debug + PartialEq + Eq + ::std::hash::Hash + Clone {
     fn get_from_str<T: AsRef<str>>(string: T) -> Self;
     fn recover_string(&self) -> String;
 }

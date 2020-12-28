@@ -30,16 +30,16 @@ pub struct ParseError {
 pub type ParseResult<T> = Result<T, ParseError>;
 impl ::std::fmt::Display for ParseError {
     fn fmt(&self, fmt: &mut ::std::fmt::Formatter) -> ::std::result::Result<(), ::std::fmt::Error> {
-        write!(fmt, "error at {}:{}: expected ", self.line, self.column)?;
+        try!(write!(fmt, "error at {}:{}: expected ", self.line, self.column));
         if self.expected.len() == 0 {
-            write!(fmt, "EOF")?;
+            try!(write!(fmt, "EOF"));
         } else if self.expected.len() == 1 {
-            write!(fmt, "`{}`", escape_default(self.expected.iter().next().unwrap()))?;
+            try!(write!(fmt, "`{}`", escape_default(self.expected.iter().next().unwrap())));
         } else {
             let mut iter = self.expected.iter();
-            write!(fmt, "one of `{}`", escape_default(iter.next().unwrap()))?;
+            try!(write!(fmt, "one of `{}`", escape_default(iter.next().unwrap())));
             for elem in iter {
-                write!(fmt, ", `{}`", escape_default(elem))?;
+                try!(write!(fmt, ", `{}`", escape_default(elem)));
             }
         }
         Ok(())
@@ -50,7 +50,7 @@ impl ::std::error::Error for ParseError {
         "parse error"
     }
 }
-fn slice_eq(input: &str, state: &mut ParseState<'_, impl Name>, pos: usize, m: &'static str) -> RuleResult<()> {
+fn slice_eq<T: Name>(input: &str, state: &mut ParseState<T>, pos: usize, m: &'static str) -> RuleResult<()> {
     #![inline]
     #![allow(dead_code)]
     let l = m.len();
@@ -60,7 +60,7 @@ fn slice_eq(input: &str, state: &mut ParseState<'_, impl Name>, pos: usize, m: &
         state.mark_failure(pos, m)
     }
 }
-fn slice_eq_case_insensitive(input: &str, state: &mut ParseState<'_, impl Name>, pos: usize, m: &'static str) -> RuleResult<()> {
+fn slice_eq_case_insensitive<T: Name>(input: &str, state: &mut ParseState<T>, pos: usize, m: &'static str) -> RuleResult<()> {
     #![inline]
     #![allow(dead_code)]
     let mut used = 0usize;
@@ -74,7 +74,7 @@ fn slice_eq_case_insensitive(input: &str, state: &mut ParseState<'_, impl Name>,
     }
     Matched(pos + used, ())
 }
-fn any_char(input: &str, state: &mut ParseState<'_, impl Name>, pos: usize) -> RuleResult<()> {
+fn any_char<T: Name>(input: &str, state: &mut ParseState<T>, pos: usize) -> RuleResult<()> {
     #![inline]
     #![allow(dead_code)]
     if input.len() > pos {

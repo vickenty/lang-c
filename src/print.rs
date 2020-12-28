@@ -460,13 +460,13 @@ fn print_float_format<'ast>(p: &mut Printer, n: &'ast FloatFormat) {
         _ => {}
     }
 }
-fn print_declarator_kind<'ast>(p: &mut Printer, n: &'ast DeclaratorKind<impl Name>) {
+fn print_declarator_kind<'ast, T: Name>(p: &mut Printer, n: &'ast DeclaratorKind<T>) {
     match *n {
         DeclaratorKind::Abstract => p.w.write_str(" Abstract").unwrap(),
         _ => {}
     }
 }
-fn print_array_size<'ast>(p: &mut Printer, n: &'ast ArraySize<impl Name>) {
+fn print_array_size<'ast, T: Name>(p: &mut Printer, n: &'ast ArraySize<T>) {
     match *n {
         ArraySize::Unknown => p.w.write_str(" Unknown").unwrap(),
         ArraySize::VariableUnknown => p.w.write_str(" VariableUnknown").unwrap(),
@@ -474,7 +474,7 @@ fn print_array_size<'ast>(p: &mut Printer, n: &'ast ArraySize<impl Name>) {
         ArraySize::StaticExpression(_) => p.w.write_str(" StaticExpression").unwrap(),
     }
 }
-fn print_statement<'ast>(p: &mut Printer, n: &'ast Statement<impl Name>) {
+fn print_statement<'ast, T: Name>(p: &mut Printer, n: &'ast Statement<T>) {
     match *n {
         Statement::Compound(_) => p.w.write_str(" Compound").unwrap(),
         Statement::Goto(_) => p.w.write_str(" Goto").unwrap(),
@@ -484,26 +484,26 @@ fn print_statement<'ast>(p: &mut Printer, n: &'ast Statement<impl Name>) {
         _ => {}
     }
 }
-fn print_offset_member<'ast>(p: &mut Printer, n: &'ast OffsetMember<impl Name>) {
+fn print_offset_member<'ast, T: Name>(p: &mut Printer, n: &'ast OffsetMember<T>) {
     match *n {
         OffsetMember::Member(_) => p.w.write_str(" Member").unwrap(),
         OffsetMember::IndirectMember(_) => p.w.write_str(" IndirectMember").unwrap(),
         _ => {}
     }
 }
-fn print_label<'ast>(p: &mut Printer, n: &'ast Label<impl Name>) {
+fn print_label<'ast, T: Name>(p: &mut Printer, n: &'ast Label<T>) {
     match *n {
         Label::Default => p.w.write_str(" Default").unwrap(),
         _ => {}
     }
 }
-fn print_for_initializer<'ast>(p: &mut Printer, n: &'ast ForInitializer<impl Name>) {
+fn print_for_initializer<'ast, T: Name>(p: &mut Printer, n: &'ast ForInitializer<T>) {
     match *n {
         ForInitializer::Empty => p.w.write_str(" Empty").unwrap(),
         _ => {}
     }
 }
-fn print_type_specifier<'ast>(p: &mut Printer, n: &'ast TypeSpecifier<impl Name>) {
+fn print_type_specifier<'ast, T: Name>(p: &mut Printer, n: &'ast TypeSpecifier<T>) {
     match *n {
         TypeSpecifier::Void => p.w.write_str(" Void").unwrap(),
         TypeSpecifier::Char => p.w.write_str(" Char").unwrap(),

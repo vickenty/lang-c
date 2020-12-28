@@ -24,13 +24,13 @@ use span::Node;
 
 /// Trait that specifies types which can be used for Identifiers and type names
 pub trait Name: ::std::fmt::Debug + PartialEq + Eq + ::std::hash::Hash + Clone {
-    fn get_from_str<T: AsRef<str>>(string: T) -> Self;
+    fn get_from_str<S: AsRef<str>>(string: S) -> Self;
     fn recover_string(&self) -> String;
 }
 
 impl Name for String {
-    fn get_from_str<T: AsRef<str>>(string: T) -> Self {
-        String::from(string.as_ref())
+    fn get_from_str<S: AsRef<str>>(string: S) -> Self {
+        string.as_ref().to_owned()
     }
 
     fn recover_string(&self) -> String {

@@ -1,9 +1,12 @@
 // Written for peg 0.5.4
 
-#![arguments(env: &mut Env)]
+// Notice, that we use a generic type parameter T: ast::Name at various points in this grammar
+// The rust-peg output must be postprocessed to ensure, that a valid grammar is generated.
+#![arguments(env: &mut Env<T>)]
 
 use ast::*;
 use astutil::*;
+use interner::Interner;
 use env::{Env, Symbol};
 use span::{Node, Span};
 
@@ -53,13 +56,13 @@ K<E> = #quiet<e:E ![_a-zA-Z0-9] { e }>
 ////
 
 // Identifiers.
-identifier -> Node<Identifier> = node<identifier0>
+identifier -> Node<Identifier<T::Interned>> = node<identifier0>
 
-identifier0 -> Identifier =
+identifier0 -> Identifier<T::Interned> =
     n:$([_a-zA-Z] [_a-zA-Z0-9]*) {?
         if !env.reserved.contains(n) {
             Ok(Identifier {
-                name: n.into(),
+                name: env.interner.intern_str(n),
             })
         } else {
             Err("identifier")
@@ -188,9 +191,9 @@ string_char = [^"\\\n] / escape_sequence
 // 6.5.1 Primary expression
 ////
 
-primary_expression -> Box<Node<Expression>> = box<node<primary_expression0>>
+primary_expression -> Box<Node<Expression<T::Interned>>> = box<node<primary_expression0>>
 
-primary_expression0 -> Expression =
+primary_expression0 -> Expression<T::Interned> =
     a:identifier { Expression::Identifier(Box::new(a)) } /
     a:node<constant> { Expression::Constant(Box::new(a)) } /
     a:string_literal { Expression::StringLiteral(Box::new(a)) } /
@@ -198,7 +201,7 @@ primary_expression0 -> Expression =
     a:node<generic_selection> { Expression::GenericSelection(Box::new(a)) } /
     gnu<gnu_primary_expression>
 
-generic_selection -> GenericSelection =
+generic_selection -> GenericSelection<T::Interned> =
     K<"_Generic"> _ "(" _ e:assignment_expression _ "," _ a:cs1<node<generic_association>> _ ")" {
         GenericSelection {
             expression: e,
@@ -206,7 +209,7 @@ generic_selection -> GenericSelection =
         }
     }
 
-generic_association -> GenericAssociation =
+generic_association -> GenericAssociation<T::Interned> =
     t:type_name _ ":" _ e:assignment_expression {
         let span = Span::span(t.span.start, e.span.end);
         GenericAssociation::Type(Node::new(GenericAssociationType {
@@ -220,26 +223,26 @@ generic_association -> GenericAssociation =
 
 //// 6.5.2 Postfix operators
 
-postfix_expression -> Box<Node<Expression>> = box<node<postfix_expression0>>
+postfix_expression -> Box<Node<Expression<T::Interned>>> = box<node<postfix_expression0>>
 
 #[cache]
-postfix_expression0 -> Expression =
+postfix_expression0 -> Expression<T::Interned> =
     e:node<postfix_expression1> _ t:list0<node<postfix_expressionT>> { apply_ops(t, e).node }
 
-postfix_expression1 -> Expression =
+postfix_expression1 -> Expression<T::Interned> =
     compound_literal /
     primary_expression0
 
-postfix_expressionT -> Operation =
+postfix_expressionT -> Operation<T::Interned> =
     index_operator /
     "(" _ e:cs0<node<assignment_expression0>> _ ")" { Operation::Call(e) } /
     o:node<member_operator> _ i:identifier { Operation::Member(o, i) } /
     o:node<postfix_operator> { Operation::Unary(o) }
 
-index_operator -> Operation =
+index_operator -> Operation<T::Interned> =
     i:node<index_operator0> { Operation::Binary(Node::new(BinaryOperator::Index, i.span), i.node) }
 
-index_operator0 -> Node<Expression> =
+index_operator0 -> Node<Expression<T::Interned>> =
     "[" _ e:node<expression0> _ "]" { e }
 
 member_operator -> MemberOperator =
@@ -250,10 +253,10 @@ postfix_operator -> UnaryOperator =
     "++" { UnaryOperator::PostIncrement } /
     "--" { UnaryOperator::PostDecrement }
 
-compound_literal -> Expression =
+compound_literal -> Expression<T::Interned> =
     n:node<compound_literal_inner> { Expression::CompoundLiteral(Box::new(n)) }
 
-compound_literal_inner -> CompoundLiteral =
+compound_literal_inner -> CompoundLiteral<T::Interned> =
     "(" _ t:type_name _ ")" _ "{" _ i:cs1<node<initializer_list_item>> _ ","? _ "}" {
         CompoundLiteral {
             type_name: t,
@@ -265,9 +268,9 @@ compound_literal_inner -> CompoundLiteral =
 // 6.5.3 Unary operators
 ////
 
-unary_expression -> Box<Node<Expression>> = box<node<unary_expression0>>
+unary_expression -> Box<Node<Expression<T::Interned>>> = box<node<unary_expression0>>
 
-unary_expression0 -> Expression =
+unary_expression0 -> Expression<T::Interned> =
     postfix_expression0 /
     unary_prefix /
     unary_cast /
@@ -275,10 +278,10 @@ unary_expression0 -> Expression =
     alignof_expression /
     gnu<K<"__extension__">> _ e:unary_expression0 { e }
 
-unary_prefix -> Expression =
+unary_prefix -> Expression<T::Interned> =
     n:node<unary_prefix_inner> { Expression::UnaryOperator(Box::new(n)) }
 
-unary_prefix_inner -> UnaryOperatorExpression =
+unary_prefix_inner -> UnaryOperatorExpression<T::Interned> =
     op:node<prefix_operator> _ e:unary_expression {
         UnaryOperatorExpression {
             operator: op,
@@ -291,10 +294,10 @@ prefix_operator -> UnaryOperator =
     "--" { UnaryOperator::PreDecrement } /
     K<"sizeof"> { UnaryOperator::SizeOf }
 
-unary_cast -> Expression =
+unary_cast -> Expression<T::Interned> =
     n:node<unary_cast_inner> { Expression::UnaryOperator(Box::new(n)) }
 
-unary_cast_inner -> UnaryOperatorExpression =
+unary_cast_inner -> UnaryOperatorExpression<T::Interned> =
     op:node<unary_operator> _ e:cast_expression {
         UnaryOperatorExpression {
             operator: op,
@@ -310,12 +313,12 @@ unary_operator -> UnaryOperator =
     "~" { UnaryOperator::Complement } /
     "!" { UnaryOperator::Negate }
 
-sizeof_expression -> Expression =
+sizeof_expression -> Expression<T::Interned> =
     K<"sizeof"> _ "(" _ t:type_name _ ")" {
         Expression::SizeOf(Box::new(t))
     }
 
-alignof_expression -> Expression =
+alignof_expression -> Expression<T::Interned> =
     K<"_Alignof" / gnu<"__alignof" "__"?>> _ "(" _ t:type_name _ ")" {
         Expression::AlignOf(Box::new(t))
     }
@@ -324,13 +327,13 @@ alignof_expression -> Expression =
 // 6.5.4 Cast expressions
 ////
 
-cast_expression -> Box<Node<Expression>> = box<node<cast_expression0>>
+cast_expression -> Box<Node<Expression<T::Interned>>> = box<node<cast_expression0>>
 
-cast_expression0 -> Expression =
+cast_expression0 -> Expression<T::Interned> =
     c:node<cast_expression_inner> { Expression::Cast(Box::new(c)) } /
     unary_expression0
 
-cast_expression_inner -> CastExpression =
+cast_expression_inner -> CastExpression<T::Interned> =
     "(" _ t:type_name _ ")" _ e:cast_expression {
         CastExpression {
             type_name: t,
@@ -342,9 +345,9 @@ cast_expression_inner -> CastExpression =
 // 6.5.5 -- 6.5.14 Binary operators
 ////
 
-binary_expression -> Box<Node<Expression>> = box<binary_expression0>
+binary_expression -> Box<Node<Expression<T::Interned>>> = box<binary_expression0>
 
-binary_expression0 -> Node<Expression> = #infix<binary_operand> {
+binary_expression0 -> Node<Expression<T::Interned>> = #infix<binary_operand> {
 #L  x o:infix<"||"> y { infix(o, BinaryOperator::LogicalOr, x, y) }
 #L  x o:infix<"&&"> y { infix(o, BinaryOperator::LogicalAnd, x, y) }
 #L  x o:infix<"|"> y { infix(o, BinaryOperator::BitwiseOr, x, y) }
@@ -367,15 +370,15 @@ binary_expression0 -> Node<Expression> = #infix<binary_operand> {
 
 infix<ex> = _ n:node<ex> _ { n }
 
-binary_operand -> Node<Expression> = node<cast_expression0>
+binary_operand -> Node<Expression<T::Interned>> = node<cast_expression0>
 
 ////
 // 6.5.15 Conditional operator
 ////
 
-conditional_expression -> Box<Node<Expression>> = box<node<conditional_expression0>>
+conditional_expression -> Box<Node<Expression<T::Interned>>> = box<node<conditional_expression0>>
 
-conditional_expression0 -> Expression =
+conditional_expression0 -> Expression<T::Interned> =
     a:binary_expression0 _ t:conditional_expressionT? {
         if let Some((b, c)) = t {
             let span = Span::span(a.span.start, c.span.end);
@@ -389,20 +392,20 @@ conditional_expression0 -> Expression =
         }
     }
 
-conditional_expressionT -> (Box<Node<Expression>>, Box<Node<Expression>>) =
+conditional_expressionT -> (Box<Node<Expression<T::Interned>>>, Box<Node<Expression<T::Interned>>>) =
     "?" _ a:node<expression0> _ ":" _ b:node<conditional_expression0> { (Box::new(a), Box::new(b)) }
 
 ////
 // 6.5.16 Assignment operators
 ////
 
-assignment_expression -> Box<Node<Expression>> = box<node<assignment_expression0>>
+assignment_expression -> Box<Node<Expression<T::Interned>>> = box<node<assignment_expression0>>
 
-assignment_expression0 -> Expression =
+assignment_expression0 -> Expression<T::Interned> =
     n:node<assignment_expression_inner> { Expression::BinaryOperator(Box::new(n)) } /
     conditional_expression0
 
-assignment_expression_inner -> BinaryOperatorExpression =
+assignment_expression_inner -> BinaryOperatorExpression<T::Interned> =
     a:unary_expression _ op:node<assignment_operator> _ b:assignment_expression {
         BinaryOperatorExpression {
             operator: op,
@@ -428,9 +431,9 @@ assignment_operator -> BinaryOperator =
 // 6.5.17 Comma operator
 ////
 
-pub expression -> Box<Node<Expression>> = box<node<expression0>>
+pub expression -> Box<Node<Expression<T::Interned>>> = box<node<expression0>>
 
-expression0 -> Expression =
+expression0 -> Expression<T::Interned> =
     e:node<assignment_expression0> _ t:list0<expressionT> {
         if t.len() > 0 {
             let mut t  = t;
@@ -441,23 +444,23 @@ expression0 -> Expression =
         }
     }
 
-expressionT -> Node<Expression> =
+expressionT -> Node<Expression<T::Interned>> =
     "," _ e:node<assignment_expression0> { e }
 
 ////
 // 6.6 Constant expressions
 ////
 
-constant_expression -> Box<Node<Expression>> = conditional_expression
-constant_expression0 -> Expression = conditional_expression0
+constant_expression -> Box<Node<Expression<T::Interned>>> = conditional_expression
+constant_expression0 -> Expression<T::Interned> = conditional_expression0
 
 ////
 // 6.7 Declarations
 ////
 
-pub declaration -> Node<Declaration> = node<declaration0>
+pub declaration -> Node<Declaration<T::Interned>> = node<declaration0>
 
-declaration0 -> Declaration =
+declaration0 -> Declaration<T::Interned> =
     gnu<K<"__extension__">>? _ d:declaration1 _ ";" {
         Declaration {
             specifiers: d.0,
@@ -467,10 +470,10 @@ declaration0 -> Declaration =
 
 declaration_seq<h, t> = h:h _ t:t { (concat(h, t.0), t.1) }
 
-declaration1 -> (Vec<Node<DeclarationSpecifier>>, Vec<Node<InitDeclarator>>) =
+declaration1 -> (Vec<Node<DeclarationSpecifier<T::Interned>>>, Vec<Node<InitDeclarator<T::Interned>>>) =
     declaration_seq<declaration_specifiers_unique, declaration2>
 
-declaration2 -> (Vec<Node<DeclarationSpecifier>>, Vec<Node<InitDeclarator>>) =
+declaration2 -> (Vec<Node<DeclarationSpecifier<T::Interned>>>, Vec<Node<InitDeclarator<T::Interned>>>) =
     declaration_seq<declaration_typedef, declaration_typedef_tail> /
     declaration_seq<declaration_unique_type, declaration_tail<declaration_specifiers_unique>> /
     declaration_seq<declaration_nonunique_type, declaration_tail<declaration_specifiers_nonunique>>
@@ -482,59 +485,59 @@ declaration_tail1<s> =
     d:declaration_init_declarators { (Vec::new(), d) }
 
 // What can follow a typedef keyword
-declaration_typedef_tail -> (Vec<Node<DeclarationSpecifier>>, Vec<Node<InitDeclarator>>) =
+declaration_typedef_tail -> (Vec<Node<DeclarationSpecifier<T::Interned>>>, Vec<Node<InitDeclarator<T::Interned>>>) =
     declaration_seq<declaration_specifiers_unique, declaration_typedef_tail0>
 
-declaration_typedef_tail0 -> (Vec<Node<DeclarationSpecifier>>, Vec<Node<InitDeclarator>>) =
+declaration_typedef_tail0 -> (Vec<Node<DeclarationSpecifier<T::Interned>>>, Vec<Node<InitDeclarator<T::Interned>>>) =
     declaration_seq<declaration_unique_type, declaration_typedef_tail1<declaration_specifiers_unique>> /
     declaration_seq<declaration_nonunique_type, declaration_typedef_tail1<declaration_specifiers_nonunique>>
 
 // What can follow after typedef + type name
 declaration_typedef_tail1<s> = s:s _ d:declaration_type_declarators { (s, d) }
 
-declaration_unique_type -> Vec<Node<DeclarationSpecifier>> =
+declaration_unique_type -> Vec<Node<DeclarationSpecifier<T::Interned>>> =
     n:node<declaration_specifier_unique_type0> { vec![ n ] }
 
-declaration_nonunique_type -> Vec<Node<DeclarationSpecifier>> =
+declaration_nonunique_type -> Vec<Node<DeclarationSpecifier<T::Interned>>> =
     n:node<declaration_specifier_nonunique_type0> { vec![ n ] }
 
-declaration_specifiers -> Vec<Node<DeclarationSpecifier>> =
+declaration_specifiers -> Vec<Node<DeclarationSpecifier<T::Interned>>> =
     s:declaration_specifiers_unique _ t:declaration_specifiers_tail { concat(s, t) }
 
-declaration_specifiers_tail -> Vec<Node<DeclarationSpecifier>> =
+declaration_specifiers_tail -> Vec<Node<DeclarationSpecifier<T::Interned>>> =
     t:declaration_unique_type _ s:declaration_specifiers_unique { concat(t, s) } /
     t:declaration_nonunique_type _ s:declaration_specifiers_nonunique { concat(t, s) }
 
-declaration_specifiers_unique -> Vec<Node<DeclarationSpecifier>> =
+declaration_specifiers_unique -> Vec<Node<DeclarationSpecifier<T::Interned>>> =
     list0<node<declaration_specifier_nontype>>
 
-declaration_specifiers_nonunique  -> Vec<Node<DeclarationSpecifier>> =
+declaration_specifiers_nonunique  -> Vec<Node<DeclarationSpecifier<T::Interned>>> =
     list0<node<declaration_specifier_nontype / declaration_specifier_nonunique_type0>>
 
-declaration_specifier_nontype -> DeclarationSpecifier =
+declaration_specifier_nontype -> DeclarationSpecifier<T::Interned> =
     s:storage_class_specifier { DeclarationSpecifier::StorageClass(s) } /
     s:type_qualifier { DeclarationSpecifier::TypeQualifier(s) } /
     s:function_specifier { DeclarationSpecifier::Function(s) } /
     s:alignment_specifier { DeclarationSpecifier::Alignment(s) } /
     s:gnu<attribute_specifier> { DeclarationSpecifier::Extension(s) }
 
-declaration_typedef -> Vec<Node<DeclarationSpecifier>> =
+declaration_typedef -> Vec<Node<DeclarationSpecifier<T::Interned>>> =
     s:node<declaration_typedef0> { vec![ s ] }
 
-declaration_typedef0 -> DeclarationSpecifier =
+declaration_typedef0 -> DeclarationSpecifier<T::Interned> =
     s:storage_class_typedef { DeclarationSpecifier::StorageClass(s) }
 
-declaration_specifier_unique_type0 -> DeclarationSpecifier =
+declaration_specifier_unique_type0 -> DeclarationSpecifier<T::Interned> =
     s:node<type_specifier_unique> { DeclarationSpecifier::TypeSpecifier(s) }
 
-declaration_specifier_nonunique_type0 -> DeclarationSpecifier =
+declaration_specifier_nonunique_type0 -> DeclarationSpecifier<T::Interned> =
     s:node<type_specifier_nonunique> { DeclarationSpecifier::TypeSpecifier(s) }
 
-declaration_init_declarators -> Vec<Node<InitDeclarator>> = cs0<node<init_declarator>>
+declaration_init_declarators -> Vec<Node<InitDeclarator<T::Interned>>> = cs0<node<init_declarator>>
 
-declaration_type_declarators -> Vec<Node<InitDeclarator>> = cs0<node<type_declarator>>
+declaration_type_declarators -> Vec<Node<InitDeclarator<T::Interned>>> = cs0<node<type_declarator>>
 
-init_declarator -> InitDeclarator =
+init_declarator -> InitDeclarator<T::Interned> =
     d:init_declarator_declarator _ e:gnu<init_declarator_gnu>? _ i:node<init_declarator_init>?
     {
         InitDeclarator {
@@ -543,19 +546,19 @@ init_declarator -> InitDeclarator =
         }
     }
 
-init_declarator_declarator -> Node<Declarator> =
+init_declarator_declarator -> Node<Declarator<T::Interned>> =
     d:declarator {
         env.handle_declarator(&d, Symbol::Identifier);
         d
     }
 
-init_declarator_init -> Initializer =
+init_declarator_init -> Initializer<T::Interned> =
     "=" _ i:initializer { i }
 
-init_declarator_gnu -> Vec<Node<Extension>> =
+init_declarator_gnu -> Vec<Node<Extension<T::Interned>>> =
     l:asm_label? _ a:attribute_specifier_list { l.into_iter().chain(a).collect() }
 
-type_declarator -> InitDeclarator =
+type_declarator -> InitDeclarator<T::Interned> =
     d:declarator _ e:gnu<init_declarator_gnu>?
     {
         env.handle_declarator(&d, Symbol::Typename);
@@ -590,7 +593,7 @@ storage_class_typedef0 -> StorageClassSpecifier =
 // ISO 2011, 6.7.2, §2. Void, _Bool, _Atomic, typedef names, struct/unions, and enum
 // specifiers can only appear once in declaration specifiers or specifier-qualifiers.
 // This resolves the ambiguity with typedef names.
-type_specifier_unique -> TypeSpecifier =
+type_specifier_unique -> TypeSpecifier<T::Interned> =
     K<"void"> { TypeSpecifier::Void } /
     K<"_Bool"> { TypeSpecifier::Bool } /
     K<"_Atomic"> _ "(" _ t:type_name _ ")" { TypeSpecifier::Atomic(t) } /
@@ -598,7 +601,7 @@ type_specifier_unique -> TypeSpecifier =
     e:node<enum_specifier> { TypeSpecifier::Enum(e) } /
     t:typedef_name { TypeSpecifier::TypedefName(t) }
 
-type_specifier_nonunique -> TypeSpecifier =
+type_specifier_nonunique -> TypeSpecifier<T::Interned> =
     K<"char"> { TypeSpecifier::Char } /
     K<"short"> { TypeSpecifier::Short } /
     K<"int"> { TypeSpecifier::Int } /
@@ -611,7 +614,7 @@ type_specifier_nonunique -> TypeSpecifier =
     t:K<ts18661_float_type_specifier> { TypeSpecifier::TS18661Float(t) } /
     gnu<typeof_specifier>
 
-struct_or_union_specifier -> StructType =
+struct_or_union_specifier -> StructType<T::Interned> =
     t:node<struct_or_union> _ i:identifier? _ d:struct_or_union_body {
         StructType {
             kind: t,
@@ -627,7 +630,7 @@ struct_or_union_specifier -> StructType =
         }
     }
 
-struct_or_union_body -> Option<Vec<Node<StructDeclaration>>> =
+struct_or_union_body -> Option<Vec<Node<StructDeclaration<T::Interned>>>> =
     "{" _ d:list1<node<struct_declaration>> _ "}" { Some(d) } /
     gnu<"{" _ "}"> { Some(Vec::new()) } /
     { None }
@@ -636,12 +639,12 @@ struct_or_union -> StructKind =
     K<"struct"> { StructKind::Struct } /
     K<"union"> { StructKind::Union }
 
-struct_declaration -> StructDeclaration =
+struct_declaration -> StructDeclaration<T::Interned> =
     f:node<struct_field> { StructDeclaration::Field(f) } /
     s:static_assert { StructDeclaration::StaticAssert(s) } /
     gnu<K<"__extension__">> _ d:struct_declaration { d }
 
-struct_field -> StructField =
+struct_field -> StructField<T::Interned> =
     s:specifier_qualifiers _ d:cs0<node<struct_declarator>> _ ";" {
         StructField {
             specifiers: s,
@@ -649,20 +652,20 @@ struct_field -> StructField =
         }
     }
 
-specifier_qualifiers -> Vec<Node<SpecifierQualifier>> =
+specifier_qualifiers -> Vec<Node<SpecifierQualifier<T::Interned>>> =
     list_eq1_n<node<specifier_qualifier_unique_type0>, node<specifier_qualifier_qualifier0>> /
     list_ge1_n<node<specifier_qualifier_nonunique_type0>, node<specifier_qualifier_qualifier0>>
 
-specifier_qualifier_unique_type0 -> SpecifierQualifier =
+specifier_qualifier_unique_type0 -> SpecifierQualifier<T::Interned> =
     s:node<type_specifier_unique> { SpecifierQualifier::TypeSpecifier(s) }
 
-specifier_qualifier_nonunique_type0 -> SpecifierQualifier =
+specifier_qualifier_nonunique_type0 -> SpecifierQualifier<T::Interned> =
     s:node<type_specifier_nonunique> { SpecifierQualifier::TypeSpecifier(s) }
 
-specifier_qualifier_qualifier0 -> SpecifierQualifier =
+specifier_qualifier_qualifier0 -> SpecifierQualifier<T::Interned> =
     q:type_qualifier { SpecifierQualifier::TypeQualifier(q) }
 
-struct_declarator -> StructDeclarator =
+struct_declarator -> StructDeclarator<T::Interned> =
     d:declarator? _ ":" _ e:constant_expression a:gnu<attribute_specifier_list>? {
         StructDeclarator {
             declarator: d.map(|d| with_ext(d, a)),
@@ -676,7 +679,7 @@ struct_declarator -> StructDeclarator =
         }
     }
 
-enum_specifier -> EnumType =
+enum_specifier -> EnumType<T::Interned> =
     K<"enum"> _ i:identifier? _ "{" _ e:cs1<node<enumerator>> _ ","? _ "}" {
         EnumType {
             identifier: i,
@@ -690,16 +693,16 @@ enum_specifier -> EnumType =
         }
     }
 
-enumerator -> Enumerator =
+enumerator -> Enumerator<T::Interned> =
     i:identifier _ e:enumerator_constant? {
-        env.add_symbol(&i.node.name, Symbol::Identifier);
+        env.add_interned_symbol(&i.node.name, Symbol::Identifier);
         Enumerator {
             identifier: i,
             expression: e,
         }
     }
 
-enumerator_constant -> Box<Node<Expression>> =
+enumerator_constant -> Box<Node<Expression<T::Interned>>> =
     "=" _ e:constant_expression { e }
 
 ////
@@ -732,9 +735,9 @@ function_specifier0 -> FunctionSpecifier =
 // 6.7.5 Alignment specifiers
 ////
 
-alignment_specifier -> Node<AlignmentSpecifier> = node<alignment_specifier0>
+alignment_specifier -> Node<AlignmentSpecifier<T::Interned>> = node<alignment_specifier0>
 
-alignment_specifier0 -> AlignmentSpecifier =
+alignment_specifier0 -> AlignmentSpecifier<T::Interned> =
     K<"_Alignas"> _ "(" _ t:type_name _ ")" { AlignmentSpecifier::Type(t) } /
     K<"_Alignas"> _ "(" _ e:constant_expression _ ")" { AlignmentSpecifier::Constant(e) }
 
@@ -742,9 +745,9 @@ alignment_specifier0 -> AlignmentSpecifier =
 // 6.7.6 Declarators
 ////
 
-declarator -> Node<Declarator> = node<declarator0>
+declarator -> Node<Declarator<T::Interned>> = node<declarator0>
 
-declarator0 -> Declarator =
+declarator0 -> Declarator<T::Interned> =
     attr:gnu<attribute_specifier_list>?
     pointer:list0<pointer> _
     kind:node<direct_declarator> _
@@ -757,16 +760,16 @@ declarator0 -> Declarator =
         }
     }
 
-direct_declarator -> DeclaratorKind =
+direct_declarator -> DeclaratorKind<T::Interned> =
     i:identifier { DeclaratorKind::Identifier(i) } /
     "(" _ d:declarator _ ")" { DeclaratorKind::Declarator(Box::new(d)) }
 
-derived_declarator -> DerivedDeclarator =
+derived_declarator -> DerivedDeclarator<T::Interned> =
     "[" _ a:node<array_declarator> { DerivedDeclarator::Array(a) } /
     "(" _ f:scoped<node<function_declarator>> _ ")" { DerivedDeclarator::Function(f) } /
     "(" _ p:cs0<identifier> _ ")" { DerivedDeclarator::KRFunction(p) }
 
-array_declarator -> ArrayDeclarator =
+array_declarator -> ArrayDeclarator<T::Interned> =
     q:list0<type_qualifier> _ "]" {
         ArrayDeclarator {
             qualifiers: q,
@@ -798,7 +801,7 @@ array_declarator -> ArrayDeclarator =
         }
     }
 
-function_declarator -> FunctionDeclarator =
+function_declarator -> FunctionDeclarator<T::Interned> =
     p:cs1<parameter_declaration> _ e:ellipsis {
         FunctionDeclarator {
             parameters: p,
@@ -806,21 +809,21 @@ function_declarator -> FunctionDeclarator =
         }
     }
 
-pointer -> Node<DerivedDeclarator> = node<pointer0>
+pointer -> Node<DerivedDeclarator<T::Interned>> = node<pointer0>
 
-pointer0 -> DerivedDeclarator =
+pointer0 -> DerivedDeclarator<T::Interned> =
     "*" _ q:list0<node<pointer_qualifier>> { DerivedDeclarator::Pointer(q) }
 
-pointer_qualifier -> PointerQualifier =
+pointer_qualifier -> PointerQualifier<T::Interned> =
     q:type_qualifier { PointerQualifier::TypeQualifier(q) } /
     e:gnu<attribute_specifier> { PointerQualifier::Extension(e) }
 
 ellipsis -> Ellipsis =
     "," _ "..." { Ellipsis::Some } / { Ellipsis::None }
 
-parameter_declaration -> Node<ParameterDeclaration> = node<parameter_declaration0>
+parameter_declaration -> Node<ParameterDeclaration<T::Interned>> = node<parameter_declaration0>
 
-parameter_declaration0 -> ParameterDeclaration =
+parameter_declaration0 -> ParameterDeclaration<T::Interned> =
     s:declaration_specifiers _ d:parameter_declarator _ a:gnu<attribute_specifier_list>? {
         ParameterDeclaration {
             specifiers: s,
@@ -829,7 +832,7 @@ parameter_declaration0 -> ParameterDeclaration =
         }
     }
 
-parameter_declarator -> Option<Node<Declarator>> =
+parameter_declarator -> Option<Node<Declarator<T::Interned>>> =
     d:declarator {
         env.handle_declarator(&d, Symbol::Identifier);
         Some(d)
@@ -841,9 +844,9 @@ parameter_declarator -> Option<Node<Declarator>> =
 // 6.7.7 Type names
 ////
 
-type_name -> Node<TypeName> = node<type_name0>
+type_name -> Node<TypeName<T::Interned>> = node<type_name0>
 
-type_name0 -> TypeName =
+type_name0 -> TypeName<T::Interned> =
     s:specifier_qualifiers _ d:abstract_declarator? {
         TypeName {
             specifiers: s,
@@ -851,9 +854,9 @@ type_name0 -> TypeName =
         }
     }
 
-abstract_declarator -> Node<Declarator> = node<abstract_declarator0>
+abstract_declarator -> Node<Declarator<T::Interned>> = node<abstract_declarator0>
 
-abstract_declarator0 -> Declarator =
+abstract_declarator0 -> Declarator<T::Interned> =
     p:list0<pointer> _ k:node<direct_abstract_declarator> _ d:list0<derived_abstract_declarator> {
         Declarator {
             kind: k,
@@ -876,16 +879,16 @@ abstract_declarator0 -> Declarator =
         }
     }
 
-direct_abstract_declarator -> DeclaratorKind =
+direct_abstract_declarator -> DeclaratorKind<T::Interned> =
     "(" _ d:abstract_declarator _ ")" { DeclaratorKind::Declarator(Box::new(d)) }
 
-derived_abstract_declarator -> Node<DerivedDeclarator> = node<derived_abstract_declarator0>
+derived_abstract_declarator -> Node<DerivedDeclarator<T::Interned>> = node<derived_abstract_declarator0>
 
-derived_abstract_declarator0 -> DerivedDeclarator =
+derived_abstract_declarator0 -> DerivedDeclarator<T::Interned> =
     "[" _ a:node<abstract_array_declarator> { DerivedDeclarator::Array(a) } /
     "(" _ d:node<abstract_function_declarator> _ ")" { DerivedDeclarator::Function(d) }
 
-abstract_array_declarator -> ArrayDeclarator =
+abstract_array_declarator -> ArrayDeclarator<T::Interned> =
     q:list0<type_qualifier> _ "]" {
         ArrayDeclarator {
             qualifiers: q,
@@ -917,7 +920,7 @@ abstract_array_declarator -> ArrayDeclarator =
         }
     }
 
-abstract_function_declarator -> FunctionDeclarator =
+abstract_function_declarator -> FunctionDeclarator<T::Interned> =
     p:cs1<parameter_declaration> _ e:ellipsis {
         FunctionDeclarator {
             parameters: p,
@@ -936,9 +939,9 @@ abstract_function_declarator -> FunctionDeclarator =
 // 6.7.8 Type definitions
 ////
 
-typedef_name -> Node<Identifier> = #quiet<typedef_name0> / #expected("<typedef_name>")
+typedef_name -> Node<Identifier<T::Interned>> = #quiet<typedef_name0> / #expected("<typedef_name>")
 
-typedef_name0 -> Node<Identifier> = i:identifier {?
+typedef_name0 -> Node<Identifier<T::Interned>> = i:identifier {?
     if env.is_typename(&i.node.name) {
         Ok(i)
     } else {
@@ -950,12 +953,12 @@ typedef_name0 -> Node<Identifier> = i:identifier {?
 // 6.7.9 Initialization
 ////
 
-initializer -> Initializer =
+initializer -> Initializer<T::Interned> =
     e:assignment_expression { Initializer::Expression(e) } /
     "{" _ i:cs1<node<initializer_list_item>> _ ","? _ "}" { Initializer::List(i) } /
     gnu<"{" _ "}"> { Initializer::List(Vec::new()) }
 
-initializer_list_item -> InitializerListItem =
+initializer_list_item -> InitializerListItem<T::Interned> =
     d:designation? _ i:node<initializer> {
         InitializerListItem {
             designation: d.unwrap_or_default(),
@@ -963,19 +966,19 @@ initializer_list_item -> InitializerListItem =
         }
     }
 
-designation -> Vec<Node<Designator>> =
+designation -> Vec<Node<Designator<T::Interned>>> =
     d:list1<node<designator>> _ "=" { d } /
     d:gnu<node<colon_designation>> { vec! [ d ] } /
     d:gnu<node<array_designator>> { vec![ d ] }
 
-colon_designation -> Designator =
+colon_designation -> Designator<T::Interned> =
     i:identifier _ ":" { Designator::Member(i) }
 
-designator -> Designator =
+designator -> Designator<T::Interned> =
     d:array_designator { d } /
     "." _ i:identifier { Designator::Member(i) }
 
-array_designator -> Designator =
+array_designator -> Designator<T::Interned> =
     "[" _ a:node<constant_expression0> _ b:gnu<range_designator_ext>? "]" {
         match b {
             Some(b) => {
@@ -986,16 +989,16 @@ array_designator -> Designator =
         }
     }
 
-range_designator_ext -> Node<Expression> =
+range_designator_ext -> Node<Expression<T::Interned>> =
     "..." _ e:node<constant_expression0> { e }
 
 ////
 // 6.7.10 Static assertions
 ////
 
-static_assert -> Node<StaticAssert> = node<static_assert0>
+static_assert -> Node<StaticAssert<T::Interned>> = node<static_assert0>
 
-static_assert0 -> StaticAssert =
+static_assert0 -> StaticAssert<T::Interned> =
    gnu<K<"__extension__">>?
    _ K<"_Static_assert"> _ "(" _ e:constant_expression _ "," _ s:string_literal _ ")" _ ";" {
         StaticAssert {
@@ -1008,9 +1011,9 @@ static_assert0 -> StaticAssert =
 // 6.8 Statements and blocks
 ////
 
-pub statement -> Box<Node<Statement>> = box<node<statement0>>
+pub statement -> Box<Node<Statement<T::Interned>>> = box<node<statement0>>
 
-statement0 -> Statement =
+statement0 -> Statement<T::Interned> =
     s:node<labeled_statement> { Statement::Labeled(s) } /
     scoped<compound_statement> /
     expression_statement /
@@ -1023,7 +1026,7 @@ statement0 -> Statement =
 // 6.8.1 Labeled statements
 ////
 
-labeled_statement -> LabeledStatement =
+labeled_statement -> LabeledStatement<T::Interned> =
     l:node<label> _ ":" _ s:statement {
         LabeledStatement {
             label: l,
@@ -1031,7 +1034,7 @@ labeled_statement -> LabeledStatement =
         }
     }
 
-label -> Label =
+label -> Label<T::Interned> =
     i:identifier { Label::Identifier(i) } /
     K<"case"> _ e:constant_expression { Label::Case(e) } /
     K<"default"> { Label::Default }
@@ -1040,30 +1043,30 @@ label -> Label =
 // 6.8.2 Compound statement
 ////
 
-compound_statement -> Statement =
+compound_statement -> Statement<T::Interned> =
     "{" _ b:list0<node<block_item>> _ "}" { Statement::Compound(b) }
 
-block_item -> BlockItem =
+block_item -> BlockItem<T::Interned> =
     d:declaration { BlockItem::Declaration(d) } /
     s:static_assert { BlockItem::StaticAssert(s) } /
     s:node<statement0> { BlockItem::Statement(s) }
 
 ////
-// 6.8.3 Expression and null statements
+// 6.8.3 Expression<T::Interned> and null statements
 ////
 
-expression_statement -> Statement =
+expression_statement -> Statement<T::Interned> =
     e:expression? _ ";" { Statement::Expression(e) }
 
 ////
 // 6.8.4 Selection statement
 ////
 
-selection_statement -> Statement =
+selection_statement -> Statement<T::Interned> =
     s:node<if_statement> { Statement::If(s) } /
     s:node<switch_statement> { Statement::Switch(s) }
 
-if_statement -> IfStatement =
+if_statement -> IfStatement<T::Interned> =
     K<"if"> _ "(" _ e:expression _ ")" _ a:statement _ b:else_statement? {
         IfStatement {
             condition: e,
@@ -1072,9 +1075,9 @@ if_statement -> IfStatement =
         }
     }
 
-else_statement -> Box<Node<Statement>> = K<"else"> _ s:statement { s }
+else_statement -> Box<Node<Statement<T::Interned>>> = K<"else"> _ s:statement { s }
 
-switch_statement -> SwitchStatement =
+switch_statement -> SwitchStatement<T::Interned> =
     K<"switch"> _ "(" _ e:expression _ ")" _ s:statement {
         SwitchStatement {
             expression: e,
@@ -1086,12 +1089,12 @@ switch_statement -> SwitchStatement =
 // 6.8.5 Iteration statement
 ////
 
-iteration_statement -> Statement =
+iteration_statement -> Statement<T::Interned> =
     s:node<while_statement> { Statement::While(s) } /
     s:node<do_while_statement> { Statement::DoWhile(s) } /
     s:node<for_statement> { Statement::For(s) }
 
-while_statement -> WhileStatement =
+while_statement -> WhileStatement<T::Interned> =
     K<"while"> _ "(" _ e:expression _ ")" _ s:statement {
         WhileStatement {
             expression: e,
@@ -1099,7 +1102,7 @@ while_statement -> WhileStatement =
         }
     }
 
-do_while_statement -> DoWhileStatement =
+do_while_statement -> DoWhileStatement<T::Interned> =
     K<"do"> _ s:statement _ K<"while"> _ "(" _ e:expression _ ")" _ ";" {
         DoWhileStatement {
             statement: s,
@@ -1107,7 +1110,7 @@ do_while_statement -> DoWhileStatement =
         }
     }
 
-for_statement -> ForStatement =
+for_statement -> ForStatement<T::Interned> =
     K<"for"> _ "(" _ a:node<for_initializer> _ b:expression? _ ";" _ c:expression? _ ")" _ s:statement {
         ForStatement {
             initializer: a,
@@ -1117,7 +1120,7 @@ for_statement -> ForStatement =
         }
     }
 
-for_initializer -> ForInitializer =
+for_initializer -> ForInitializer<T::Interned> =
     e:expression _ ";" { ForInitializer::Expression(e) } /
     d:declaration { ForInitializer::Declaration(d) } /
     s:static_assert { ForInitializer::StaticAssert(s) } /
@@ -1127,7 +1130,7 @@ for_initializer -> ForInitializer =
 // 6.8.6 Jump statements
 ////
 
-jump_statement -> Statement =
+jump_statement -> Statement<T::Interned> =
     K<"goto"> _ i:identifier _ ";" { Statement::Goto(i) } /
     K<"continue"> _ ";" { Statement::Continue } /
     K<"break"> _ ";" { Statement::Break } /
@@ -1139,15 +1142,15 @@ jump_statement -> Statement =
 
 scoped<e> = ({ env.enter_scope(); }) e:e? {? env.leave_scope(); e.ok_or("") }
 
-pub translation_unit -> TranslationUnit =
+pub translation_unit -> TranslationUnit<T::Interned> =
     directive? _ d:list0<node<external_declaration>> _ { TranslationUnit(d) }
 
-external_declaration -> ExternalDeclaration =
+external_declaration -> ExternalDeclaration<T::Interned> =
     d:declaration { ExternalDeclaration::Declaration(d) } /
     s:static_assert { ExternalDeclaration::StaticAssert(s) } /
     d:scoped<node<function_definition>> { ExternalDeclaration::FunctionDefinition(d) }
 
-function_definition -> FunctionDefinition =
+function_definition -> FunctionDefinition<T::Interned> =
     gnu<K<"__extension__">>?
     _ a:declaration_specifiers _ b:declarator _ c:list0<declaration>
     _ d:node<compound_statement> {
@@ -1171,13 +1174,13 @@ gnu_guard = {? if env.extensions_gnu { Ok(()) } else { Err("gnu extensions disab
 // GNU attributes
 ////
 
-attribute_specifier_list -> Vec<Node<Extension>> =
+attribute_specifier_list -> Vec<Node<Extension<T::Interned>>> =
     a:list0<attribute_specifier> { a.into_iter().flat_map(|v| v).collect() }
 
-attribute_specifier -> Vec<Node<Extension>> =
+attribute_specifier -> Vec<Node<Extension<T::Interned>>> =
     K<"__attribute__"> _ "((" _ a:cs0<node<attribute>> _ "))" { a }
 
-attribute -> Extension =
+attribute -> Extension<T::Interned> =
     c:clang<node<attr_availability>> { Extension::AvailabilityAttribute(c) } /
     n:node<attribute_name> _ p:attribute_parameters? {
         Extension::Attribute(Attribute {
@@ -1189,10 +1192,10 @@ attribute -> Extension =
 attribute_name -> String =
     n:$(#quiet<[_a-zA-Z][_a-zA-Z0-9]*>) { String::from(n) }
 
-attribute_parameters -> Vec<Node<Expression>> =
+attribute_parameters -> Vec<Node<Expression<T::Interned>>> =
     "(" _ e:cs0<node<assignment_expression0>> _ ")" { e }
 
-attr_availability -> AvailabilityAttribute =
+attr_availability -> AvailabilityAttribute<T::Interned> =
     K<"availability"> _ "(" _ p:identifier _ "," _ c:cs1<node<attr_availability_clause>> _ ")" {
         AvailabilityAttribute {
             platform: p,
@@ -1221,9 +1224,9 @@ attr_availability_version -> AvailabilityVersion =
 // GNU assembler labels
 ////
 
-asm_label -> Node<Extension> = node<asm_label0>
+asm_label -> Node<Extension<T::Interned>> = node<asm_label0>
 
-asm_label0 -> Extension =
+asm_label0 -> Extension<T::Interned> =
     asm_label_keyword _ "(" _ s:string_literal _ ")" { Extension::AsmLabel(s) }
 
 asm_label_keyword =
@@ -1233,10 +1236,10 @@ asm_label_keyword =
 // GNU assembler statements
 ////
 
-asm_statement -> Statement =
+asm_statement -> Statement<T::Interned> =
     s:node<asm_statement0> { Statement::Asm(s) }
 
-asm_statement0 -> AsmStatement =
+asm_statement0 -> AsmStatement<T::Interned> =
     K<"asm" / "__asm" "__"?> _ q:type_qualifier? _ "(" _
         a:string_literal _
         o:asm_ext<asm_operand_list, asm_ext<asm_operand_list, asm_ext<cs0<string_literal>, ()>>>? _
@@ -1256,9 +1259,9 @@ asm_statement0 -> AsmStatement =
 
 asm_ext<e, t> = ":" _ e:e _ t:t? { (e, t.unwrap_or_default()) }
 
-asm_operand_list -> Vec<Node<GnuAsmOperand>> = cs0<node<asm_operand>>
+asm_operand_list -> Vec<Node<GnuAsmOperand<T::Interned>>> = cs0<node<asm_operand>>
 
-asm_operand -> GnuAsmOperand =
+asm_operand -> GnuAsmOperand<T::Interned> =
     i:("[" _ i:identifier _ "]" _ {i})? s:string_literal _ "(" _ e:node<expression0> _ ")" {
         GnuAsmOperand {
             symbolic_name: i,
@@ -1271,19 +1274,19 @@ asm_operand -> GnuAsmOperand =
 // GNU expression extensions
 ////
 
-gnu_primary_expression -> Expression =
+gnu_primary_expression -> Expression<T::Interned> =
     statement_expression /
     offsetof_expression /
     va_arg_expression /
     keyword_expression
 
-statement_expression -> Expression =
+statement_expression -> Expression<T::Interned> =
     "(" _ s:scoped<node<compound_statement>> _ ")" { Expression::Statement(Box::new(s)) }
 
-va_arg_expression -> Expression =
+va_arg_expression -> Expression<T::Interned> =
     n:node<va_arg_expression_inner> { Expression::VaArg(Box::new(n)) }
 
-va_arg_expression_inner -> VaArgExpression =
+va_arg_expression_inner -> VaArgExpression<T::Interned> =
     K<"__builtin_va_arg"> _ "(" _ e:assignment_expression _ "," _ t:type_name _ ")" {
         VaArgExpression {
             va_list: e,
@@ -1291,10 +1294,10 @@ va_arg_expression_inner -> VaArgExpression =
         }
     }
 
-keyword_expression -> Expression =
+keyword_expression -> Expression<T::Interned> =
     k:node<$(keyword_expression0)> {
         let ident = Identifier {
-            name: k.node.to_string(),
+            name: env.interner.intern_str(k.node),
         };
         Expression::Identifier(Box::new(Node::new(ident, k.span)))
     }
@@ -1304,10 +1307,10 @@ keyword_expression0 =
     K<"__FUNCTION__"> /
     K<"__PRETTY_FUNCTION__">
 
-offsetof_expression -> Expression =
+offsetof_expression -> Expression<T::Interned> =
     n:node<offsetof_expression_inner> { Expression::OffsetOf(Box::new(n)) }
 
-offsetof_expression_inner -> OffsetOfExpression =
+offsetof_expression_inner -> OffsetOfExpression<T::Interned> =
     K<"__builtin_offsetof"> _ "(" _ t:type_name _ "," _ d:node<offsetof_designator> _ ")" {
         OffsetOfExpression {
             type_name: t,
@@ -1315,7 +1318,7 @@ offsetof_expression_inner -> OffsetOfExpression =
         }
     }
 
-offsetof_designator -> OffsetDesignator =
+offsetof_designator -> OffsetDesignator<T::Interned> =
     i:identifier _ d:list0<node<offsetof_member>> {
         OffsetDesignator {
             base: i,
@@ -1323,7 +1326,7 @@ offsetof_designator -> OffsetDesignator =
         }
     }
 
-offsetof_member -> OffsetMember =
+offsetof_member -> OffsetMember<T::Interned> =
     "." _ i:identifier { OffsetMember::Member(i) } /
     "->" _ i:identifier { OffsetMember::IndirectMember(i) } /
     "[" _ e:node<expression0> _ "]" { OffsetMember::Index(e) }
@@ -1332,10 +1335,10 @@ offsetof_member -> OffsetMember =
 // GNU typeof extension
 ////
 
-typeof_specifier -> TypeSpecifier =
+typeof_specifier -> TypeSpecifier<T::Interned> =
     K<"typeof" / "__typeof" "__"?> _ "(" _ e:node<typeof_specifier0> _ ")" { TypeSpecifier::TypeOf(e) }
 
-typeof_specifier0 -> TypeOf =
+typeof_specifier0 -> TypeOf<T::Interned> =
     e:node<expression0> { TypeOf::Expression(e) } /
     t:type_name { TypeOf::Type(t) }
 

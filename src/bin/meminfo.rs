@@ -3,7 +3,7 @@ use lang_c::ast::*;
 use std::mem::size_of;
 
 macro_rules! ps {
-    ($( $i:ident )+) => ({ $(println!("{:3}  {}", size_of::<$i>(), stringify!($i));)+ })
+    ($( $t:ty )+) => ({ $(println!("{:3}  {}", size_of::<$t>(), stringify!($t));)+ })
 }
 
 fn main() {

@@ -9,6 +9,8 @@ use std::process::Command;
 
 use ast::TranslationUnit;
 use env::Env;
+use interner::DummyInterner;
+use interner::Interner;
 use parser::translation_unit;
 
 /// Parser configuration
@@ -71,7 +73,16 @@ pub struct Parse {
     /// Pre-processed source text
     pub source: String,
     /// Root of the abstract syntax tree
-    pub unit: TranslationUnit,
+    pub unit: TranslationUnit<String>,
+}
+
+/// Result of a successful parse for generic identifier type
+#[derive(Clone, Debug)]
+pub struct ParseExt<T: Interner> {
+    /// Pre-processed source text
+    pub source: String,
+    /// Root of the abstract syntax tree
+    pub unit: TranslationUnit<T::Interned>,
 }
 
 #[derive(Debug)]
@@ -158,14 +169,55 @@ pub fn parse<P: AsRef<Path>>(config: &Config, source: P) -> Result<Parse, Error>
 }
 
 pub fn parse_preprocessed(config: &Config, source: String) -> Result<Parse, SyntaxError> {
+    let mut interner = DummyInterner;
     let mut env = match config.flavor {
-        Flavor::StdC11 => Env::with_core(),
-        Flavor::GnuC11 => Env::with_gnu(),
-        Flavor::ClangC11 => Env::with_clang(),
+        Flavor::StdC11 => Env::with_core(&mut interner),
+        Flavor::GnuC11 => Env::with_gnu(&mut interner),
+        Flavor::ClangC11 => Env::with_clang(&mut interner),
     };
 
     match translation_unit(&source, &mut env) {
         Ok(unit) => Ok(Parse {
+            source: source,
+            unit: unit,
+        }),
+        Err(err) => Err(SyntaxError {
+            source: source,
+            line: err.line,
+            column: err.column,
+            offset: err.offset,
+            expected: err.expected,
+        }),
+    }
+}
+
+/// Parse a C file using a custom string type extended setup
+pub fn parse_ext<P: AsRef<Path>, T: Interner>(
+    interner: &mut T,
+    config: &Config,
+    source: P,
+) -> Result<ParseExt<T>, Error> {
+    let processed = match preprocess(config, source.as_ref()) {
+        Ok(s) => s,
+        Err(e) => return Err(Error::PreprocessorError(e)),
+    };
+
+    Ok(try!(parse_preprocessed_ext(interner, config, processed)))
+}
+
+pub fn parse_preprocessed_ext<T: Interner>(
+    interner: &mut T,
+    config: &Config,
+    source: String,
+) -> Result<ParseExt<T>, SyntaxError> {
+    let mut env = match config.flavor {
+        Flavor::StdC11 => Env::with_core(interner),
+        Flavor::GnuC11 => Env::with_gnu(interner),
+        Flavor::ClangC11 => Env::with_clang(interner),
+    };
+
+    match translation_unit(&source, &mut env) {
+        Ok(unit) => Ok(ParseExt::<T> {
             source: source,
             unit: unit,
         }),

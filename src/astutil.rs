@@ -2,14 +2,14 @@ use ast::*;
 use span::{Node, Span};
 
 #[cfg_attr(test, derive(Debug, PartialEq, Clone))]
-pub enum Operation {
-    Member(Node<MemberOperator>, Node<Identifier>),
+pub enum Operation<T: Name> {
+    Member(Node<MemberOperator>, Node<Identifier<T>>),
     Unary(Node<UnaryOperator>),
-    Binary(Node<BinaryOperator>, Node<Expression>),
-    Call(Vec<Node<Expression>>),
+    Binary(Node<BinaryOperator>, Node<Expression<T>>),
+    Call(Vec<Node<Expression<T>>>),
 }
 
-fn apply_op(a: Node<Expression>, op: Node<Operation>) -> Node<Expression> {
+fn apply_op<T: Name>(a: Node<Expression<T>>, op: Node<Operation<T>>) -> Node<Expression<T>> {
     let span = Span::span(a.span.start, op.span.end);
     let expr = match op.node {
         Operation::Member(op, id) => Expression::Member(Box::new(Node::new(
@@ -47,7 +47,10 @@ fn apply_op(a: Node<Expression>, op: Node<Operation>) -> Node<Expression> {
     Node::new(expr, span)
 }
 
-pub fn apply_ops(ops: Vec<Node<Operation>>, expr: Node<Expression>) -> Node<Expression> {
+pub fn apply_ops<T: Name>(
+    ops: Vec<Node<Operation<T>>>,
+    expr: Node<Expression<T>>,
+) -> Node<Expression<T>> {
     ops.into_iter().fold(expr, apply_op)
 }
 
@@ -56,12 +59,12 @@ pub fn concat<T>(mut a: Vec<T>, b: Vec<T>) -> Vec<T> {
     a
 }
 
-pub fn infix(
+pub fn infix<T: Name>(
     node: Node<()>,
     op: BinaryOperator,
-    lhs: Node<Expression>,
-    rhs: Node<Expression>,
-) -> Node<Expression> {
+    lhs: Node<Expression<T>>,
+    rhs: Node<Expression<T>>,
+) -> Node<Expression<T>> {
     let span = Span::span(lhs.span.start, rhs.span.end);
     Node::new(
         Expression::BinaryOperator(Box::new(Node::new(
@@ -76,7 +79,10 @@ pub fn infix(
     )
 }
 
-pub fn with_ext(mut d: Node<Declarator>, e: Option<Vec<Node<Extension>>>) -> Node<Declarator> {
+pub fn with_ext<T: Name>(
+    mut d: Node<Declarator<T>>,
+    e: Option<Vec<Node<Extension<T>>>>,
+) -> Node<Declarator<T>> {
     if let Some(e) = e {
         d.node.extensions.extend(e);
     }

@@ -22,21 +22,9 @@
 
 use span::Node;
 
-/// Trait that specifies types which can be used for Identifiers and type names
-pub trait Name: ::std::fmt::Debug + PartialEq + Eq + ::std::hash::Hash + Clone {
-    fn get_from_str<S: AsRef<str>>(string: S) -> Self;
-    fn recover_string(&self) -> String;
-}
+pub trait Name: ::std::fmt::Debug + PartialEq + Eq + ::std::hash::Hash + Clone {}
 
-impl Name for String {
-    fn get_from_str<S: AsRef<str>>(string: S) -> Self {
-        string.as_ref().to_owned()
-    }
-
-    fn recover_string(&self) -> String {
-        self.clone()
-    }
-}
+impl<T> Name for T where T: ::std::fmt::Debug + PartialEq + Eq + ::std::hash::Hash + Clone {}
 
 // From 6.4 Lexical elements
 

@@ -9,6 +9,7 @@ use std::mem;
 use std::path::PathBuf;
 
 use env::Env;
+use interner::DummyInterner;
 use parser;
 use print::Printer;
 use span::Span;
@@ -70,17 +71,30 @@ impl Case {
     }
 
     fn run(&self) -> bool {
-        let mut env: Option<Env<String>> = None;
+        let mut interner = DummyInterner::default();
+
+        // As the Env will borrow the interner, we have only one shot to create the Env.
+        enum EnvType {
+            Gnu,
+            Clang,
+            None,
+        }
+
+        let mut env_type = EnvType::None;
 
         for pragma in &self.pragma {
             match *pragma {
-                Pragma::Gnu => env = Some(Env::with_gnu()),
-                Pragma::Clang => env = Some(Env::with_clang()),
+                Pragma::Gnu => env_type = EnvType::Gnu,
+                Pragma::Clang => env_type = EnvType::Clang,
                 _ => {}
             }
         }
 
-        let mut env = env.unwrap_or_else(Env::with_core);
+        let mut env = match env_type {
+            EnvType::Gnu => Env::with_gnu(&mut interner),
+            EnvType::Clang => Env::with_clang(&mut interner),
+            EnvType::None => Env::with_core(&mut interner),
+        };
 
         for pragma in &self.pragma {
             match *pragma {
@@ -205,7 +219,7 @@ impl Kind {
     fn parse_and_print(
         &self,
         source: &str,
-        env: &mut Env<String>,
+        env: &mut Env<DummyInterner>,
     ) -> Result<String, parser::ParseError> {
         let source = source.trim_right();
 

@@ -13,6 +13,7 @@
 use std::fmt;
 
 use ast::*;
+use interner::DummyInterner;
 use span::Span;
 use visit::*;
 
@@ -56,53 +57,53 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
     }
     fn visit_constant(&mut self, n: &'ast Constant, span: &'ast Span) {
         self.name("Constant");
-        visit_constant::<_, String>(&mut self.block(), n, span);
+        visit_constant::<_, DummyInterner>(&mut self.block(), n, span);
     }
     fn visit_integer(&mut self, n: &'ast Integer, span: &'ast Span) {
         self.name("Integer");
         self.write_field(&n.number);
-        visit_integer::<_, String>(&mut self.block(), n, span);
+        visit_integer::<_, DummyInterner>(&mut self.block(), n, span);
     }
     fn visit_integer_base(&mut self, n: &'ast IntegerBase, span: &'ast Span) {
         self.name("IntegerBase");
         self.write_field(&n);
-        visit_integer_base::<_, String>(&mut self.block(), n, span);
+        visit_integer_base::<_, DummyInterner>(&mut self.block(), n, span);
     }
     fn visit_integer_suffix(&mut self, n: &'ast IntegerSuffix, span: &'ast Span) {
         self.name("IntegerSuffix");
         self.write_field(&n.unsigned);
         self.write_field(&n.imaginary);
-        visit_integer_suffix::<_, String>(&mut self.block(), n, span);
+        visit_integer_suffix::<_, DummyInterner>(&mut self.block(), n, span);
     }
     fn visit_integer_size(&mut self, n: &'ast IntegerSize, span: &'ast Span) {
         self.name("IntegerSize");
         self.write_field(&n);
-        visit_integer_size::<_, String>(&mut self.block(), n, span);
+        visit_integer_size::<_, DummyInterner>(&mut self.block(), n, span);
     }
     fn visit_float(&mut self, n: &'ast Float, span: &'ast Span) {
         self.name("Float");
         self.write_field(&n.number);
-        visit_float::<_, String>(&mut self.block(), n, span);
+        visit_float::<_, DummyInterner>(&mut self.block(), n, span);
     }
     fn visit_float_base(&mut self, n: &'ast FloatBase, span: &'ast Span) {
         self.name("FloatBase");
         self.write_field(&n);
-        visit_float_base::<_, String>(&mut self.block(), n, span);
+        visit_float_base::<_, DummyInterner>(&mut self.block(), n, span);
     }
     fn visit_float_suffix(&mut self, n: &'ast FloatSuffix, span: &'ast Span) {
         self.name("FloatSuffix");
         self.write_field(&n.imaginary);
-        visit_float_suffix::<_, String>(&mut self.block(), n, span);
+        visit_float_suffix::<_, DummyInterner>(&mut self.block(), n, span);
     }
     fn visit_float_format(&mut self, n: &'ast FloatFormat, span: &'ast Span) {
         self.name("FloatFormat");
         print_float_format(self, n);
-        visit_float_format::<_, String>(&mut self.block(), n, span);
+        visit_float_format::<_, DummyInterner>(&mut self.block(), n, span);
     }
     fn visit_string_literal(&mut self, n: &'ast StringLiteral, span: &'ast Span) {
         self.name("StringLiteral");
         self.write_field(&n);
-        visit_string_literal::<_, String>(&mut self.block(), n, span);
+        visit_string_literal::<_, DummyInterner>(&mut self.block(), n, span);
     }
     fn visit_expression(&mut self, n: &'ast Expression<String>, span: &'ast Span) {
         self.name("Expression");
@@ -111,7 +112,7 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
     fn visit_member_operator(&mut self, n: &'ast MemberOperator, span: &'ast Span) {
         self.name("MemberOperator");
         self.write_field(&n);
-        visit_member_operator::<_, String>(&mut self.block(), n, span);
+        visit_member_operator::<_, DummyInterner>(&mut self.block(), n, span);
     }
     fn visit_generic_selection(&mut self, n: &'ast GenericSelection<String>, span: &'ast Span) {
         self.name("GenericSelection");
@@ -144,7 +145,7 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
     fn visit_unary_operator(&mut self, n: &'ast UnaryOperator, span: &'ast Span) {
         self.name("UnaryOperator");
         self.write_field(&n);
-        visit_unary_operator::<_, String>(&mut self.block(), n, span);
+        visit_unary_operator::<_, DummyInterner>(&mut self.block(), n, span);
     }
     fn visit_unary_operator_expression(
         &mut self,
@@ -161,7 +162,7 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
     fn visit_binary_operator(&mut self, n: &'ast BinaryOperator, span: &'ast Span) {
         self.name("BinaryOperator");
         self.write_field(&n);
-        visit_binary_operator::<_, String>(&mut self.block(), n, span);
+        visit_binary_operator::<_, DummyInterner>(&mut self.block(), n, span);
     }
     fn visit_binary_operator_expression(
         &mut self,
@@ -219,7 +220,7 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
     fn visit_storage_class_specifier(&mut self, n: &'ast StorageClassSpecifier, span: &'ast Span) {
         self.name("StorageClassSpecifier");
         self.write_field(&n);
-        visit_storage_class_specifier::<_, String>(&mut self.block(), n, span);
+        visit_storage_class_specifier::<_, DummyInterner>(&mut self.block(), n, span);
     }
     fn visit_type_specifier(&mut self, n: &'ast TypeSpecifier<String>, span: &'ast Span) {
         self.name("TypeSpecifier");
@@ -229,12 +230,12 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
     fn visit_ts18661_float_type(&mut self, n: &'ast TS18661FloatType, span: &'ast Span) {
         self.name("TS18661FloatType");
         self.write_field(&n.width);
-        visit_ts18661_float_type::<_, String>(&mut self.block(), n, span);
+        visit_ts18661_float_type::<_, DummyInterner>(&mut self.block(), n, span);
     }
     fn visit_ts18661_float_format(&mut self, n: &'ast TS18661FloatFormat, span: &'ast Span) {
         self.name("TS18661FloatFormat");
         self.write_field(&n);
-        visit_ts18661_float_format::<_, String>(&mut self.block(), n, span);
+        visit_ts18661_float_format::<_, DummyInterner>(&mut self.block(), n, span);
     }
     fn visit_struct_type(&mut self, n: &'ast StructType<String>, span: &'ast Span) {
         self.name("StructType");
@@ -243,7 +244,7 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
     fn visit_struct_kind(&mut self, n: &'ast StructKind, span: &'ast Span) {
         self.name("StructKind");
         self.write_field(&n);
-        visit_struct_kind::<_, String>(&mut self.block(), n, span);
+        visit_struct_kind::<_, DummyInterner>(&mut self.block(), n, span);
     }
     fn visit_struct_declaration(&mut self, n: &'ast StructDeclaration<String>, span: &'ast Span) {
         self.name("StructDeclaration");
@@ -272,12 +273,12 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
     fn visit_type_qualifier(&mut self, n: &'ast TypeQualifier, span: &'ast Span) {
         self.name("TypeQualifier");
         self.write_field(&n);
-        visit_type_qualifier::<_, String>(&mut self.block(), n, span);
+        visit_type_qualifier::<_, DummyInterner>(&mut self.block(), n, span);
     }
     fn visit_function_specifier(&mut self, n: &'ast FunctionSpecifier, span: &'ast Span) {
         self.name("FunctionSpecifier");
         self.write_field(&n);
-        visit_function_specifier::<_, String>(&mut self.block(), n, span);
+        visit_function_specifier::<_, DummyInterner>(&mut self.block(), n, span);
     }
     fn visit_alignment_specifier(&mut self, n: &'ast AlignmentSpecifier<String>, span: &'ast Span) {
         self.name("AlignmentSpecifier");
@@ -324,7 +325,7 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
     fn visit_ellipsis(&mut self, n: &'ast Ellipsis, span: &'ast Span) {
         self.name("Ellipsis");
         self.write_field(&n);
-        visit_ellipsis::<_, String>(&mut self.block(), n, span);
+        visit_ellipsis::<_, DummyInterner>(&mut self.block(), n, span);
     }
     fn visit_type_name(&mut self, n: &'ast TypeName<String>, span: &'ast Span) {
         self.name("TypeName");

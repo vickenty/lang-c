@@ -1,6 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
 use ast::*;
+use interner::Interner;
 use span::Node;
 use strings;
 
@@ -10,43 +11,46 @@ pub enum Symbol {
     Identifier,
 }
 
-pub struct Env<T: Name> {
-    pub symbols: Vec<HashMap<T, Symbol>>,
+pub struct Env<'a, T: 'a + Interner> {
+    pub symbols: Vec<HashMap<T::Interned, Symbol>>,
+    pub interner: &'a mut T,
     pub extensions_gnu: bool,
     pub extensions_clang: bool,
     pub reserved: HashSet<&'static str>,
 }
 
-impl<T: Name> Env<T> {
-    pub fn with_core() -> Env<T> {
+impl<'a, T: Interner> Env<'a, T> {
+    pub fn with_core(interner: &'a mut T) -> Env<'a, T> {
         let mut reserved = HashSet::default();
         reserved.extend(strings::RESERVED_C11.iter());
         Env {
             extensions_gnu: false,
             extensions_clang: false,
             symbols: vec![HashMap::default()],
+            interner: interner,
             reserved: reserved,
         }
     }
 
-    pub fn with_gnu() -> Env<T> {
+    pub fn with_gnu(interner: &'a mut T) -> Env<'a, T> {
         let mut symbols = HashMap::default();
         let mut reserved = HashSet::default();
-        symbols.insert(T::get_from_str("__builtin_va_list"), Symbol::Typename);
+        symbols.insert(interner.intern_str("__builtin_va_list"), Symbol::Typename);
         reserved.extend(strings::RESERVED_C11.iter());
         reserved.extend(strings::RESERVED_GNU.iter());
         Env {
             extensions_gnu: true,
             extensions_clang: false,
             symbols: vec![symbols],
+            interner: interner,
             reserved: reserved,
         }
     }
 
-    pub fn with_clang() -> Env<T> {
+    pub fn with_clang(interner: &'a mut T) -> Env<'a, T> {
         let mut symbols = HashMap::default();
         let mut reserved = HashSet::default();
-        symbols.insert(T::get_from_str("__builtin_va_list"), Symbol::Typename);
+        symbols.insert(interner.intern_str("__builtin_va_list"), Symbol::Typename);
         reserved.extend(strings::RESERVED_C11.iter());
         reserved.extend(strings::RESERVED_GNU.iter());
         reserved.extend(strings::RESERVED_CLANG.iter());
@@ -54,6 +58,7 @@ impl<T: Name> Env<T> {
             extensions_gnu: true,
             extensions_clang: true,
             symbols: vec![symbols],
+            interner: interner,
             reserved: reserved,
         }
     }
@@ -66,7 +71,7 @@ impl<T: Name> Env<T> {
         self.symbols.pop().expect("more scope pops than pushes");
     }
 
-    pub fn is_typename(&self, ident: &T) -> bool {
+    pub fn is_typename(&self, ident: &T::Interned) -> bool {
         for scope in self.symbols.iter().rev() {
             if let Some(symbol) = scope.get(ident) {
                 return *symbol == Symbol::Typename;
@@ -75,8 +80,8 @@ impl<T: Name> Env<T> {
         false
     }
 
-    pub fn handle_declarator(&mut self, d: &Node<Declarator<T>>, sym: Symbol) {
-        if let Some(name) = find_declarator_name(&d.node.kind.node) {
+    pub fn handle_declarator(&mut self, d: &Node<Declarator<T::Interned>>, sym: Symbol) {
+        if let Some(name) = find_declarator_name::<T>(&d.node.kind.node) {
             self.add_interned_symbol(&name, sym)
         }
     }
@@ -87,10 +92,10 @@ impl<T: Name> Env<T> {
             .symbols
             .last_mut()
             .expect("at least one scope should be always present");
-        scope.insert(T::get_from_str(s), symbol);
+        scope.insert(self.interner.intern_str(s), symbol);
     }
 
-    pub fn add_interned_symbol(&mut self, s: &T, symbol: Symbol) {
+    pub fn add_interned_symbol(&mut self, s: &T::Interned, symbol: Symbol) {
         let scope = self
             .symbols
             .last_mut()
@@ -104,10 +109,10 @@ impl<T: Name> Env<T> {
     }
 }
 
-fn find_declarator_name<T: Name>(d: &DeclaratorKind<T>) -> Option<&T> {
+fn find_declarator_name<T: Interner>(d: &DeclaratorKind<T::Interned>) -> Option<&T::Interned> {
     match d {
         &DeclaratorKind::Abstract => None,
         &DeclaratorKind::Identifier(ref i) => Some(&i.node.name),
-        &DeclaratorKind::Declarator(ref d) => find_declarator_name(&d.node.kind.node),
+        &DeclaratorKind::Declarator(ref d) => find_declarator_name::<T>(&d.node.kind.node),
     }
 }

@@ -13,3 +13,6 @@ categories = [ "parser-implementations" ]
 
 [badges]
 travis-ci = { repository = "vickenty/lang-c" }
+
+[dependencies]
+lasso = "0.4.1"

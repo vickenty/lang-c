@@ -9,7 +9,10 @@
 //! }
 //! ```
 
+
 #![allow(deprecated)]
+
+extern crate lasso;
 
 pub mod ast;
 pub mod driver;

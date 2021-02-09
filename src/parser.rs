@@ -7816,7 +7816,56 @@ fn __parse_struct_field<'input>(__input: &'input str, __state: &mut ParseState<'
                                     Matched(__pos, _) => {
                                         let __seq_res = slice_eq(__input, __state, __pos, ";");
                                         match __seq_res {
-                                            Matched(__pos, _) => Matched(__pos, { StructField { specifiers: s, declarators: d } }),
+                                            Matched(__pos, _) => {
+                                                let __seq_res = {
+                                                    let __seq_res = {
+                                                        __state.suppress_fail += 1;
+                                                        let __assert_res = __parse_gnu_guard(__input, __state, __pos, env);
+                                                        __state.suppress_fail -= 1;
+                                                        match __assert_res {
+                                                            Matched(_, __value) => Matched(__pos, __value),
+                                                            Failed => Failed,
+                                                        }
+                                                    };
+                                                    match __seq_res {
+                                                        Matched(__pos, _) => {
+                                                            let __seq_res = {
+                                                                let mut __repeat_pos = __pos;
+                                                                let mut __repeat_value = vec![];
+                                                                loop {
+                                                                    let __pos = __repeat_pos;
+                                                                    let __step_res = {
+                                                                        let __seq_res = __parse__(__input, __state, __pos, env);
+                                                                        match __seq_res {
+                                                                            Matched(__pos, _) => slice_eq(__input, __state, __pos, ";"),
+                                                                            Failed => Failed,
+                                                                        }
+                                                                    };
+                                                                    match __step_res {
+                                                                        Matched(__newpos, __value) => {
+                                                                            __repeat_pos = __newpos;
+                                                                            __repeat_value.push(__value);
+                                                                        }
+                                                                        Failed => {
+                                                                            break;
+                                                                        }
+                                                                    }
+                                                                }
+                                                                Matched(__repeat_pos, __repeat_value)
+                                                            };
+                                                            match __seq_res {
+                                                                Matched(__pos, e) => Matched(__pos, { e }),
+                                                                Failed => Failed,
+                                                            }
+                                                        }
+                                                        Failed => Failed,
+                                                    }
+                                                };
+                                                match __seq_res {
+                                                    Matched(__pos, _) => Matched(__pos, { StructField { specifiers: s, declarators: d } }),
+                                                    Failed => Failed,
+                                                }
+                                            }
                                             Failed => Failed,
                                         }
                                     }
@@ -14236,6 +14285,66 @@ fn __parse_translation_unit<'input>(__input: &'input str, __state: &mut ParseSta
 }
 
 fn __parse_external_declaration<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<ExternalDeclaration> {
+    #![allow(non_snake_case, unused)]
+    {
+        let __seq_res = __parse_external_declaration0(__input, __state, __pos, env);
+        match __seq_res {
+            Matched(__pos, d) => {
+                let __seq_res = {
+                    let __seq_res = {
+                        __state.suppress_fail += 1;
+                        let __assert_res = __parse_gnu_guard(__input, __state, __pos, env);
+                        __state.suppress_fail -= 1;
+                        match __assert_res {
+                            Matched(_, __value) => Matched(__pos, __value),
+                            Failed => Failed,
+                        }
+                    };
+                    match __seq_res {
+                        Matched(__pos, _) => {
+                            let __seq_res = {
+                                let mut __repeat_pos = __pos;
+                                let mut __repeat_value = vec![];
+                                loop {
+                                    let __pos = __repeat_pos;
+                                    let __step_res = {
+                                        let __seq_res = __parse__(__input, __state, __pos, env);
+                                        match __seq_res {
+                                            Matched(__pos, _) => slice_eq(__input, __state, __pos, ";"),
+                                            Failed => Failed,
+                                        }
+                                    };
+                                    match __step_res {
+                                        Matched(__newpos, __value) => {
+                                            __repeat_pos = __newpos;
+                                            __repeat_value.push(__value);
+                                        }
+                                        Failed => {
+                                            break;
+                                        }
+                                    }
+                                }
+                                Matched(__repeat_pos, __repeat_value)
+                            };
+                            match __seq_res {
+                                Matched(__pos, e) => Matched(__pos, { e }),
+                                Failed => Failed,
+                            }
+                        }
+                        Failed => Failed,
+                    }
+                };
+                match __seq_res {
+                    Matched(__pos, _) => Matched(__pos, { d }),
+                    Failed => Failed,
+                }
+            }
+            Failed => Failed,
+        }
+    }
+}
+
+fn __parse_external_declaration0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<ExternalDeclaration> {
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {

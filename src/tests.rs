@@ -218,31 +218,19 @@ impl Kind {
                     p.visit_constant(&n, &Span::none());
                 }
                 Kind::Declaration => {
-                    let n = match parser::declaration(source, env) {
-                        Ok(n) => n,
-                        Err(e) => return Err(e),
-                    };
+                    let n = try!(parser::declaration(source, env));
                     p.visit_declaration(&n.node, &n.span);
                 }
                 Kind::Statement => {
-                    let n = match parser::statement(source, env) {
-                        Ok(n) => n,
-                        Err(e) => return Err(e),
-                    };
+                    let n = try!(parser::statement(source, env));
                     p.visit_statement(&n.node, &n.span);
                 }
                 Kind::Expression => {
-                    let n = match parser::expression(source, env) {
-                        Ok(n) => n,
-                        Err(e) => return Err(e),
-                    };
+                    let n = try!(parser::expression(source, env));
                     p.visit_expression(&n.node, &n.span);
                 }
                 Kind::TranslationUnit => {
-                    let n = match parser::translation_unit(source, env) {
-                        Ok(n) => n,
-                        Err(e) => return Err(e),
-                    };
+                    let n = try!(parser::translation_unit(source, env));
                     p.visit_translation_unit(&n);
                 }
             }

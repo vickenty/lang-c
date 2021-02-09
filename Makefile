@@ -3,12 +3,12 @@
 peg?=rust-peg
 
 all: src/parser.rs
-	cargo b --lib
-	cargo t
+	cargo b --lib --features '$(features)'
+	cargo t --features '$(features)'
 
 trace:
 	rm -f src/parser.rs
-	make peg=rust-peg-trace
+	make peg=rust-peg-trace features=dev-pegviz
 
 .INTERMEDIATE: src/parser.rs.raw src/parser.rs.fmt
 

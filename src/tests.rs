@@ -1,4 +1,5 @@
 use std::env;
+use std::ffi::{OsStr, OsString};
 use std::fs;
 use std::fs::DirEntry;
 use std::fs::File;
@@ -275,11 +276,31 @@ impl Pragma {
     }
 }
 
+fn filter_entry(a: &DirEntry, filter: Option<&OsString>) -> bool {
+    let path = a.path();
+    let name = match path.file_name().and_then(OsStr::to_str) {
+        Some(name) => name,
+        None => return false,
+    };
+    if name.starts_with('.') || name.ends_with('~') {
+        return false;
+    }
+    if let Some(filter) = filter.and_then(|s| s.to_str()) {
+        return name.starts_with(filter);
+    }
+
+    true
+}
+
 #[test]
 fn reftest_main() {
     let mut cases = Vec::new();
+    let filter = env::var_os("TEST_FILTER");
     for entry in fs::read_dir("reftests").expect("listing reftests/") {
         let entry = entry.expect("failed to read reftests/ entry");
+        if !filter_entry(&entry, filter.as_ref()) {
+            continue;
+        }
         let case = match Case::from_path(&entry) {
             Ok(case) => case,
             Err(err) => {

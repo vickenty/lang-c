@@ -8236,10 +8236,42 @@ fn __parse_specifier_qualifier_nonunique_type0<'input>(__input: &'input str, __s
 fn __parse_specifier_qualifier_qualifier0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<SpecifierQualifier> {
     #![allow(non_snake_case, unused)]
     {
-        let __seq_res = __parse_type_qualifier(__input, __state, __pos, env);
-        match __seq_res {
-            Matched(__pos, q) => Matched(__pos, { SpecifierQualifier::TypeQualifier(q) }),
-            Failed => Failed,
+        let __choice_res = {
+            let __seq_res = __parse_type_qualifier(__input, __state, __pos, env);
+            match __seq_res {
+                Matched(__pos, q) => Matched(__pos, { SpecifierQualifier::TypeQualifier(q) }),
+                Failed => Failed,
+            }
+        };
+        match __choice_res {
+            Matched(__pos, __value) => Matched(__pos, __value),
+            Failed => {
+                let __seq_res = {
+                    let __seq_res = {
+                        __state.suppress_fail += 1;
+                        let __assert_res = __parse_gnu_guard(__input, __state, __pos, env);
+                        __state.suppress_fail -= 1;
+                        match __assert_res {
+                            Matched(_, __value) => Matched(__pos, __value),
+                            Failed => Failed,
+                        }
+                    };
+                    match __seq_res {
+                        Matched(__pos, _) => {
+                            let __seq_res = __parse_attribute_specifier(__input, __state, __pos, env);
+                            match __seq_res {
+                                Matched(__pos, e) => Matched(__pos, { e }),
+                                Failed => Failed,
+                            }
+                        }
+                        Failed => Failed,
+                    }
+                };
+                match __seq_res {
+                    Matched(__pos, e) => Matched(__pos, { SpecifierQualifier::Extension(e) }),
+                    Failed => Failed,
+                }
+            }
         }
     }
 }
@@ -14509,7 +14541,16 @@ fn __parse_attribute_specifier<'input>(__input: &'input str, __state: &mut Parse
         let __seq_res = {
             __state.suppress_fail += 1;
             let res = {
-                let __seq_res = slice_eq(__input, __state, __pos, "__attribute__");
+                let __seq_res = {
+                    let __seq_res = slice_eq(__input, __state, __pos, "__attribute");
+                    match __seq_res {
+                        Matched(__pos, _) => match slice_eq(__input, __state, __pos, "__") {
+                            Matched(__newpos, _) => Matched(__newpos, ()),
+                            Failed => Matched(__pos, ()),
+                        },
+                        Failed => Failed,
+                    }
+                };
                 match __seq_res {
                     Matched(__pos, e) => {
                         let __seq_res = {

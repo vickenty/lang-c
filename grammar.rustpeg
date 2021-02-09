@@ -660,7 +660,8 @@ specifier_qualifier_nonunique_type0 -> SpecifierQualifier =
     s:node<type_specifier_nonunique> { SpecifierQualifier::TypeSpecifier(s) }
 
 specifier_qualifier_qualifier0 -> SpecifierQualifier =
-    q:type_qualifier { SpecifierQualifier::TypeQualifier(q) }
+    q:type_qualifier { SpecifierQualifier::TypeQualifier(q) } /
+    e:gnu<attribute_specifier> { SpecifierQualifier::Extension(e) }
 
 struct_declarator -> StructDeclarator =
     d:declarator? _ ":" _ e:constant_expression a:gnu<attribute_specifier_list>? {
@@ -1175,7 +1176,7 @@ attribute_specifier_list -> Vec<Node<Extension>> =
     a:list0<attribute_specifier> { a.into_iter().flat_map(|v| v).collect() }
 
 attribute_specifier -> Vec<Node<Extension>> =
-    K<"__attribute__"> _ "((" _ a:cs0<node<attribute>> _ "))" { a }
+    K<"__attribute" "__"?> _ "((" _ a:cs0<node<attribute>> _ "))" { a }
 
 attribute -> Extension =
     c:clang<node<attr_availability>> { Extension::AvailabilityAttribute(c) } /

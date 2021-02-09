@@ -1003,6 +1003,11 @@ pub fn visit_specifier_qualifier<'ast, V: Visit<'ast> + ?Sized>(
     match *specifier_qualifier {
         SpecifierQualifier::TypeSpecifier(ref t) => visitor.visit_type_specifier(&t.node, &t.span),
         SpecifierQualifier::TypeQualifier(ref t) => visitor.visit_type_qualifier(&t.node, &t.span),
+        SpecifierQualifier::Extension(ref e) => {
+            for n in e {
+                visitor.visit_extension(&n.node, &n.span);
+            }
+        }
     }
 }
 

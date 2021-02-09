@@ -699,6 +699,7 @@ pub struct StructField {
 pub enum SpecifierQualifier {
     TypeSpecifier(Node<TypeSpecifier>),
     TypeQualifier(Node<TypeQualifier>),
+    Extension(Vec<Node<Extension>>),
 }
 
 /// Field declarator for a struct or a union

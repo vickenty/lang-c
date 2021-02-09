@@ -746,7 +746,7 @@ alignment_specifier0 -> AlignmentSpecifier =
 declarator -> Node<Declarator> = node<declarator0>
 
 declarator0 -> Declarator =
-    attr:gnu<attribute_specifier_list>?
+    attr:gnu<attribute_specifier_list>? _
     pointer:list0<pointer> _
     kind:node<direct_declarator> _
     derived:list0<node<derived_declarator>>

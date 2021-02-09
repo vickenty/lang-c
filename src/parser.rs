@@ -9571,121 +9571,127 @@ fn __parse_declarator0<'input>(__input: &'input str, __state: &mut ParseState<'i
         };
         match __seq_res {
             Matched(__pos, attr) => {
-                let __seq_res = {
-                    let __seq_res = {
-                        let mut __repeat_pos = __pos;
-                        let mut __repeat_value = vec![];
-                        loop {
-                            let __pos = __repeat_pos;
-                            let __pos = if __repeat_value.len() > 0 {
-                                let __sep_res = __parse__(__input, __state, __pos, env);
-                                match __sep_res {
-                                    Matched(__newpos, _) => __newpos,
-                                    Failed => break,
-                                }
-                            } else {
-                                __pos
-                            };
-                            let __step_res = __parse_pointer(__input, __state, __pos, env);
-                            match __step_res {
-                                Matched(__newpos, __value) => {
-                                    __repeat_pos = __newpos;
-                                    __repeat_value.push(__value);
-                                }
-                                Failed => {
-                                    break;
-                                }
-                            }
-                        }
-                        Matched(__repeat_pos, __repeat_value)
-                    };
-                    match __seq_res {
-                        Matched(__pos, e) => Matched(__pos, { e }),
-                        Failed => Failed,
-                    }
-                };
+                let __seq_res = __parse__(__input, __state, __pos, env);
                 match __seq_res {
-                    Matched(__pos, pointer) => {
-                        let __seq_res = __parse__(__input, __state, __pos, env);
+                    Matched(__pos, _) => {
+                        let __seq_res = {
+                            let __seq_res = {
+                                let mut __repeat_pos = __pos;
+                                let mut __repeat_value = vec![];
+                                loop {
+                                    let __pos = __repeat_pos;
+                                    let __pos = if __repeat_value.len() > 0 {
+                                        let __sep_res = __parse__(__input, __state, __pos, env);
+                                        match __sep_res {
+                                            Matched(__newpos, _) => __newpos,
+                                            Failed => break,
+                                        }
+                                    } else {
+                                        __pos
+                                    };
+                                    let __step_res = __parse_pointer(__input, __state, __pos, env);
+                                    match __step_res {
+                                        Matched(__newpos, __value) => {
+                                            __repeat_pos = __newpos;
+                                            __repeat_value.push(__value);
+                                        }
+                                        Failed => {
+                                            break;
+                                        }
+                                    }
+                                }
+                                Matched(__repeat_pos, __repeat_value)
+                            };
+                            match __seq_res {
+                                Matched(__pos, e) => Matched(__pos, { e }),
+                                Failed => Failed,
+                            }
+                        };
                         match __seq_res {
-                            Matched(__pos, _) => {
-                                let __seq_res = {
-                                    let __seq_res = Matched(__pos, __pos);
-                                    match __seq_res {
-                                        Matched(__pos, l) => {
-                                            let __seq_res = __parse_direct_declarator(__input, __state, __pos, env);
+                            Matched(__pos, pointer) => {
+                                let __seq_res = __parse__(__input, __state, __pos, env);
+                                match __seq_res {
+                                    Matched(__pos, _) => {
+                                        let __seq_res = {
+                                            let __seq_res = Matched(__pos, __pos);
                                             match __seq_res {
-                                                Matched(__pos, e) => {
-                                                    let __seq_res = Matched(__pos, __pos);
+                                                Matched(__pos, l) => {
+                                                    let __seq_res = __parse_direct_declarator(__input, __state, __pos, env);
                                                     match __seq_res {
-                                                        Matched(__pos, r) => Matched(__pos, { Node::new(e, Span::span(l, r)) }),
+                                                        Matched(__pos, e) => {
+                                                            let __seq_res = Matched(__pos, __pos);
+                                                            match __seq_res {
+                                                                Matched(__pos, r) => Matched(__pos, { Node::new(e, Span::span(l, r)) }),
+                                                                Failed => Failed,
+                                                            }
+                                                        }
                                                         Failed => Failed,
                                                     }
                                                 }
                                                 Failed => Failed,
                                             }
-                                        }
-                                        Failed => Failed,
-                                    }
-                                };
-                                match __seq_res {
-                                    Matched(__pos, kind) => {
-                                        let __seq_res = __parse__(__input, __state, __pos, env);
+                                        };
                                         match __seq_res {
-                                            Matched(__pos, _) => {
-                                                let __seq_res = {
-                                                    let __seq_res = {
-                                                        let mut __repeat_pos = __pos;
-                                                        let mut __repeat_value = vec![];
-                                                        loop {
-                                                            let __pos = __repeat_pos;
-                                                            let __pos = if __repeat_value.len() > 0 {
-                                                                let __sep_res = __parse__(__input, __state, __pos, env);
-                                                                match __sep_res {
-                                                                    Matched(__newpos, _) => __newpos,
-                                                                    Failed => break,
-                                                                }
-                                                            } else {
-                                                                __pos
-                                                            };
-                                                            let __step_res = {
-                                                                let __seq_res = Matched(__pos, __pos);
-                                                                match __seq_res {
-                                                                    Matched(__pos, l) => {
-                                                                        let __seq_res = __parse_derived_declarator(__input, __state, __pos, env);
+                                            Matched(__pos, kind) => {
+                                                let __seq_res = __parse__(__input, __state, __pos, env);
+                                                match __seq_res {
+                                                    Matched(__pos, _) => {
+                                                        let __seq_res = {
+                                                            let __seq_res = {
+                                                                let mut __repeat_pos = __pos;
+                                                                let mut __repeat_value = vec![];
+                                                                loop {
+                                                                    let __pos = __repeat_pos;
+                                                                    let __pos = if __repeat_value.len() > 0 {
+                                                                        let __sep_res = __parse__(__input, __state, __pos, env);
+                                                                        match __sep_res {
+                                                                            Matched(__newpos, _) => __newpos,
+                                                                            Failed => break,
+                                                                        }
+                                                                    } else {
+                                                                        __pos
+                                                                    };
+                                                                    let __step_res = {
+                                                                        let __seq_res = Matched(__pos, __pos);
                                                                         match __seq_res {
-                                                                            Matched(__pos, e) => {
-                                                                                let __seq_res = Matched(__pos, __pos);
+                                                                            Matched(__pos, l) => {
+                                                                                let __seq_res = __parse_derived_declarator(__input, __state, __pos, env);
                                                                                 match __seq_res {
-                                                                                    Matched(__pos, r) => Matched(__pos, { Node::new(e, Span::span(l, r)) }),
+                                                                                    Matched(__pos, e) => {
+                                                                                        let __seq_res = Matched(__pos, __pos);
+                                                                                        match __seq_res {
+                                                                                            Matched(__pos, r) => Matched(__pos, { Node::new(e, Span::span(l, r)) }),
+                                                                                            Failed => Failed,
+                                                                                        }
+                                                                                    }
                                                                                     Failed => Failed,
                                                                                 }
                                                                             }
                                                                             Failed => Failed,
                                                                         }
+                                                                    };
+                                                                    match __step_res {
+                                                                        Matched(__newpos, __value) => {
+                                                                            __repeat_pos = __newpos;
+                                                                            __repeat_value.push(__value);
+                                                                        }
+                                                                        Failed => {
+                                                                            break;
+                                                                        }
                                                                     }
-                                                                    Failed => Failed,
                                                                 }
+                                                                Matched(__repeat_pos, __repeat_value)
                                                             };
-                                                            match __step_res {
-                                                                Matched(__newpos, __value) => {
-                                                                    __repeat_pos = __newpos;
-                                                                    __repeat_value.push(__value);
-                                                                }
-                                                                Failed => {
-                                                                    break;
-                                                                }
+                                                            match __seq_res {
+                                                                Matched(__pos, e) => Matched(__pos, { e }),
+                                                                Failed => Failed,
                                                             }
+                                                        };
+                                                        match __seq_res {
+                                                            Matched(__pos, derived) => Matched(__pos, { Declarator { kind: kind, derived: concat(pointer, derived), extensions: attr.unwrap_or_default() } }),
+                                                            Failed => Failed,
                                                         }
-                                                        Matched(__repeat_pos, __repeat_value)
-                                                    };
-                                                    match __seq_res {
-                                                        Matched(__pos, e) => Matched(__pos, { e }),
-                                                        Failed => Failed,
                                                     }
-                                                };
-                                                match __seq_res {
-                                                    Matched(__pos, derived) => Matched(__pos, { Declarator { kind: kind, derived: concat(pointer, derived), extensions: attr.unwrap_or_default() } }),
                                                     Failed => Failed,
                                                 }
                                             }

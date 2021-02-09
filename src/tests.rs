@@ -166,16 +166,18 @@ impl Case {
 
         let mut file = BufWriter::new(try!(File::create(&self.path)));
         let mut lines = content.into_iter();
+
         for line in &mut lines {
-            try!(file.write_all(line.as_bytes()));
             if line.trim_right() == OUTPUT_START {
                 break;
             }
+            try!(file.write_all(line.as_bytes()));
         }
-        try!(file.write_all(actual.as_bytes()));
+
+        try!(write!(&mut file, "{}\n{}{}\n", OUTPUT_START, actual, OUTPUT_END));
+
         for line in &mut lines {
             if line.trim_right() == OUTPUT_END {
-                try!(file.write_all(line.as_bytes()));
                 break;
             }
         }

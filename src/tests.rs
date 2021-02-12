@@ -174,7 +174,11 @@ impl Case {
             try!(file.write_all(line.as_bytes()));
         }
 
-        try!(write!(&mut file, "{}\n{}{}\n", OUTPUT_START, actual, OUTPUT_END));
+        try!(write!(
+            &mut file,
+            "{}\n{}{}\n",
+            OUTPUT_START, actual, OUTPUT_END
+        ));
 
         for line in &mut lines {
             if line.trim_right() == OUTPUT_END {

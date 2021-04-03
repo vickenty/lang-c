@@ -191,9 +191,9 @@ string_char = [^"\\\n] / escape_sequence
 primary_expression -> Box<Node<Expression>> = box<node<primary_expression0>>
 
 primary_expression0 -> Expression =
+    a:string_literal { Expression::StringLiteral(Box::new(a)) } /
     a:identifier { Expression::Identifier(Box::new(a)) } /
     a:node<constant> { Expression::Constant(Box::new(a)) } /
-    a:string_literal { Expression::StringLiteral(Box::new(a)) } /
     "(" _ a:expression0 _ ")" { a } /
     a:node<generic_selection> { Expression::GenericSelection(Box::new(a)) } /
     gnu<gnu_primary_expression>

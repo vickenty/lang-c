@@ -1795,9 +1795,9 @@ fn __parse_primary_expression0<'input>(__input: &'input str, __state: &mut Parse
     #![allow(non_snake_case, unused)]
     {
         let __choice_res = {
-            let __seq_res = __parse_identifier(__input, __state, __pos, env);
+            let __seq_res = __parse_string_literal(__input, __state, __pos, env);
             match __seq_res {
-                Matched(__pos, a) => Matched(__pos, { Expression::Identifier(Box::new(a)) }),
+                Matched(__pos, a) => Matched(__pos, { Expression::StringLiteral(Box::new(a)) }),
                 Failed => Failed,
             }
         };
@@ -1805,27 +1805,9 @@ fn __parse_primary_expression0<'input>(__input: &'input str, __state: &mut Parse
             Matched(__pos, __value) => Matched(__pos, __value),
             Failed => {
                 let __choice_res = {
-                    let __seq_res = {
-                        let __seq_res = Matched(__pos, __pos);
-                        match __seq_res {
-                            Matched(__pos, l) => {
-                                let __seq_res = __parse_constant(__input, __state, __pos, env);
-                                match __seq_res {
-                                    Matched(__pos, e) => {
-                                        let __seq_res = Matched(__pos, __pos);
-                                        match __seq_res {
-                                            Matched(__pos, r) => Matched(__pos, { Node::new(e, Span::span(l, r)) }),
-                                            Failed => Failed,
-                                        }
-                                    }
-                                    Failed => Failed,
-                                }
-                            }
-                            Failed => Failed,
-                        }
-                    };
+                    let __seq_res = __parse_identifier(__input, __state, __pos, env);
                     match __seq_res {
-                        Matched(__pos, a) => Matched(__pos, { Expression::Constant(Box::new(a)) }),
+                        Matched(__pos, a) => Matched(__pos, { Expression::Identifier(Box::new(a)) }),
                         Failed => Failed,
                     }
                 };
@@ -1833,9 +1815,27 @@ fn __parse_primary_expression0<'input>(__input: &'input str, __state: &mut Parse
                     Matched(__pos, __value) => Matched(__pos, __value),
                     Failed => {
                         let __choice_res = {
-                            let __seq_res = __parse_string_literal(__input, __state, __pos, env);
+                            let __seq_res = {
+                                let __seq_res = Matched(__pos, __pos);
+                                match __seq_res {
+                                    Matched(__pos, l) => {
+                                        let __seq_res = __parse_constant(__input, __state, __pos, env);
+                                        match __seq_res {
+                                            Matched(__pos, e) => {
+                                                let __seq_res = Matched(__pos, __pos);
+                                                match __seq_res {
+                                                    Matched(__pos, r) => Matched(__pos, { Node::new(e, Span::span(l, r)) }),
+                                                    Failed => Failed,
+                                                }
+                                            }
+                                            Failed => Failed,
+                                        }
+                                    }
+                                    Failed => Failed,
+                                }
+                            };
                             match __seq_res {
-                                Matched(__pos, a) => Matched(__pos, { Expression::StringLiteral(Box::new(a)) }),
+                                Matched(__pos, a) => Matched(__pos, { Expression::Constant(Box::new(a)) }),
                                 Failed => Failed,
                             }
                         };

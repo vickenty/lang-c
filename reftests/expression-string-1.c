@@ -1,0 +1,5 @@
+L".."
+/*===
+Expression
+    StringLiteral ["L\"..\""]
+===*/

@@ -18,11 +18,6 @@ pub struct Env {
 }
 
 impl Env {
-    #[cfg(test)]
-    pub fn new() -> Env {
-        Env::with_gnu()
-    }
-
     pub fn with_core() -> Env {
         let mut reserved = HashSet::default();
         reserved.extend(strings::RESERVED_C11.iter());

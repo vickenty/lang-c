@@ -43,15 +43,23 @@ impl<'a> Printer<'a> {
         write!(&mut self.w, "{2:1$}{0}", name, self.offset * 4, "").unwrap();
     }
 
-    fn write_field(&mut self, f: &fmt::Debug) {
-        write!(&mut self.w, " {:?}", f).unwrap();
+    fn field<T: fmt::Display>(&mut self, s: T) {
+        write!(&mut self.w, " {}", s).unwrap();
+    }
+
+    fn field_str(&mut self, s: &str) {
+        self.field_str_ext(" ", s);
+    }
+
+    fn field_str_ext(&mut self, prefix: &str, str: &str) {
+        write!(&mut self.w, "{}\"{}\"", prefix, str.escape_debug()).unwrap();
     }
 }
 
 impl<'ast, 'a> Visit<'ast> for Printer<'a> {
     fn visit_identifier(&mut self, n: &'ast Identifier, span: &'ast Span) {
         self.name("Identifier");
-        self.write_field(&n.name);
+        self.field_str(&n.name);
         visit_identifier(&mut self.block(), n, span);
     }
     fn visit_constant(&mut self, n: &'ast Constant, span: &'ast Span) {
@@ -60,38 +68,50 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
     }
     fn visit_integer(&mut self, n: &'ast Integer, span: &'ast Span) {
         self.name("Integer");
-        self.write_field(&n.number);
+        self.field_str(&n.number);
         visit_integer(&mut self.block(), n, span);
     }
     fn visit_integer_base(&mut self, n: &'ast IntegerBase, span: &'ast Span) {
         self.name("IntegerBase");
-        self.write_field(&n);
+        self.field(match n {
+            IntegerBase::Decimal => "Decimal",
+            IntegerBase::Octal => "Octal",
+            IntegerBase::Hexadecimal => "Hexadecimal",
+            IntegerBase::Binary => "Binary",
+        });
         visit_integer_base(&mut self.block(), n, span);
     }
     fn visit_integer_suffix(&mut self, n: &'ast IntegerSuffix, span: &'ast Span) {
         self.name("IntegerSuffix");
-        self.write_field(&n.unsigned);
-        self.write_field(&n.imaginary);
+        self.field(n.unsigned);
+        self.field(n.imaginary);
         visit_integer_suffix(&mut self.block(), n, span);
     }
     fn visit_integer_size(&mut self, n: &'ast IntegerSize, span: &'ast Span) {
         self.name("IntegerSize");
-        self.write_field(&n);
+        self.field(match n {
+            IntegerSize::Int => "Int",
+            IntegerSize::Long => "Long",
+            IntegerSize::LongLong => "LongLong",
+        });
         visit_integer_size(&mut self.block(), n, span);
     }
     fn visit_float(&mut self, n: &'ast Float, span: &'ast Span) {
         self.name("Float");
-        self.write_field(&n.number);
+        self.field_str(&n.number);
         visit_float(&mut self.block(), n, span);
     }
     fn visit_float_base(&mut self, n: &'ast FloatBase, span: &'ast Span) {
         self.name("FloatBase");
-        self.write_field(&n);
+        self.field(match n {
+            FloatBase::Decimal => "Decimal",
+            FloatBase::Hexadecimal => "Hexadecimal",
+        });
         visit_float_base(&mut self.block(), n, span);
     }
     fn visit_float_suffix(&mut self, n: &'ast FloatSuffix, span: &'ast Span) {
         self.name("FloatSuffix");
-        self.write_field(&n.imaginary);
+        self.field(n.imaginary);
         visit_float_suffix(&mut self.block(), n, span);
     }
     fn visit_float_format(&mut self, n: &'ast FloatFormat, span: &'ast Span) {
@@ -101,7 +121,15 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
     }
     fn visit_string_literal(&mut self, n: &'ast StringLiteral, span: &'ast Span) {
         self.name("StringLiteral");
-        self.write_field(&n);
+
+        self.w.write_str(" [").unwrap();
+        let mut comma = false;
+        for p in n {
+            self.field_str_ext(if comma { ", " } else { "" }, p);
+            comma = true;
+        }
+        self.w.write_str("]").unwrap();
+
         visit_string_literal(&mut self.block(), n, span);
     }
     fn visit_expression(&mut self, n: &'ast Expression, span: &'ast Span) {
@@ -110,7 +138,10 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
     }
     fn visit_member_operator(&mut self, n: &'ast MemberOperator, span: &'ast Span) {
         self.name("MemberOperator");
-        self.write_field(&n);
+        self.field(match n {
+            MemberOperator::Direct => "Direct",
+            MemberOperator::Indirect => "Indirect",
+        });
         visit_member_operator(&mut self.block(), n, span);
     }
     fn visit_generic_selection(&mut self, n: &'ast GenericSelection, span: &'ast Span) {
@@ -143,7 +174,19 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
     }
     fn visit_unary_operator(&mut self, n: &'ast UnaryOperator, span: &'ast Span) {
         self.name("UnaryOperator");
-        self.write_field(&n);
+        self.field(match n {
+            UnaryOperator::PostIncrement => "PostIncrement",
+            UnaryOperator::PostDecrement => "PostDecrement",
+            UnaryOperator::PreIncrement => "PreIncrement",
+            UnaryOperator::PreDecrement => "PreDecrement",
+            UnaryOperator::Address => "Address",
+            UnaryOperator::Indirection => "Indirection",
+            UnaryOperator::Plus => "Plus",
+            UnaryOperator::Minus => "Minus",
+            UnaryOperator::Complement => "Complement",
+            UnaryOperator::Negate => "Negate",
+            UnaryOperator::SizeOf => "SizeOf",
+        });
         visit_unary_operator(&mut self.block(), n, span);
     }
     fn visit_unary_operator_expression(
@@ -160,7 +203,38 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
     }
     fn visit_binary_operator(&mut self, n: &'ast BinaryOperator, span: &'ast Span) {
         self.name("BinaryOperator");
-        self.write_field(&n);
+        self.field(match n {
+            BinaryOperator::Index => "Index",
+            BinaryOperator::Multiply => "Multiply",
+            BinaryOperator::Divide => "Divide",
+            BinaryOperator::Modulo => "Modulo",
+            BinaryOperator::Plus => "Plus",
+            BinaryOperator::Minus => "Minus",
+            BinaryOperator::ShiftLeft => "ShiftLeft",
+            BinaryOperator::ShiftRight => "ShiftRight",
+            BinaryOperator::Less => "Less",
+            BinaryOperator::Greater => "Greater",
+            BinaryOperator::LessOrEqual => "LessOrEqual",
+            BinaryOperator::GreaterOrEqual => "GreaterOrEqual",
+            BinaryOperator::Equals => "Equals",
+            BinaryOperator::NotEquals => "NotEquals",
+            BinaryOperator::BitwiseAnd => "BitwiseAnd",
+            BinaryOperator::BitwiseXor => "BitwiseXor",
+            BinaryOperator::BitwiseOr => "BitwiseOr",
+            BinaryOperator::LogicalAnd => "LogicalAnd",
+            BinaryOperator::LogicalOr => "LogicalOr",
+            BinaryOperator::Assign => "Assign",
+            BinaryOperator::AssignMultiply => "AssignMultiply",
+            BinaryOperator::AssignDivide => "AssignDivide",
+            BinaryOperator::AssignModulo => "AssignModulo",
+            BinaryOperator::AssignPlus => "AssignPlus",
+            BinaryOperator::AssignMinus => "AssignMinus",
+            BinaryOperator::AssignShiftLeft => "AssignShiftLeft",
+            BinaryOperator::AssignShiftRight => "AssignShiftRight",
+            BinaryOperator::AssignBitwiseAnd => "AssignBitwiseAnd",
+            BinaryOperator::AssignBitwiseXor => "AssignBitwiseXor",
+            BinaryOperator::AssignBitwiseOr => "AssignBitwiseOr",
+        });
         visit_binary_operator(&mut self.block(), n, span);
     }
     fn visit_binary_operator_expression(
@@ -206,7 +280,14 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
     }
     fn visit_storage_class_specifier(&mut self, n: &'ast StorageClassSpecifier, span: &'ast Span) {
         self.name("StorageClassSpecifier");
-        self.write_field(&n);
+        self.field(match n {
+            StorageClassSpecifier::Typedef => "Typedef",
+            StorageClassSpecifier::Extern => "Extern",
+            StorageClassSpecifier::Static => "Static",
+            StorageClassSpecifier::ThreadLocal => "ThreadLocal",
+            StorageClassSpecifier::Auto => "Auto",
+            StorageClassSpecifier::Register => "Register",
+        });
         visit_storage_class_specifier(&mut self.block(), n, span);
     }
     fn visit_type_specifier(&mut self, n: &'ast TypeSpecifier, span: &'ast Span) {
@@ -216,12 +297,17 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
     }
     fn visit_ts18661_float_type(&mut self, n: &'ast TS18661FloatType, span: &'ast Span) {
         self.name("TS18661FloatType");
-        self.write_field(&n.width);
+        self.field(n.width);
         visit_ts18661_float_type(&mut self.block(), n, span);
     }
     fn visit_ts18661_float_format(&mut self, n: &'ast TS18661FloatFormat, span: &'ast Span) {
         self.name("TS18661FloatFormat");
-        self.write_field(&n);
+        self.field(match n {
+            TS18661FloatFormat::BinaryInterchange => "BinaryInterchange",
+            TS18661FloatFormat::BinaryExtended => "BinaryExtended",
+            TS18661FloatFormat::DecimalInterchange => "DecimalInterchange",
+            TS18661FloatFormat::DecimalExtended => "DecimalExtended",
+        });
         visit_ts18661_float_format(&mut self.block(), n, span);
     }
     fn visit_struct_type(&mut self, n: &'ast StructType, span: &'ast Span) {
@@ -230,7 +316,10 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
     }
     fn visit_struct_kind(&mut self, n: &'ast StructKind, span: &'ast Span) {
         self.name("StructKind");
-        self.write_field(&n);
+        self.field(match n {
+            StructKind::Struct => "Struct",
+            StructKind::Union => "Union",
+        });
         visit_struct_kind(&mut self.block(), n, span);
     }
     fn visit_struct_declaration(&mut self, n: &'ast StructDeclaration, span: &'ast Span) {
@@ -259,12 +348,23 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
     }
     fn visit_type_qualifier(&mut self, n: &'ast TypeQualifier, span: &'ast Span) {
         self.name("TypeQualifier");
-        self.write_field(&n);
+        self.field(match n {
+            TypeQualifier::Const => "Const",
+            TypeQualifier::Restrict => "Restrict",
+            TypeQualifier::Volatile => "Volatile",
+            TypeQualifier::Nonnull => "Nonnull",
+            TypeQualifier::NullUnspecified => "NullUnspecified",
+            TypeQualifier::Nullable => "Nullable",
+            TypeQualifier::Atomic => "Atomic",
+        });
         visit_type_qualifier(&mut self.block(), n, span);
     }
     fn visit_function_specifier(&mut self, n: &'ast FunctionSpecifier, span: &'ast Span) {
         self.name("FunctionSpecifier");
-        self.write_field(&n);
+        self.field(match n {
+            FunctionSpecifier::Inline => "Inline",
+            FunctionSpecifier::Noreturn => "Noreturn",
+        });
         visit_function_specifier(&mut self.block(), n, span);
     }
     fn visit_alignment_specifier(&mut self, n: &'ast AlignmentSpecifier, span: &'ast Span) {
@@ -307,7 +407,10 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
     }
     fn visit_ellipsis(&mut self, n: &'ast Ellipsis, span: &'ast Span) {
         self.name("Ellipsis");
-        self.write_field(&n);
+        self.field(match n {
+            Ellipsis::Some => "Some",
+            Ellipsis::None => "None",
+        });
         visit_ellipsis(&mut self.block(), n, span);
     }
     fn visit_type_name(&mut self, n: &'ast TypeName, span: &'ast Span) {
@@ -391,7 +494,7 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
     }
     fn visit_attribute(&mut self, n: &'ast Attribute, span: &'ast Span) {
         self.name("Attribute");
-        self.write_field(&n.name.node);
+        self.field_str(&n.name.node);
         visit_attribute(&mut self.block(), n, span);
     }
     fn visit_asm_statement(&mut self, n: &'ast AsmStatement, span: &'ast Span) {

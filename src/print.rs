@@ -73,7 +73,7 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
     }
     fn visit_integer_base(&mut self, n: &'ast IntegerBase, span: &'ast Span) {
         self.name("IntegerBase");
-        self.field(match n {
+        self.field(match *n {
             IntegerBase::Decimal => "Decimal",
             IntegerBase::Octal => "Octal",
             IntegerBase::Hexadecimal => "Hexadecimal",
@@ -89,7 +89,7 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
     }
     fn visit_integer_size(&mut self, n: &'ast IntegerSize, span: &'ast Span) {
         self.name("IntegerSize");
-        self.field(match n {
+        self.field(match *n {
             IntegerSize::Int => "Int",
             IntegerSize::Long => "Long",
             IntegerSize::LongLong => "LongLong",
@@ -103,7 +103,7 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
     }
     fn visit_float_base(&mut self, n: &'ast FloatBase, span: &'ast Span) {
         self.name("FloatBase");
-        self.field(match n {
+        self.field(match *n {
             FloatBase::Decimal => "Decimal",
             FloatBase::Hexadecimal => "Hexadecimal",
         });
@@ -138,7 +138,7 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
     }
     fn visit_member_operator(&mut self, n: &'ast MemberOperator, span: &'ast Span) {
         self.name("MemberOperator");
-        self.field(match n {
+        self.field(match *n {
             MemberOperator::Direct => "Direct",
             MemberOperator::Indirect => "Indirect",
         });
@@ -174,7 +174,7 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
     }
     fn visit_unary_operator(&mut self, n: &'ast UnaryOperator, span: &'ast Span) {
         self.name("UnaryOperator");
-        self.field(match n {
+        self.field(match *n {
             UnaryOperator::PostIncrement => "PostIncrement",
             UnaryOperator::PostDecrement => "PostDecrement",
             UnaryOperator::PreIncrement => "PreIncrement",
@@ -203,7 +203,7 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
     }
     fn visit_binary_operator(&mut self, n: &'ast BinaryOperator, span: &'ast Span) {
         self.name("BinaryOperator");
-        self.field(match n {
+        self.field(match *n {
             BinaryOperator::Index => "Index",
             BinaryOperator::Multiply => "Multiply",
             BinaryOperator::Divide => "Divide",
@@ -280,7 +280,7 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
     }
     fn visit_storage_class_specifier(&mut self, n: &'ast StorageClassSpecifier, span: &'ast Span) {
         self.name("StorageClassSpecifier");
-        self.field(match n {
+        self.field(match *n {
             StorageClassSpecifier::Typedef => "Typedef",
             StorageClassSpecifier::Extern => "Extern",
             StorageClassSpecifier::Static => "Static",
@@ -302,7 +302,7 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
     }
     fn visit_ts18661_float_format(&mut self, n: &'ast TS18661FloatFormat, span: &'ast Span) {
         self.name("TS18661FloatFormat");
-        self.field(match n {
+        self.field(match *n {
             TS18661FloatFormat::BinaryInterchange => "BinaryInterchange",
             TS18661FloatFormat::BinaryExtended => "BinaryExtended",
             TS18661FloatFormat::DecimalInterchange => "DecimalInterchange",
@@ -316,7 +316,7 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
     }
     fn visit_struct_kind(&mut self, n: &'ast StructKind, span: &'ast Span) {
         self.name("StructKind");
-        self.field(match n {
+        self.field(match *n {
             StructKind::Struct => "Struct",
             StructKind::Union => "Union",
         });
@@ -348,7 +348,7 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
     }
     fn visit_type_qualifier(&mut self, n: &'ast TypeQualifier, span: &'ast Span) {
         self.name("TypeQualifier");
-        self.field(match n {
+        self.field(match *n {
             TypeQualifier::Const => "Const",
             TypeQualifier::Restrict => "Restrict",
             TypeQualifier::Volatile => "Volatile",
@@ -361,7 +361,7 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
     }
     fn visit_function_specifier(&mut self, n: &'ast FunctionSpecifier, span: &'ast Span) {
         self.name("FunctionSpecifier");
-        self.field(match n {
+        self.field(match *n {
             FunctionSpecifier::Inline => "Inline",
             FunctionSpecifier::Noreturn => "Noreturn",
         });
@@ -407,7 +407,7 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
     }
     fn visit_ellipsis(&mut self, n: &'ast Ellipsis, span: &'ast Span) {
         self.name("Ellipsis");
-        self.field(match n {
+        self.field(match *n {
             Ellipsis::Some => "Some",
             Ellipsis::None => "None",
         });

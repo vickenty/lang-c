@@ -52,7 +52,7 @@ impl<'a> Printer<'a> {
     }
 
     fn field_str_ext(&mut self, prefix: &str, str: &str) {
-        write!(&mut self.w, "{}\"{}\"", prefix, str.escape_debug()).unwrap();
+        write!(&mut self.w, "{}\"{}\"", prefix, Escape(str)).unwrap();
     }
 }
 
@@ -594,4 +594,28 @@ fn print_type_specifier<'ast>(p: &mut Printer, n: &'ast TypeSpecifier) {
         TypeSpecifier::TypedefName(_) => p.w.write_str(" TypedefName").unwrap(),
         _ => {}
     }
+}
+
+struct Escape<'a>(&'a str);
+
+impl<'a> fmt::Display for Escape<'a> {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        use std::fmt::Write;
+
+        for c in self.0.chars() {
+            match c {
+                '"' | '\'' | '\\' => try!(write!(fmt, "\\{}", c)),
+                ' ' ... '~' => try!(fmt.write_char(c)),
+                _ => try!(write!(fmt, "\\u{{{:04x}}}", c as u32)),
+            }
+        }
+
+        Ok(())
+    }
+}
+
+#[test]
+fn test_escape() {
+    let s = format!("{}", Escape(r#"a'"\ あ \'"#));
+    assert_eq!(s, r#"a\'\"\\ \u{3042} \\\'"#);
 }

@@ -222,7 +222,6 @@ generic_association -> GenericAssociation =
 
 postfix_expression -> Box<Node<Expression>> = box<node<postfix_expression0>>
 
-#[cache]
 postfix_expression0 -> Expression =
     e:node<postfix_expression1> _ t:list0<node<postfix_expressionT>> { apply_ops(t, e).node }
 
@@ -399,16 +398,24 @@ conditional_expressionT -> (Box<Node<Expression>>, Box<Node<Expression>>) =
 assignment_expression -> Box<Node<Expression>> = box<node<assignment_expression0>>
 
 assignment_expression0 -> Expression =
-    n:node<assignment_expression_inner> { Expression::BinaryOperator(Box::new(n)) } /
-    conditional_expression0
-
-assignment_expression_inner -> BinaryOperatorExpression =
-    a:unary_expression _ op:node<assignment_operator> _ b:assignment_expression {
-        BinaryOperatorExpression {
-            operator: op,
-            lhs: a,
-            rhs: b,
+    c:node<conditional_expression0> _ a:assignment_expression_inner? {
+        if let Some((op, rhs)) = a {
+            let span = Span::span(c.span.start, rhs.span.end);
+            Expression::BinaryOperator(Box::new(
+                Node::new(BinaryOperatorExpression {
+                    operator: op,
+                    lhs: Box::new(c),
+                    rhs: rhs,
+                }, span)
+            ))
+        } else {
+            c.node
         }
+    }
+
+assignment_expression_inner -> (Node<BinaryOperator>, Box<Node<Expression>>) =
+    _ op:node<assignment_operator> _ b:assignment_expression {
+        (op, b)
     }
 
 assignment_operator -> BinaryOperator =

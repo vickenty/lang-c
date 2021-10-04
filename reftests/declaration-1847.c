@@ -25,11 +25,12 @@ Declaration
                                 Extension
                                     Attribute "__aligned__"
                                         Expression
-                                            TypeName
-                                                SpecifierQualifier
-                                                    TypeSpecifier Long
-                                                SpecifierQualifier
-                                                    TypeSpecifier Long
+                                            AlignOf
+                                                TypeName
+                                                    SpecifierQualifier
+                                                        TypeSpecifier Long
+                                                    SpecifierQualifier
+                                                        TypeSpecifier Long
                 StructDeclaration
                     StructField
                         SpecifierQualifier
@@ -43,11 +44,12 @@ Declaration
                                 Extension
                                     Attribute "__aligned__"
                                         Expression
-                                            TypeName
-                                                SpecifierQualifier
-                                                    TypeSpecifier Long
-                                                SpecifierQualifier
-                                                    TypeSpecifier Double
+                                            AlignOf
+                                                TypeName
+                                                    SpecifierQualifier
+                                                        TypeSpecifier Long
+                                                    SpecifierQualifier
+                                                        TypeSpecifier Double
     InitDeclarator
         Declarator
             DeclaratorKind

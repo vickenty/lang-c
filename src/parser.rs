@@ -3436,6 +3436,46 @@ fn __parse_sizeof_val_expression0<'input>(__input: &'input str, __state: &mut Pa
 fn __parse_alignof_expression<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Expression> {
     #![allow(non_snake_case, unused)]
     {
+        let __seq_res = __parse_alignof(__input, __state, __pos, env);
+        match __seq_res {
+            Matched(__pos, e) => Matched(__pos, { Expression::AlignOf(e) }),
+            Failed => Failed,
+        }
+    }
+}
+
+fn __parse_alignof<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Box<Node<AlignOf>>> {
+    #![allow(non_snake_case, unused)]
+    {
+        let __seq_res = {
+            let __seq_res = Matched(__pos, __pos);
+            match __seq_res {
+                Matched(__pos, l) => {
+                    let __seq_res = __parse_alignof0(__input, __state, __pos, env);
+                    match __seq_res {
+                        Matched(__pos, e) => {
+                            let __seq_res = Matched(__pos, __pos);
+                            match __seq_res {
+                                Matched(__pos, r) => Matched(__pos, { Node::new(e, Span::span(l, r)) }),
+                                Failed => Failed,
+                            }
+                        }
+                        Failed => Failed,
+                    }
+                }
+                Failed => Failed,
+            }
+        };
+        match __seq_res {
+            Matched(__pos, e) => Matched(__pos, { Box::new(e) }),
+            Failed => Failed,
+        }
+    }
+}
+
+fn __parse_alignof0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<AlignOf> {
+    #![allow(non_snake_case, unused)]
+    {
         let __seq_res = {
             __state.suppress_fail += 1;
             let res = {
@@ -3524,7 +3564,7 @@ fn __parse_alignof_expression<'input>(__input: &'input str, __state: &mut ParseS
                                                     Matched(__pos, _) => {
                                                         let __seq_res = slice_eq(__input, __state, __pos, ")");
                                                         match __seq_res {
-                                                            Matched(__pos, _) => Matched(__pos, { Expression::AlignOf(Box::new(t)) }),
+                                                            Matched(__pos, _) => Matched(__pos, { AlignOf(Box::new(t)) }),
                                                             Failed => Failed,
                                                         }
                                                     }

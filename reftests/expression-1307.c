@@ -3,9 +3,10 @@ __alignof(long long)
 
 /*===
 Expression
-    TypeName
-        SpecifierQualifier
-            TypeSpecifier Long
-        SpecifierQualifier
-            TypeSpecifier Long
+    AlignOf
+        TypeName
+            SpecifierQualifier
+                TypeSpecifier Long
+            SpecifierQualifier
+                TypeSpecifier Long
 ===*/

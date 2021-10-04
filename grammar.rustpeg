@@ -328,8 +328,13 @@ sizeof_val_expression0 -> SizeOfVal =
     }
 
 alignof_expression -> Expression =
+    e:alignof { Expression::AlignOf(e) }
+
+alignof -> Box<Node<AlignOf>> = box<node<alignof0>>
+
+alignof0 -> AlignOf =
     K<"_Alignof" / gnu<"__alignof" "__"?>> _ "(" _ t:type_name _ ")" {
-        Expression::AlignOf(Box::new(t))
+        AlignOf(Box::new(t))
     }
 
 ////

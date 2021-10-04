@@ -213,7 +213,7 @@ pub enum Expression {
     /// Alignment of a type
     ///
     /// (C11 6.5.3)
-    AlignOf(Box<Node<TypeName>>),
+    AlignOf(Box<Node<AlignOf>>),
 
     /// Unary operators
     ///
@@ -344,6 +344,12 @@ pub struct SizeOfTy(pub Node<TypeName>);
 /// (C11 6.5.3)
 #[derive(Debug, PartialEq, Clone)]
 pub struct SizeOfVal(pub Box<Node<Expression>>);
+
+/// Alignment of a type
+///
+/// (C11 6.5.3)
+#[derive(Debug, PartialEq, Clone)]
+pub struct AlignOf(pub Box<Node<TypeName>>);
 
 /// All operators with one operand
 ///

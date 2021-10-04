@@ -180,6 +180,10 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
         self.name("SizeOfVal");
         visit_sizeofval(&mut self.block(), n, span);
     }
+    fn visit_alignof(&mut self, n: &'ast AlignOf, span: &'ast Span) {
+        self.name("AlignOf");
+        visit_alignof(&mut self.block(), n, span);
+    }
     fn visit_unary_operator(&mut self, n: &'ast UnaryOperator, span: &'ast Span) {
         self.name("UnaryOperator");
         self.field(match *n {

@@ -125,6 +125,10 @@ pub trait Visit<'ast> {
         visit_sizeofval(self, sizeof, span)
     }
 
+    fn visit_alignof(&mut self, alignof: &'ast AlignOf, span: &'ast Span) {
+        visit_alignof(self, alignof, span)
+    }
+
     fn visit_unary_operator(&mut self, unary_operator: &'ast UnaryOperator, span: &'ast Span) {
         visit_unary_operator(self, unary_operator, span)
     }
@@ -603,7 +607,7 @@ pub fn visit_expression<'ast, V: Visit<'ast> + ?Sized>(
         Expression::CompoundLiteral(ref c) => visitor.visit_compound_literal(&c.node, &c.span),
         Expression::SizeOfTy(ref s) => visitor.visit_sizeofty(&s.node, &s.span),
         Expression::SizeOfVal(ref s) => visitor.visit_sizeofval(&s.node, &s.span),
-        Expression::AlignOf(ref a) => visitor.visit_type_name(&a.node, &a.span),
+        Expression::AlignOf(ref a) => visitor.visit_alignof(&a.node, &a.span),
         Expression::UnaryOperator(ref u) => {
             visitor.visit_unary_operator_expression(&u.node, &u.span)
         }
@@ -728,6 +732,14 @@ pub fn visit_sizeofval<'ast, V: Visit<'ast> + ?Sized>(
     _span: &'ast Span,
 ) {
     visitor.visit_expression(&sizeof.0.node, &sizeof.0.span);
+}
+
+pub fn visit_alignof<'ast, V: Visit<'ast> + ?Sized>(
+    visitor: &mut V,
+    alignof: &'ast AlignOf,
+    _span: &'ast Span,
+) {
+    visitor.visit_type_name(&alignof.0.node, &alignof.0.span);
 }
 
 pub fn visit_unary_operator<'ast, V: Visit<'ast> + ?Sized>(

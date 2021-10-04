@@ -172,6 +172,14 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
         self.name("CompoundLiteral");
         visit_compound_literal(&mut self.block(), n, span);
     }
+    fn visit_sizeofty(&mut self, n: &'ast SizeOfTy, span: &'ast Span) {
+        self.name("SizeOfTy");
+        visit_sizeofty(&mut self.block(), n, span);
+    }
+    fn visit_sizeofval(&mut self, n: &'ast SizeOfVal, span: &'ast Span) {
+        self.name("SizeOfVal");
+        visit_sizeofval(&mut self.block(), n, span);
+    }
     fn visit_unary_operator(&mut self, n: &'ast UnaryOperator, span: &'ast Span) {
         self.name("UnaryOperator");
         self.field(match *n {
@@ -185,7 +193,6 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
             UnaryOperator::Minus => "Minus",
             UnaryOperator::Complement => "Complement",
             UnaryOperator::Negate => "Negate",
-            UnaryOperator::SizeOf => "SizeOf",
         });
         visit_unary_operator(&mut self.block(), n, span);
     }

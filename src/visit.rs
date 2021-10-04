@@ -118,6 +118,13 @@ pub trait Visit<'ast> {
         visit_compound_literal(self, compound_literal, span)
     }
 
+    fn visit_sizeofty(&mut self, sizeof: &'ast SizeOfTy, span: &'ast Span) {
+        visit_sizeofty(self, sizeof, span)
+    }
+    fn visit_sizeofval(&mut self, sizeof: &'ast SizeOfVal, span: &'ast Span) {
+        visit_sizeofval(self, sizeof, span)
+    }
+
     fn visit_unary_operator(&mut self, unary_operator: &'ast UnaryOperator, span: &'ast Span) {
         visit_unary_operator(self, unary_operator, span)
     }
@@ -594,7 +601,8 @@ pub fn visit_expression<'ast, V: Visit<'ast> + ?Sized>(
         Expression::Member(ref m) => visitor.visit_member_expression(&m.node, &m.span),
         Expression::Call(ref c) => visitor.visit_call_expression(&c.node, &c.span),
         Expression::CompoundLiteral(ref c) => visitor.visit_compound_literal(&c.node, &c.span),
-        Expression::SizeOf(ref s) => visitor.visit_type_name(&s.node, &s.span),
+        Expression::SizeOfTy(ref s) => visitor.visit_sizeofty(&s.node, &s.span),
+        Expression::SizeOfVal(ref s) => visitor.visit_sizeofval(&s.node, &s.span),
         Expression::AlignOf(ref a) => visitor.visit_type_name(&a.node, &a.span),
         Expression::UnaryOperator(ref u) => {
             visitor.visit_unary_operator_expression(&u.node, &u.span)
@@ -704,6 +712,22 @@ pub fn visit_compound_literal<'ast, V: Visit<'ast> + ?Sized>(
     for initializer in &compound_literal.initializer_list {
         visitor.visit_initializer_list_item(&initializer.node, &initializer.span);
     }
+}
+
+pub fn visit_sizeofty<'ast, V: Visit<'ast> + ?Sized>(
+    visitor: &mut V,
+    sizeof: &'ast SizeOfTy,
+    _span: &'ast Span,
+) {
+    visitor.visit_type_name(&sizeof.0.node, &sizeof.0.span);
+}
+
+pub fn visit_sizeofval<'ast, V: Visit<'ast> + ?Sized>(
+    visitor: &mut V,
+    sizeof: &'ast SizeOfVal,
+    _span: &'ast Span,
+) {
+    visitor.visit_expression(&sizeof.0.node, &sizeof.0.span);
 }
 
 pub fn visit_unary_operator<'ast, V: Visit<'ast> + ?Sized>(

@@ -3051,55 +3051,10 @@ fn __parse_prefix_operator<'input>(__input: &'input str, __state: &mut ParseStat
         match __choice_res {
             Matched(__pos, __value) => Matched(__pos, __value),
             Failed => {
-                let __choice_res = {
-                    let __seq_res = slice_eq(__input, __state, __pos, "--");
-                    match __seq_res {
-                        Matched(__pos, _) => Matched(__pos, { UnaryOperator::PreDecrement }),
-                        Failed => Failed,
-                    }
-                };
-                match __choice_res {
-                    Matched(__pos, __value) => Matched(__pos, __value),
-                    Failed => {
-                        let __seq_res = {
-                            __state.suppress_fail += 1;
-                            let res = {
-                                let __seq_res = slice_eq(__input, __state, __pos, "sizeof");
-                                match __seq_res {
-                                    Matched(__pos, e) => {
-                                        let __seq_res = {
-                                            __state.suppress_fail += 1;
-                                            let __assert_res = if __input.len() > __pos {
-                                                let (__ch, __next) = char_range_at(__input, __pos);
-                                                match __ch {
-                                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
-                                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
-                                                }
-                                            } else {
-                                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
-                                            };
-                                            __state.suppress_fail -= 1;
-                                            match __assert_res {
-                                                Failed => Matched(__pos, ()),
-                                                Matched(..) => Failed,
-                                            }
-                                        };
-                                        match __seq_res {
-                                            Matched(__pos, _) => Matched(__pos, { e }),
-                                            Failed => Failed,
-                                        }
-                                    }
-                                    Failed => Failed,
-                                }
-                            };
-                            __state.suppress_fail -= 1;
-                            res
-                        };
-                        match __seq_res {
-                            Matched(__pos, _) => Matched(__pos, { UnaryOperator::SizeOf }),
-                            Failed => Failed,
-                        }
-                    }
+                let __seq_res = slice_eq(__input, __state, __pos, "--");
+                match __seq_res {
+                    Matched(__pos, _) => Matched(__pos, { UnaryOperator::PreDecrement }),
+                    Failed => Failed,
                 }
             }
         }
@@ -3264,6 +3219,58 @@ fn __parse_unary_operator<'input>(__input: &'input str, __state: &mut ParseState
 fn __parse_sizeof_expression<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Expression> {
     #![allow(non_snake_case, unused)]
     {
+        let __choice_res = {
+            let __seq_res = __parse_sizeof_ty_expression(__input, __state, __pos, env);
+            match __seq_res {
+                Matched(__pos, n) => Matched(__pos, { Expression::SizeOfTy(n) }),
+                Failed => Failed,
+            }
+        };
+        match __choice_res {
+            Matched(__pos, __value) => Matched(__pos, __value),
+            Failed => {
+                let __seq_res = __parse_sizeof_val_expression(__input, __state, __pos, env);
+                match __seq_res {
+                    Matched(__pos, n) => Matched(__pos, { Expression::SizeOfVal(n) }),
+                    Failed => Failed,
+                }
+            }
+        }
+    }
+}
+
+fn __parse_sizeof_ty_expression<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Box<Node<SizeOfTy>>> {
+    #![allow(non_snake_case, unused)]
+    {
+        let __seq_res = {
+            let __seq_res = Matched(__pos, __pos);
+            match __seq_res {
+                Matched(__pos, l) => {
+                    let __seq_res = __parse_sizeof_ty_expression0(__input, __state, __pos, env);
+                    match __seq_res {
+                        Matched(__pos, e) => {
+                            let __seq_res = Matched(__pos, __pos);
+                            match __seq_res {
+                                Matched(__pos, r) => Matched(__pos, { Node::new(e, Span::span(l, r)) }),
+                                Failed => Failed,
+                            }
+                        }
+                        Failed => Failed,
+                    }
+                }
+                Failed => Failed,
+            }
+        };
+        match __seq_res {
+            Matched(__pos, e) => Matched(__pos, { Box::new(e) }),
+            Failed => Failed,
+        }
+    }
+}
+
+fn __parse_sizeof_ty_expression0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<SizeOfTy> {
+    #![allow(non_snake_case, unused)]
+    {
         let __seq_res = {
             __state.suppress_fail += 1;
             let res = {
@@ -3317,7 +3324,7 @@ fn __parse_sizeof_expression<'input>(__input: &'input str, __state: &mut ParseSt
                                                     Matched(__pos, _) => {
                                                         let __seq_res = slice_eq(__input, __state, __pos, ")");
                                                         match __seq_res {
-                                                            Matched(__pos, _) => Matched(__pos, { Expression::SizeOf(Box::new(t)) }),
+                                                            Matched(__pos, _) => Matched(__pos, { SizeOfTy(t) }),
                                                             Failed => Failed,
                                                         }
                                                     }
@@ -3330,6 +3337,91 @@ fn __parse_sizeof_expression<'input>(__input: &'input str, __state: &mut ParseSt
                                     Failed => Failed,
                                 }
                             }
+                            Failed => Failed,
+                        }
+                    }
+                    Failed => Failed,
+                }
+            }
+            Failed => Failed,
+        }
+    }
+}
+
+fn __parse_sizeof_val_expression<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Box<Node<SizeOfVal>>> {
+    #![allow(non_snake_case, unused)]
+    {
+        let __seq_res = {
+            let __seq_res = Matched(__pos, __pos);
+            match __seq_res {
+                Matched(__pos, l) => {
+                    let __seq_res = __parse_sizeof_val_expression0(__input, __state, __pos, env);
+                    match __seq_res {
+                        Matched(__pos, e) => {
+                            let __seq_res = Matched(__pos, __pos);
+                            match __seq_res {
+                                Matched(__pos, r) => Matched(__pos, { Node::new(e, Span::span(l, r)) }),
+                                Failed => Failed,
+                            }
+                        }
+                        Failed => Failed,
+                    }
+                }
+                Failed => Failed,
+            }
+        };
+        match __seq_res {
+            Matched(__pos, e) => Matched(__pos, { Box::new(e) }),
+            Failed => Failed,
+        }
+    }
+}
+
+fn __parse_sizeof_val_expression0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<SizeOfVal> {
+    #![allow(non_snake_case, unused)]
+    {
+        let __seq_res = {
+            __state.suppress_fail += 1;
+            let res = {
+                let __seq_res = slice_eq(__input, __state, __pos, "sizeof");
+                match __seq_res {
+                    Matched(__pos, e) => {
+                        let __seq_res = {
+                            __state.suppress_fail += 1;
+                            let __assert_res = if __input.len() > __pos {
+                                let (__ch, __next) = char_range_at(__input, __pos);
+                                match __ch {
+                                    '_' | 'a'...'z' | 'A'...'Z' | '0'...'9' => Matched(__next, ()),
+                                    _ => __state.mark_failure(__pos, "[_a-zA-Z0-9]"),
+                                }
+                            } else {
+                                __state.mark_failure(__pos, "[_a-zA-Z0-9]")
+                            };
+                            __state.suppress_fail -= 1;
+                            match __assert_res {
+                                Failed => Matched(__pos, ()),
+                                Matched(..) => Failed,
+                            }
+                        };
+                        match __seq_res {
+                            Matched(__pos, _) => Matched(__pos, { e }),
+                            Failed => Failed,
+                        }
+                    }
+                    Failed => Failed,
+                }
+            };
+            __state.suppress_fail -= 1;
+            res
+        };
+        match __seq_res {
+            Matched(__pos, _) => {
+                let __seq_res = __parse__(__input, __state, __pos, env);
+                match __seq_res {
+                    Matched(__pos, _) => {
+                        let __seq_res = __parse_unary_expression(__input, __state, __pos, env);
+                        match __seq_res {
+                            Matched(__pos, e) => Matched(__pos, { SizeOfVal(e) }),
                             Failed => Failed,
                         }
                     }

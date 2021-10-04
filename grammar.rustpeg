@@ -288,8 +288,7 @@ unary_prefix_inner -> UnaryOperatorExpression =
 
 prefix_operator -> UnaryOperator =
     "++" { UnaryOperator::PreIncrement } /
-    "--" { UnaryOperator::PreDecrement } /
-    K<"sizeof"> { UnaryOperator::SizeOf }
+    "--" { UnaryOperator::PreDecrement }
 
 unary_cast -> Expression =
     n:node<unary_cast_inner> { Expression::UnaryOperator(Box::new(n)) }
@@ -311,8 +310,21 @@ unary_operator -> UnaryOperator =
     "!" { UnaryOperator::Negate }
 
 sizeof_expression -> Expression =
+    n:sizeof_ty_expression { Expression::SizeOfTy(n) } /
+    n:sizeof_val_expression { Expression::SizeOfVal(n) }
+
+sizeof_ty_expression -> Box<Node<SizeOfTy>> = box<node<sizeof_ty_expression0>>
+
+sizeof_ty_expression0 -> SizeOfTy =
     K<"sizeof"> _ "(" _ t:type_name _ ")" {
-        Expression::SizeOf(Box::new(t))
+        SizeOfTy(t)
+    }
+
+sizeof_val_expression -> Box<Node<SizeOfVal>> = box<node<sizeof_val_expression0>>
+
+sizeof_val_expression0 -> SizeOfVal =
+    K<"sizeof"> _ e:unary_expression {
+        SizeOfVal(e)
     }
 
 alignof_expression -> Expression =

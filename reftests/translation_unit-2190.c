@@ -48,24 +48,26 @@ TranslationUnit
                     Statement
                         IfStatement
                             Expression
-                                TypeName
-                                    SpecifierQualifier
-                                        TypeSpecifier
-                                            EnumType
-                                                Enumerator
-                                                    Identifier "a"
+                                SizeOfTy
+                                    TypeName
+                                        SpecifierQualifier
+                                            TypeSpecifier
+                                                EnumType
+                                                    Enumerator
+                                                        Identifier "a"
                             Statement
                                 Expression
                                     BinaryOperatorExpression
                                         Expression
                                             Identifier "x"
                                         Expression
-                                            TypeName
-                                                SpecifierQualifier
-                                                    TypeSpecifier
-                                                        EnumType
-                                                            Enumerator
-                                                                Identifier "b"
+                                            SizeOfTy
+                                                TypeName
+                                                    SpecifierQualifier
+                                                        TypeSpecifier
+                                                            EnumType
+                                                                Enumerator
+                                                                    Identifier "b"
                                         BinaryOperator Assign
                             Statement
                                 Expression
@@ -79,12 +81,13 @@ TranslationUnit
                     Statement
                         SwitchStatement
                             Expression
-                                TypeName
-                                    SpecifierQualifier
-                                        TypeSpecifier
-                                            EnumType
-                                                Enumerator
-                                                    Identifier "b"
+                                SizeOfTy
+                                    TypeName
+                                        SpecifierQualifier
+                                            TypeSpecifier
+                                                EnumType
+                                                    Enumerator
+                                                        Identifier "b"
                             Statement
                                 Expression
                                     BinaryOperatorExpression

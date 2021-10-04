@@ -202,10 +202,13 @@ pub enum Expression {
 
     /// Size of a type
     ///
-    /// Note: size of an expression is represented with `UnaryOperator::SizeOf`.
+    /// (C11 6.5.3)
+    SizeOfTy(Box<Node<SizeOfTy>>),
+
+    /// Size of a unary expression
     ///
     /// (C11 6.5.3)
-    SizeOf(Box<Node<TypeName>>),
+    SizeOfVal(Box<Node<SizeOfVal>>),
 
     /// Alignment of a type
     ///
@@ -330,6 +333,18 @@ pub struct CompoundLiteral {
     pub initializer_list: Vec<Node<InitializerListItem>>,
 }
 
+/// SizeOf a type
+///
+/// (C11 6.5.3)
+#[derive(Debug, PartialEq, Clone)]
+pub struct SizeOfTy(pub Node<TypeName>);
+
+/// Size of an unary expression
+///
+/// (C11 6.5.3)
+#[derive(Debug, PartialEq, Clone)]
+pub struct SizeOfVal(pub Box<Node<Expression>>);
+
 /// All operators with one operand
 ///
 /// (C11 6.5)
@@ -355,8 +370,6 @@ pub enum UnaryOperator {
     Complement,
     /// `!operand`
     Negate,
-    /// `sizeof operand`
-    SizeOf,
 }
 
 /// Unary operator expression

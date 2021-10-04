@@ -10,6 +10,7 @@
 //! ```
 
 #![allow(deprecated)]
+#![allow(ellipsis_inclusive_range_patterns)]
 
 pub mod ast;
 pub mod driver;

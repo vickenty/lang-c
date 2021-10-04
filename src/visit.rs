@@ -118,15 +118,15 @@ pub trait Visit<'ast> {
         visit_compound_literal(self, compound_literal, span)
     }
 
-    fn visit_sizeofty(&mut self, sizeof: &'ast SizeOfTy, span: &'ast Span) {
-        visit_sizeofty(self, sizeof, span)
+    fn visit_sizeofty(&mut self, sizeofty: &'ast SizeOfTy, span: &'ast Span) {
+        visit_sizeofty(self, sizeofty, span)
     }
-    fn visit_sizeofval(&mut self, sizeof: &'ast SizeOfVal, span: &'ast Span) {
-        visit_sizeofval(self, sizeof, span)
+    fn visit_sizeofval(&mut self, sizeofval: &'ast SizeOfVal, span: &'ast Span) {
+        visit_sizeofval(self, sizeofval, span)
     }
 
-    fn visit_alignof(&mut self, alignof: &'ast AlignOf, span: &'ast Span) {
-        visit_alignof(self, alignof, span)
+    fn visit_alignof(&mut self, alignofty: &'ast AlignOf, span: &'ast Span) {
+        visit_alignof(self, alignofty, span)
     }
 
     fn visit_unary_operator(&mut self, unary_operator: &'ast UnaryOperator, span: &'ast Span) {
@@ -720,26 +720,26 @@ pub fn visit_compound_literal<'ast, V: Visit<'ast> + ?Sized>(
 
 pub fn visit_sizeofty<'ast, V: Visit<'ast> + ?Sized>(
     visitor: &mut V,
-    sizeof: &'ast SizeOfTy,
+    sizeofty: &'ast SizeOfTy,
     _span: &'ast Span,
 ) {
-    visitor.visit_type_name(&sizeof.0.node, &sizeof.0.span);
+    visitor.visit_type_name(&sizeofty.0.node, &sizeofty.0.span);
 }
 
 pub fn visit_sizeofval<'ast, V: Visit<'ast> + ?Sized>(
     visitor: &mut V,
-    sizeof: &'ast SizeOfVal,
+    sizeofval: &'ast SizeOfVal,
     _span: &'ast Span,
 ) {
-    visitor.visit_expression(&sizeof.0.node, &sizeof.0.span);
+    visitor.visit_expression(&sizeofval.0.node, &sizeofval.0.span);
 }
 
 pub fn visit_alignof<'ast, V: Visit<'ast> + ?Sized>(
     visitor: &mut V,
-    alignof: &'ast AlignOf,
+    alignofty: &'ast AlignOf,
     _span: &'ast Span,
 ) {
-    visitor.visit_type_name(&alignof.0.node, &alignof.0.span);
+    visitor.visit_type_name(&alignofty.0.node, &alignofty.0.span);
 }
 
 pub fn visit_unary_operator<'ast, V: Visit<'ast> + ?Sized>(

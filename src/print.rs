@@ -393,6 +393,7 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
     }
     fn visit_derived_declarator(&mut self, n: &'ast DerivedDeclarator, span: &'ast Span) {
         self.name("DerivedDeclarator");
+        print_derived_declarator(self, n);
         visit_derived_declarator(&mut self.block(), n, span);
     }
     fn visit_array_declarator(&mut self, n: &'ast ArrayDeclarator, span: &'ast Span) {
@@ -549,6 +550,13 @@ fn print_float_format<'ast>(p: &mut Printer, n: &'ast FloatFormat) {
 fn print_declarator_kind<'ast>(p: &mut Printer, n: &'ast DeclaratorKind) {
     match *n {
         DeclaratorKind::Abstract => p.w.write_str(" Abstract").unwrap(),
+        _ => {}
+    }
+}
+fn print_derived_declarator<'ast>(p: &mut Printer, n: &'ast DerivedDeclarator) {
+    match *n {
+        DerivedDeclarator::Pointer(_) => p.w.write_str(" Pointer").unwrap(),
+        DerivedDeclarator::KRFunction(_) => p.w.write_str(" KRFunction").unwrap(),
         _ => {}
     }
 }

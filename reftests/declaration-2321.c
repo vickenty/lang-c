@@ -15,7 +15,7 @@ Declaration
                 Declarator
                     DeclaratorKind
                         Identifier "_close"
-                    DerivedDeclarator
+                    DerivedDeclarator Pointer
                         PointerQualifier
                             TypeQualifier Nullable
             DerivedDeclarator
@@ -25,6 +25,6 @@ Declaration
                             TypeSpecifier Void
                         Declarator
                             DeclaratorKind Abstract
-                            DerivedDeclarator
+                            DerivedDeclarator Pointer
                     Ellipsis None
 ===*/

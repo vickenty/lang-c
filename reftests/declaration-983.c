@@ -28,7 +28,7 @@ Declaration
                         Declarator
                             DeclaratorKind
                                 Identifier "__buf"
-                            DerivedDeclarator
+                            DerivedDeclarator Pointer
                     ParameterDeclaration
                         DeclarationSpecifier
                             TypeSpecifier TypedefName

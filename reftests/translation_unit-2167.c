@@ -28,7 +28,7 @@ TranslationUnit
             Declarator
                 DeclaratorKind
                     Identifier "foo"
-                DerivedDeclarator
+                DerivedDeclarator KRFunction
             Statement Compound
                 BlockItem
                     Statement

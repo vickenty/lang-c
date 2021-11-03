@@ -12,10 +12,10 @@ Declaration
                 Declarator
                     DeclaratorKind
                         Identifier "f"
-                    DerivedDeclarator
-                    DerivedDeclarator
-                    DerivedDeclarator
-                    DerivedDeclarator
+                    DerivedDeclarator Pointer
+                    DerivedDeclarator Pointer
+                    DerivedDeclarator Pointer
+                    DerivedDeclarator Pointer
             DerivedDeclarator
                 FunctionDeclarator
                     ParameterDeclaration

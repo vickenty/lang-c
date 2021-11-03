@@ -10,7 +10,7 @@ TranslationUnit
             Declarator
                 DeclaratorKind
                     Identifier "main"
-                DerivedDeclarator
+                DerivedDeclarator KRFunction
                     Identifier "argc"
                     Identifier "argv"
             Declaration
@@ -27,7 +27,7 @@ TranslationUnit
                     Declarator
                         DeclaratorKind
                             Identifier "argv"
-                        DerivedDeclarator
-                        DerivedDeclarator
+                        DerivedDeclarator Pointer
+                        DerivedDeclarator Pointer
             Statement Compound
 ===*/

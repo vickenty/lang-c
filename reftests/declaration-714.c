@@ -23,7 +23,7 @@ Declaration
         Declarator
             DeclaratorKind
                 Identifier "foobar"
-            DerivedDeclarator
+            DerivedDeclarator Pointer
                 PointerQualifier
                     TypeQualifier Const
 ===*/

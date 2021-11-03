@@ -33,7 +33,7 @@ Declaration
                             TypeSpecifier Char
                         Declarator
                             DeclaratorKind Abstract
-                            DerivedDeclarator
+                            DerivedDeclarator Pointer
                     Ellipsis Some
             Extension
                 Attribute "format"

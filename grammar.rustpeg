@@ -827,7 +827,13 @@ function_declarator -> FunctionDeclarator =
 pointer -> Node<DerivedDeclarator> = node<pointer0>
 
 pointer0 -> DerivedDeclarator =
-    "*" _ q:list0<node<pointer_qualifier>> { DerivedDeclarator::Pointer(q) }
+    t:$("*" / clang<"^">) _ q:list0<node<pointer_qualifier>> {
+        if t == "^" {
+            DerivedDeclarator::Block(q)
+        } else {
+            DerivedDeclarator::Pointer(q)
+        }
+    }
 
 pointer_qualifier -> PointerQualifier =
     q:type_qualifier { PointerQualifier::TypeQualifier(q) } /

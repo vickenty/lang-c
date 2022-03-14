@@ -1153,6 +1153,11 @@ pub fn visit_derived_declarator<'ast, V: Visit<'ast> + ?Sized>(
                 visitor.visit_identifier(&identifier.node, &identifier.span);
             }
         }
+        DerivedDeclarator::Block(ref qs) => {
+            for q in qs {
+                visitor.visit_pointer_qualifier(&q.node, &q.span);
+            }
+        }
     }
 }
 

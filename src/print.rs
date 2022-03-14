@@ -557,6 +557,7 @@ fn print_derived_declarator<'ast>(p: &mut Printer, n: &'ast DerivedDeclarator) {
     match *n {
         DerivedDeclarator::Pointer(_) => p.w.write_str(" Pointer").unwrap(),
         DerivedDeclarator::KRFunction(_) => p.w.write_str(" KRFunction").unwrap(),
+        DerivedDeclarator::Block(_) => p.w.write_str(" Block").unwrap(),
         _ => {}
     }
 }

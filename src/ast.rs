@@ -863,6 +863,10 @@ pub enum DerivedDeclarator {
     Function(Node<FunctionDeclarator>),
     /// `… ( identifiers )`
     KRFunction(Vec<Node<Identifier>>),
+    /// `^ qualifiers …`
+    ///
+    /// [Clang extension](https://clang.llvm.org/docs/BlockLanguageSpec.html)
+    Block(Vec<Node<PointerQualifier>>),
 }
 
 /// Array part of a declarator

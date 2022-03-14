@@ -10661,9 +10661,41 @@ fn __parse_pointer<'input>(__input: &'input str, __state: &mut ParseState<'input
 fn __parse_pointer0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<DerivedDeclarator> {
     #![allow(non_snake_case, unused)]
     {
-        let __seq_res = slice_eq(__input, __state, __pos, "*");
+        let __seq_res = {
+            let str_start = __pos;
+            match {
+                let __choice_res = slice_eq(__input, __state, __pos, "*");
+                match __choice_res {
+                    Matched(__pos, __value) => Matched(__pos, __value),
+                    Failed => {
+                        let __seq_res = {
+                            __state.suppress_fail += 1;
+                            let __assert_res = __parse_clang_guard(__input, __state, __pos, env);
+                            __state.suppress_fail -= 1;
+                            match __assert_res {
+                                Matched(_, __value) => Matched(__pos, __value),
+                                Failed => Failed,
+                            }
+                        };
+                        match __seq_res {
+                            Matched(__pos, _) => {
+                                let __seq_res = slice_eq(__input, __state, __pos, "^");
+                                match __seq_res {
+                                    Matched(__pos, e) => Matched(__pos, { e }),
+                                    Failed => Failed,
+                                }
+                            }
+                            Failed => Failed,
+                        }
+                    }
+                }
+            } {
+                Matched(__newpos, _) => Matched(__newpos, &__input[str_start..__newpos]),
+                Failed => Failed,
+            }
+        };
         match __seq_res {
-            Matched(__pos, _) => {
+            Matched(__pos, t) => {
                 let __seq_res = __parse__(__input, __state, __pos, env);
                 match __seq_res {
                     Matched(__pos, _) => {
@@ -10719,7 +10751,13 @@ fn __parse_pointer0<'input>(__input: &'input str, __state: &mut ParseState<'inpu
                             }
                         };
                         match __seq_res {
-                            Matched(__pos, q) => Matched(__pos, { DerivedDeclarator::Pointer(q) }),
+                            Matched(__pos, q) => Matched(__pos, {
+                                if t == "^" {
+                                    DerivedDeclarator::Block(q)
+                                } else {
+                                    DerivedDeclarator::Pointer(q)
+                                }
+                            }),
                             Failed => Failed,
                         }
                     }

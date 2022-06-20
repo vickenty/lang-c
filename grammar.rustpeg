@@ -659,7 +659,7 @@ struct_declaration -> StructDeclaration =
     gnu<K<"__extension__">> _ d:struct_declaration { d }
 
 struct_field -> StructField =
-    s:specifier_qualifiers _ d:cs0<node<struct_declarator>> _ ";" gnu<(_ ";")*> {
+    s:specifier_qualifiers _ d:cs0<node<struct_declarator>> _ ";" gnu<(_ ";")*>? {
         StructField {
             specifiers: s,
             declarators: d,
@@ -1167,7 +1167,7 @@ pub translation_unit -> TranslationUnit =
     directive? _ d:list0<node<external_declaration>> _ { TranslationUnit(d) }
 
 external_declaration -> ExternalDeclaration =
-    d:external_declaration0 gnu<(_ ";")*> { d }
+    d:external_declaration0 gnu<(_ ";")*>? { d }
 
 external_declaration0 -> ExternalDeclaration =
     d:declaration { ExternalDeclaration::Declaration(d) } /

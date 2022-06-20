@@ -7949,7 +7949,7 @@ fn __parse_struct_field<'input>(__input: &'input str, __state: &mut ParseState<'
                                         let __seq_res = slice_eq(__input, __state, __pos, ";");
                                         match __seq_res {
                                             Matched(__pos, _) => {
-                                                let __seq_res = {
+                                                let __seq_res = match {
                                                     let __seq_res = {
                                                         __state.suppress_fail += 1;
                                                         let __assert_res = __parse_gnu_guard(__input, __state, __pos, env);
@@ -7992,6 +7992,9 @@ fn __parse_struct_field<'input>(__input: &'input str, __state: &mut ParseState<'
                                                         }
                                                         Failed => Failed,
                                                     }
+                                                } {
+                                                    Matched(__newpos, _) => Matched(__newpos, ()),
+                                                    Failed => Matched(__pos, ()),
                                                 };
                                                 match __seq_res {
                                                     Matched(__pos, _) => Matched(__pos, { StructField { specifiers: s, declarators: d } }),
@@ -14460,7 +14463,7 @@ fn __parse_external_declaration<'input>(__input: &'input str, __state: &mut Pars
         let __seq_res = __parse_external_declaration0(__input, __state, __pos, env);
         match __seq_res {
             Matched(__pos, d) => {
-                let __seq_res = {
+                let __seq_res = match {
                     let __seq_res = {
                         __state.suppress_fail += 1;
                         let __assert_res = __parse_gnu_guard(__input, __state, __pos, env);
@@ -14503,6 +14506,9 @@ fn __parse_external_declaration<'input>(__input: &'input str, __state: &mut Pars
                         }
                         Failed => Failed,
                     }
+                } {
+                    Matched(__newpos, _) => Matched(__newpos, ()),
+                    Failed => Matched(__pos, ()),
                 };
                 match __seq_res {
                     Matched(__pos, _) => Matched(__pos, { d }),

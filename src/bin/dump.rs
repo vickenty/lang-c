@@ -4,7 +4,7 @@ extern crate lang_c;
 
 use std::process::exit;
 
-use lang_c::driver::Config;
+use lang_c::driver::{Config, Flavor};
 use lang_c::visit::Visit;
 
 fn main() {
@@ -17,6 +17,8 @@ fn main() {
             config = Config::with_gcc();
         } else if opt == "-use-clang" {
             config = Config::with_clang();
+        } else if opt == "-use-std" {
+            config.flavor = Flavor::StdC11;
         } else if opt == "-q" {
             quiet = true;
         } else if opt.starts_with("-") {

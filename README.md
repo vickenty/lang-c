@@ -30,7 +30,7 @@ A number of external tools are used during development:
 
 - GNU make
 - rustfmt
-- [rust-peg](https://github.com/kevinmehall/rust-peg) 0.5.7
+- [rust-peg](https://github.com/kevinmehall/rust-peg) 0.5.4
 
 Parser (`src/parser.rs`) is built from a PEG grammar in `grammar.rustpeg`. It is updated manually and then 
 committed, not generated on every build, thus no `rust-peg` in the list of dependencies.

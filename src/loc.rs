@@ -156,7 +156,7 @@ fn test_line_directive() {
         parse_line_directive("# 0 \"\""),
         Some((Location { file: "", line: 0 }, 0))
     );
-    assert_eq!(parse_line_directive("# 0 \"# #\x0a\x0a\\"), None,);
+    assert_eq!(parse_line_directive("# 0 \"# #\x0a\x0a\\"), None);
     assert_eq!(parse_line_directive("# 0 \"\\"), None);
     assert_eq!(parse_line_directive("# 0 \"\\…"), None);
 }

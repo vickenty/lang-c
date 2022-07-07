@@ -9,6 +9,7 @@ use std::process::Command;
 
 use ast::TranslationUnit;
 use env::Env;
+use loc;
 use parser::translation_unit;
 
 /// Parser configuration
@@ -134,16 +135,25 @@ impl SyntaxError {
 
         Ok(())
     }
+
+    pub fn get_location(&self) -> (loc::Location, Vec<loc::Location>) {
+        loc::get_location_for_offset(&self.source, self.offset)
+    }
 }
 
 impl fmt::Display for SyntaxError {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        let (loc, inc) = self.get_location();
         try!(write!(
             fmt,
-            "unexpected token at line {} column {}, expected ",
-            self.line, self.column
+            "unexpected token at \"{}\" line {} column {}, expected ",
+            loc.file, loc.line, self.column
         ));
-        self.format_expected(fmt)
+        try!(self.format_expected(fmt));
+        for loc in inc {
+            try!(write!(fmt, "\n  included from {}:{}", loc.file, loc.line));
+        }
+        Ok(())
     }
 }
 

@@ -1,7 +1,7 @@
 #![allow(unknown_lints)]
 #![allow(bare_trait_objects)]
 
-//! Debug rinter for abstract syntax tree
+//! Debug printer for abstract syntax tree
 //!
 //! ```no_run
 //! # use lang_c::print::Printer;

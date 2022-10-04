@@ -12445,7 +12445,7 @@ fn __parse_array_designator<'input>(__input: &'input str, __state: &mut ParseSta
                                             };
                                             match __seq_res {
                                                 Matched(__pos, _) => {
-                                                    let __seq_res = __parse_range_designator_ext(__input, __state, __pos, env);
+                                                    let __seq_res = __parse_range_suffix(__input, __state, __pos, env);
                                                     match __seq_res {
                                                         Matched(__pos, e) => Matched(__pos, { e }),
                                                         Failed => Failed,
@@ -12490,7 +12490,7 @@ fn __parse_array_designator<'input>(__input: &'input str, __state: &mut ParseSta
     }
 }
 
-fn __parse_range_designator_ext<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Node<Expression>> {
+fn __parse_range_suffix<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Node<Expression>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = slice_eq(__input, __state, __pos, "...");
@@ -13044,7 +13044,50 @@ fn __parse_label<'input>(__input: &'input str, __state: &mut ParseState<'input>,
                                 Matched(__pos, _) => {
                                     let __seq_res = __parse_constant_expression(__input, __state, __pos, env);
                                     match __seq_res {
-                                        Matched(__pos, e) => Matched(__pos, { Label::Case(e) }),
+                                        Matched(__pos, a) => {
+                                            let __seq_res = __parse__(__input, __state, __pos, env);
+                                            match __seq_res {
+                                                Matched(__pos, _) => {
+                                                    let __seq_res = match {
+                                                        let __seq_res = {
+                                                            __state.suppress_fail += 1;
+                                                            let __assert_res = __parse_gnu_guard(__input, __state, __pos, env);
+                                                            __state.suppress_fail -= 1;
+                                                            match __assert_res {
+                                                                Matched(_, __value) => Matched(__pos, __value),
+                                                                Failed => Failed,
+                                                            }
+                                                        };
+                                                        match __seq_res {
+                                                            Matched(__pos, _) => {
+                                                                let __seq_res = __parse_range_suffix(__input, __state, __pos, env);
+                                                                match __seq_res {
+                                                                    Matched(__pos, e) => Matched(__pos, { e }),
+                                                                    Failed => Failed,
+                                                                }
+                                                            }
+                                                            Failed => Failed,
+                                                        }
+                                                    } {
+                                                        Matched(__newpos, __value) => Matched(__newpos, Some(__value)),
+                                                        Failed => Matched(__pos, None),
+                                                    };
+                                                    match __seq_res {
+                                                        Matched(__pos, b) => Matched(__pos, {
+                                                            match b {
+                                                                Some(b) => {
+                                                                    let span = Span::span(a.span.start, b.span.end);
+                                                                    Label::CaseRange(Node::new(CaseRange { low: a, high: Box::new(b) }, span))
+                                                                }
+                                                                None => Label::Case(a),
+                                                            }
+                                                        }),
+                                                        Failed => Failed,
+                                                    }
+                                                }
+                                                Failed => Failed,
+                                            }
+                                        }
                                         Failed => Failed,
                                     }
                                 }

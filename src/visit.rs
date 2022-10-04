@@ -433,6 +433,10 @@ pub trait Visit<'ast> {
         visit_label(self, label, span)
     }
 
+    fn visit_case_range(&mut self, range: &'ast CaseRange, span: &'ast Span) {
+        visit_case_range(self, range, span)
+    }
+
     fn visit_for_initializer(&mut self, for_initializer: &'ast ForInitializer, span: &'ast Span) {
         visit_for_initializer(self, for_initializer, span)
     }
@@ -1435,8 +1439,18 @@ pub fn visit_label<'ast, V: Visit<'ast> + ?Sized>(
     match *label {
         Label::Identifier(ref i) => visitor.visit_identifier(&i.node, &i.span),
         Label::Case(ref c) => visitor.visit_expression(&c.node, &c.span),
+        Label::CaseRange(ref c) => visitor.visit_case_range(&c.node, &c.span),
         Label::Default => {}
     }
+}
+
+pub fn visit_case_range<'ast, V: Visit<'ast> + ?Sized>(
+    visitor: &mut V,
+    range: &'ast CaseRange,
+    _span: &'ast Span,
+) {
+    visitor.visit_expression(&range.low.node, &range.low.span);
+    visitor.visit_expression(&range.high.node, &range.high.span);
 }
 
 pub fn visit_for_initializer<'ast, V: Visit<'ast> + ?Sized>(

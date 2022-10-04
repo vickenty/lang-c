@@ -1099,10 +1099,27 @@ pub enum Label {
     ///
     /// `case 'a': …`
     Case(Box<Node<Expression>>),
+    /// Case with a range in a `switch` statement
+    ///
+    /// `case 'a' ... 'z': …`
+    ///
+    /// [GNU extension](https://gcc.gnu.org/onlinedocs/gcc/Case-Ranges.html)
+    CaseRange(Node<CaseRange>),
     /// Default case in a `switch` statement
     ///
     /// `default: …`
     Default,
+}
+
+/// Case range expression
+///
+/// `from ... to`
+///
+/// [GNU extension](https://gcc.gnu.org/onlinedocs/gcc/Case-Ranges.html)
+#[derive(Debug, PartialEq, Clone)]
+pub struct CaseRange {
+    pub low: Box<Node<Expression>>,
+    pub high: Box<Node<Expression>>,
 }
 
 /// First element of a `for` statement

@@ -483,6 +483,10 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
         print_label(self, n);
         visit_label(&mut self.block(), n, span);
     }
+    fn visit_case_range(&mut self, n: &'ast CaseRange, span: &'ast Span) {
+        self.name("CaseRange");
+        visit_case_range(&mut self.block(), n, span);
+    }
     fn visit_for_initializer(&mut self, n: &'ast ForInitializer, span: &'ast Span) {
         self.name("ForInitializer");
         print_for_initializer(self, n);
@@ -625,7 +629,7 @@ impl<'a> fmt::Display for Escape<'a> {
         for c in self.0.chars() {
             match c {
                 '"' | '\'' | '\\' => try!(write!(fmt, "\\{}", c)),
-                ' ' ... '~' => try!(fmt.write_char(c)),
+                ' '...'~' => try!(fmt.write_char(c)),
                 _ => try!(write!(fmt, "\\u{{{:04x}}}", c as u32)),
             }
         }

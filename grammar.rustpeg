@@ -1000,7 +1000,7 @@ designator -> Designator =
     "." _ i:identifier { Designator::Member(i) }
 
 array_designator -> Designator =
-    "[" _ a:node<constant_expression0> _ b:gnu<range_designator_ext>? "]" {
+    "[" _ a:node<constant_expression0> _ b:gnu<range_suffix>? "]" {
         match b {
             Some(b) => {
                 let span = Span::span(a.span.start, b.span.end);
@@ -1010,7 +1010,7 @@ array_designator -> Designator =
         }
     }
 
-range_designator_ext -> Node<Expression> =
+range_suffix -> Node<Expression> = // shared with label
     "..." _ e:node<constant_expression0> { e }
 
 ////
@@ -1057,7 +1057,15 @@ labeled_statement -> LabeledStatement =
 
 label -> Label =
     i:identifier { Label::Identifier(i) } /
-    K<"case"> _ e:constant_expression { Label::Case(e) } /
+    K<"case"> _ a:constant_expression _ b:gnu<range_suffix>? {
+        match b {
+            Some(b) => {
+                let span = Span::span(a.span.start, b.span.end);
+                Label::CaseRange(Node::new(CaseRange { low: a, high: Box::new(b) }, span))
+            }
+            None => Label::Case(a),
+        }
+    } /
     K<"default"> { Label::Default }
 
 ////

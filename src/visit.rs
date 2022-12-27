@@ -1086,6 +1086,9 @@ pub fn visit_enumerator<'ast, V: Visit<'ast> + ?Sized>(
     if let Some(ref expression) = enumerator.expression {
         visitor.visit_expression(&expression.node, &expression.span);
     }
+    for extension in &enumerator.extensions {
+        visitor.visit_extension(&extension.node, &extension.span);
+    }
 }
 
 pub fn visit_type_qualifier<'ast, V: Visit<'ast> + ?Sized>(

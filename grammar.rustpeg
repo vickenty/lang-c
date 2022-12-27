@@ -709,11 +709,12 @@ enum_specifier -> EnumType =
     }
 
 enumerator -> Enumerator =
-    i:identifier _ e:enumerator_constant? {
+    i:identifier _ a:gnu<attribute_specifier_list>? _  e:enumerator_constant? {
         env.add_symbol(&i.node.name, Symbol::Identifier);
         Enumerator {
             identifier: i,
             expression: e,
+            extensions: a.unwrap_or_default(),
         }
     }
 

@@ -748,6 +748,7 @@ pub struct EnumType {
 pub struct Enumerator {
     pub identifier: Node<Identifier>,
     pub expression: Option<Box<Node<Expression>>>,
+    pub extensions: Vec<Node<Extension>>,
 }
 
 // From 6.7.3

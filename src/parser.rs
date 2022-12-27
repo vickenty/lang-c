@@ -8816,15 +8816,50 @@ fn __parse_enumerator<'input>(__input: &'input str, __state: &mut ParseState<'in
                 let __seq_res = __parse__(__input, __state, __pos, env);
                 match __seq_res {
                     Matched(__pos, _) => {
-                        let __seq_res = match __parse_enumerator_constant(__input, __state, __pos, env) {
+                        let __seq_res = match {
+                            let __seq_res = {
+                                __state.suppress_fail += 1;
+                                let __assert_res = __parse_gnu_guard(__input, __state, __pos, env);
+                                __state.suppress_fail -= 1;
+                                match __assert_res {
+                                    Matched(_, __value) => Matched(__pos, __value),
+                                    Failed => Failed,
+                                }
+                            };
+                            match __seq_res {
+                                Matched(__pos, _) => {
+                                    let __seq_res = __parse_attribute_specifier_list(__input, __state, __pos, env);
+                                    match __seq_res {
+                                        Matched(__pos, e) => Matched(__pos, { e }),
+                                        Failed => Failed,
+                                    }
+                                }
+                                Failed => Failed,
+                            }
+                        } {
                             Matched(__newpos, __value) => Matched(__newpos, Some(__value)),
                             Failed => Matched(__pos, None),
                         };
                         match __seq_res {
-                            Matched(__pos, e) => Matched(__pos, {
-                                env.add_symbol(&i.node.name, Symbol::Identifier);
-                                Enumerator { identifier: i, expression: e }
-                            }),
+                            Matched(__pos, a) => {
+                                let __seq_res = __parse__(__input, __state, __pos, env);
+                                match __seq_res {
+                                    Matched(__pos, _) => {
+                                        let __seq_res = match __parse_enumerator_constant(__input, __state, __pos, env) {
+                                            Matched(__newpos, __value) => Matched(__newpos, Some(__value)),
+                                            Failed => Matched(__pos, None),
+                                        };
+                                        match __seq_res {
+                                            Matched(__pos, e) => Matched(__pos, {
+                                                env.add_symbol(&i.node.name, Symbol::Identifier);
+                                                Enumerator { identifier: i, expression: e, extensions: a.unwrap_or_default() }
+                                            }),
+                                            Failed => Failed,
+                                        }
+                                    }
+                                    Failed => Failed,
+                                }
+                            }
                             Failed => Failed,
                         }
                     }

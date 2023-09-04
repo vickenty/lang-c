@@ -21,9 +21,9 @@ Expression
     Expression
         StringLiteral ["u8\"str\""]
     Expression
-        Constant
+        Constant Character u'chr'
     Expression
-        Constant
+        Constant Character U'chr'
     Expression
-        Constant
+        Constant Character L'chr'
 ===*/

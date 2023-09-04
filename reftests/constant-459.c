@@ -2,5 +2,5 @@
 '\n'
 
 /*===
-Constant
+Constant Character '\n'
 ===*/

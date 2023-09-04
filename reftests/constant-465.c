@@ -2,5 +2,5 @@
 '\xde'
 
 /*===
-Constant
+Constant Character '\xde'
 ===*/

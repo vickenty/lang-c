@@ -6,8 +6,8 @@ Statement
         Label
             CaseRange
                 Expression
-                    Constant
+                    Constant Character 'a'
                 Expression
-                    Constant
+                    Constant Character 'z'
         Statement
 ===*/

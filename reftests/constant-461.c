@@ -2,5 +2,5 @@
 '\''
 
 /*===
-Constant
+Constant Character '\''
 ===*/

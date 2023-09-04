@@ -2,5 +2,5 @@
 'a'
 
 /*===
-Constant
+Constant Character 'a'
 ===*/

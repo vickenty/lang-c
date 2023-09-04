@@ -2,5 +2,5 @@
 '\02'
 
 /*===
-Constant
+Constant Character '\02'
 ===*/

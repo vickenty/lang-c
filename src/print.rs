@@ -64,6 +64,14 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
     }
     fn visit_constant(&mut self, n: &'ast Constant, span: &'ast Span) {
         self.name("Constant");
+        match *n {
+            Constant::Character(ref c) => {
+                self.field("Character");
+                self.field(c);
+            }
+            _ => {},
+        }
+
         visit_constant(&mut self.block(), n, span);
     }
     fn visit_integer(&mut self, n: &'ast Integer, span: &'ast Span) {

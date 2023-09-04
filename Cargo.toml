@@ -13,6 +13,3 @@ categories = [ "parser-implementations" ]
 
 [features]
 dev-pegviz = [] # tests only: emit extra output for pegviz
-
-[badges]
-travis-ci = { repository = "vickenty/lang-c" }

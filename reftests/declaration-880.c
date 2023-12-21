@@ -11,7 +11,7 @@ Declaration
         Declarator
             DeclaratorKind
                 Identifier "fparseln"
-            DerivedDeclarator Pointer
+            PointerDeclarator Pointer
             DerivedDeclarator
                 FunctionDeclarator
                     ParameterDeclaration
@@ -20,21 +20,21 @@ Declaration
                                 Identifier "FILE"
                         Declarator
                             DeclaratorKind Abstract
-                            DerivedDeclarator Pointer
+                            PointerDeclarator Pointer
                     ParameterDeclaration
                         DeclarationSpecifier
                             TypeSpecifier TypedefName
                                 Identifier "size_t"
                         Declarator
                             DeclaratorKind Abstract
-                            DerivedDeclarator Pointer
+                            PointerDeclarator Pointer
                     ParameterDeclaration
                         DeclarationSpecifier
                             TypeSpecifier TypedefName
                                 Identifier "size_t"
                         Declarator
                             DeclaratorKind Abstract
-                            DerivedDeclarator Pointer
+                            PointerDeclarator Pointer
                     ParameterDeclaration
                         DeclarationSpecifier
                             TypeQualifier Const

@@ -13,7 +13,7 @@ Declaration
         Declarator
             DeclaratorKind
                 Identifier "foo"
-            DerivedDeclarator Pointer
+            PointerDeclarator Pointer
     InitDeclarator
         Declarator
             DeclaratorKind

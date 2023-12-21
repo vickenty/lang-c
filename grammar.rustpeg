@@ -771,7 +771,8 @@ declarator0 -> Declarator =
     {
         Declarator {
             kind: kind,
-            derived: concat(pointer, derived),
+            pointer: pointer,
+            derived: derived,
             extensions: attr.unwrap_or_default(),
         }
     }
@@ -825,14 +826,14 @@ function_declarator -> FunctionDeclarator =
         }
     }
 
-pointer -> Node<DerivedDeclarator> = node<pointer0>
+pointer -> Node<PointerDeclarator> = node<pointer0>
 
-pointer0 -> DerivedDeclarator =
+pointer0 -> PointerDeclarator =
     t:$("*" / clang<"^">) _ q:list0<node<pointer_qualifier>> {
         if t == "^" {
-            DerivedDeclarator::Block(q)
+            PointerDeclarator::Block(q)
         } else {
-            DerivedDeclarator::Pointer(q)
+            PointerDeclarator::Pointer(q)
         }
     }
 
@@ -882,21 +883,24 @@ abstract_declarator0 -> Declarator =
     p:list0<pointer> _ k:node<direct_abstract_declarator> _ d:list0<derived_abstract_declarator> {
         Declarator {
             kind: k,
-            derived: concat(p, d),
+            pointer: p,
+            derived: d,
             extensions: Vec::new(),
         }
     } /
     p:list0<pointer> k:#position _ d:list1<derived_abstract_declarator> {
         Declarator {
             kind: Node::new(DeclaratorKind::Abstract, Span::span(k, k)),
-            derived: concat(p, d),
+            pointer: p,
+            derived: d,
             extensions: Vec::new(),
         }
     } /
     p:list1<pointer> k:#position {
         Declarator {
             kind: Node::new(DeclaratorKind::Abstract, Span::span(k, k)),
-            derived: p,
+            pointer: p,
+            derived: Vec::new(),
             extensions: Vec::new(),
         }
     }

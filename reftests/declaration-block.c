@@ -10,5 +10,5 @@ Declaration
         Declarator
             DeclaratorKind
                 Identifier "block"
-            DerivedDeclarator Block
+            PointerDeclarator Block
 ===*/

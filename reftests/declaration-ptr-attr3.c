@@ -9,7 +9,7 @@ Declaration
         Declarator
             DeclaratorKind
                 Identifier "f"
-            DerivedDeclarator Pointer
+            PointerDeclarator Pointer
                 PointerQualifier
                     Extension
                         Attribute "aligned"
@@ -19,5 +19,5 @@ Declaration
                                         IntegerBase Decimal
                                         IntegerSuffix false false
                                             IntegerSize Int
-            DerivedDeclarator Pointer
+            PointerDeclarator Pointer
 ===*/

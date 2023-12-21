@@ -29,5 +29,5 @@ Declaration
                             Declarator
                                 DeclaratorKind
                                     Identifier "i"
-                                DerivedDeclarator Pointer
+                                PointerDeclarator Pointer
 ===*/

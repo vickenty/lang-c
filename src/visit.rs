@@ -309,6 +309,14 @@ pub trait Visit<'ast> {
         visit_declarator_kind(self, declarator_kind, span)
     }
 
+    fn visit_pointer_declarator(
+        &mut self,
+        pointer_declarator: &'ast PointerDeclarator,
+        span: &'ast Span,
+    ) {
+        visit_pointer_declarator(self, pointer_declarator, span)
+    }
+
     fn visit_derived_declarator(
         &mut self,
         derived_declarator: &'ast DerivedDeclarator,
@@ -1122,6 +1130,9 @@ pub fn visit_declarator<'ast, V: Visit<'ast> + ?Sized>(
     _span: &'ast Span,
 ) {
     visitor.visit_declarator_kind(&declarator.kind.node, &declarator.kind.span);
+    for pointer in &declarator.pointer {
+        visitor.visit_pointer_declarator(&pointer.node, &pointer.span);
+    }
     for derived in &declarator.derived {
         visitor.visit_derived_declarator(&derived.node, &derived.span);
     }
@@ -1142,27 +1153,36 @@ pub fn visit_declarator_kind<'ast, V: Visit<'ast> + ?Sized>(
     }
 }
 
+pub fn visit_pointer_declarator<'ast, V: Visit<'ast> + ?Sized>(
+    visitor: &mut V,
+    pointer_declarator: &'ast PointerDeclarator,
+    _span: &'ast Span,
+) {
+    match *pointer_declarator {
+        PointerDeclarator::Pointer(ref p) => {
+            for pointer in p {
+                visitor.visit_pointer_qualifier(&pointer.node, &pointer.span);
+            }
+        }
+        PointerDeclarator::Block(ref qs) => {
+            for q in qs {
+                visitor.visit_pointer_qualifier(&q.node, &q.span);
+            }
+        }
+    }
+}
+
 pub fn visit_derived_declarator<'ast, V: Visit<'ast> + ?Sized>(
     visitor: &mut V,
     derived_declarator: &'ast DerivedDeclarator,
     _span: &'ast Span,
 ) {
     match *derived_declarator {
-        DerivedDeclarator::Pointer(ref p) => {
-            for pointer in p {
-                visitor.visit_pointer_qualifier(&pointer.node, &pointer.span);
-            }
-        }
         DerivedDeclarator::Array(ref a) => visitor.visit_array_declarator(&a.node, &a.span),
         DerivedDeclarator::Function(ref f) => visitor.visit_function_declarator(&f.node, &f.span),
         DerivedDeclarator::KRFunction(ref k) => {
             for identifier in k {
                 visitor.visit_identifier(&identifier.node, &identifier.span);
-            }
-        }
-        DerivedDeclarator::Block(ref qs) => {
-            for q in qs {
-                visitor.visit_pointer_qualifier(&q.node, &q.span);
             }
         }
     }

@@ -9,11 +9,11 @@ use std::io::{BufRead, BufReader, BufWriter, Write};
 use std::mem;
 use std::path::PathBuf;
 
-use env::Env;
-use parser;
-use print::Printer;
-use span::Span;
-use visit::Visit;
+use crate::env::Env;
+use crate::parser;
+use crate::print::Printer;
+use crate::span::Span;
+use crate::visit::Visit;
 
 struct Case {
     path: PathBuf,
@@ -34,7 +34,7 @@ impl Case {
         let kind = name.split("-").next().expect("case contains hyphen");
         let kind = Kind::from_str(&kind).expect("unknown test case kind");
 
-        let file = BufReader::new(try!(File::open(entry.path())));
+        let file = BufReader::new(r#try!(File::open(entry.path())));
 
         let mut pragma = Vec::new();
         let mut expect = String::new();
@@ -44,7 +44,7 @@ impl Case {
         for line in file.lines() {
             let target = if in_exp { &mut expect } else { &mut source };
 
-            let line = try!(line);
+            let line = r#try!(line);
             let line = line.trim_right();
             if line.is_empty() || line.starts_with("//") {
                 continue;
@@ -158,23 +158,23 @@ impl Case {
 
     fn save(&self, actual: &str) -> io::Result<()> {
         let mut buf = String::new();
-        let mut file = BufReader::new(try!(File::open(&self.path)));
+        let mut file = BufReader::new(r#try!(File::open(&self.path)));
         let mut content = Vec::new();
-        while try!(file.read_line(&mut buf)) > 0 {
+        while r#try!(file.read_line(&mut buf)) > 0 {
             content.push(mem::replace(&mut buf, String::new()));
         }
 
-        let mut file = BufWriter::new(try!(File::create(&self.path)));
+        let mut file = BufWriter::new(r#try!(File::create(&self.path)));
         let mut lines = content.into_iter();
 
         for line in &mut lines {
             if line.trim_right() == OUTPUT_START {
                 break;
             }
-            try!(file.write_all(line.as_bytes()));
+            r#try!(file.write_all(line.as_bytes()));
         }
 
-        try!(write!(
+        r#try!(write!(
             &mut file,
             "{}\n{}{}\n",
             OUTPUT_START, actual, OUTPUT_END
@@ -186,7 +186,7 @@ impl Case {
             }
         }
         for line in &mut lines {
-            try!(file.write_all(line.as_bytes()));
+            r#try!(file.write_all(line.as_bytes()));
         }
 
         Ok(())
@@ -221,23 +221,23 @@ impl Kind {
             let mut p = Printer::new(&mut s);
             match *self {
                 Kind::Constant => {
-                    let n = try!(parser::constant(source, env));
+                    let n = r#try!(parser::constant(source, env));
                     p.visit_constant(&n, &Span::none());
                 }
                 Kind::Declaration => {
-                    let n = try!(parser::declaration(source, env));
+                    let n = r#try!(parser::declaration(source, env));
                     p.visit_declaration(&n.node, &n.span);
                 }
                 Kind::Statement => {
-                    let n = try!(parser::statement(source, env));
+                    let n = r#try!(parser::statement(source, env));
                     p.visit_statement(&n.node, &n.span);
                 }
                 Kind::Expression => {
-                    let n = try!(parser::expression(source, env));
+                    let n = r#try!(parser::expression(source, env));
                     p.visit_expression(&n.node, &n.span);
                 }
                 Kind::TranslationUnit => {
-                    let n = try!(parser::translation_unit(source, env));
+                    let n = r#try!(parser::translation_unit(source, env));
                     p.visit_translation_unit(&n);
                 }
             }

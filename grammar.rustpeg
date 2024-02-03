@@ -2,10 +2,10 @@
 
 #![arguments(env: &mut Env)]
 
-use ast::*;
-use astutil::*;
-use env::{Env, Symbol};
-use span::{Node, Span};
+use crate::ast::*;
+use crate::astutil::*;
+use crate::env::{Env, Symbol};
+use crate::span::{Node, Span};
 
 ////
 // Prologue

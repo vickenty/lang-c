@@ -10,6 +10,7 @@ homepage = "https://github.com/vickenty/lang-c"
 repository = "https://github.com/vickenty/lang-c"
 keywords = [ "ast", "c", "parser", "c-language" ]
 categories = [ "parser-implementations" ]
+edition = "2018"
 
 [features]
 dev-pegviz = [] # tests only: emit extra output for pegviz

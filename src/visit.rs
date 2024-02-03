@@ -18,8 +18,8 @@
 //!
 //! Free functions apply the visitor to sub-nodes of any given AST node.
 
-use ast::*;
-use span::Span;
+use crate::ast::*;
+use crate::span::Span;
 
 pub trait Visit<'ast> {
     fn visit_identifier(&mut self, identifier: &'ast Identifier, span: &'ast Span) {

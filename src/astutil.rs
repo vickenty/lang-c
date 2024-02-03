@@ -1,5 +1,5 @@
-use ast::*;
-use span::{Node, Span};
+use crate::ast::*;
+use crate::span::{Node, Span};
 
 #[cfg_attr(test, derive(Debug, PartialEq, Clone))]
 pub enum Operation {

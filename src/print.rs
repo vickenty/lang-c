@@ -12,9 +12,9 @@
 //! ```
 use std::fmt;
 
-use ast::*;
-use span::Span;
-use visit::*;
+use crate::ast::*;
+use crate::span::Span;
+use crate::visit::*;
 
 /// Printing visitor
 ///
@@ -69,7 +69,7 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
                 self.field("Character");
                 self.field(c);
             }
-            _ => {},
+            _ => {}
         }
 
         visit_constant(&mut self.block(), n, span);
@@ -636,9 +636,9 @@ impl<'a> fmt::Display for Escape<'a> {
 
         for c in self.0.chars() {
             match c {
-                '"' | '\'' | '\\' => try!(write!(fmt, "\\{}", c)),
-                ' '...'~' => try!(fmt.write_char(c)),
-                _ => try!(write!(fmt, "\\u{{{:04x}}}", c as u32)),
+                '"' | '\'' | '\\' => r#try!(write!(fmt, "\\{}", c)),
+                ' '...'~' => r#try!(fmt.write_char(c)),
+                _ => r#try!(write!(fmt, "\\u{{{:04x}}}", c as u32)),
             }
         }
 

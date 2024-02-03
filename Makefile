@@ -20,6 +20,7 @@ src/parser.rs.fmt: src/parser.rs.raw
 
 src/parser.rs: src/parser.rs.fmt
 	cat grammar.header $< > $@
+	sed -i $@ 's/try/r#try/'
 
 check:
 	test src/parser.rs -nt grammar.rustpeg

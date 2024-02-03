@@ -1,8 +1,8 @@
 use std::collections::{HashMap, HashSet};
 
-use ast::*;
-use span::Node;
-use strings;
+use crate::ast::*;
+use crate::span::Node;
+use crate::strings;
 
 #[derive(Clone, Copy, Debug, PartialEq, Hash)]
 pub enum Symbol {

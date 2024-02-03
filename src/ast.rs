@@ -20,7 +20,7 @@
 //! - statement expressions
 //! - `typeof` type specifiers
 
-use span::Node;
+use crate::span::Node;
 
 // From 6.4 Lexical elements
 

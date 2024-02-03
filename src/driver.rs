@@ -1,6 +1,6 @@
 //! Preprocess and parse C source file into an abstract syntax tree
 
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 use std::error;
 use std::fmt;
 use std::io;
@@ -118,7 +118,7 @@ pub struct SyntaxError {
     /// Byte position in the preproccessed source
     pub offset: usize,
     /// Tokens expected at the error location
-    pub expected: HashSet<&'static str>,
+    pub expected: BTreeSet<&'static str>,
 }
 
 impl SyntaxError {

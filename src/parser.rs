@@ -25,7 +25,7 @@ pub struct ParseError {
     pub line: usize,
     pub column: usize,
     pub offset: usize,
-    pub expected: ::std::collections::HashSet<&'static str>,
+    pub expected: ::std::collections::BTreeSet<&'static str>,
 }
 pub type ParseResult<T> = Result<T, ParseError>;
 impl ::std::fmt::Display for ParseError {
@@ -107,13 +107,13 @@ impl<'input> ParseState<'input> {
 struct ParseState<'input> {
     max_err_pos: usize,
     suppress_fail: usize,
-    expected: ::std::collections::HashSet<&'static str>,
+    expected: ::std::collections::BTreeSet<&'static str>,
     _phantom: ::std::marker::PhantomData<&'input ()>,
     postfix_expression0_cache: ::std::collections::HashMap<usize, RuleResult<Expression>>,
 }
 impl<'input> ParseState<'input> {
     fn new() -> ParseState<'input> {
-        ParseState { max_err_pos: 0, suppress_fail: 0, expected: ::std::collections::HashSet::new(), _phantom: ::std::marker::PhantomData, postfix_expression0_cache: ::std::collections::HashMap::new() }
+        ParseState { max_err_pos: 0, suppress_fail: 0, expected: ::std::collections::BTreeSet::new(), _phantom: ::std::marker::PhantomData, postfix_expression0_cache: ::std::collections::HashMap::new() }
     }
 }
 

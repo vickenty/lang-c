@@ -58,7 +58,7 @@ pub struct Integer {
 /// Base of the integer literal
 ///
 /// (C11 6.4.4.1)
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum IntegerBase {
     Decimal,
     Octal,
@@ -70,7 +70,7 @@ pub enum IntegerBase {
 /// Suffix of an integer literal
 ///
 /// (C11 6.4.4.1)
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct IntegerSuffix {
     /// Minimum size of the integer literal
     pub size: IntegerSize,
@@ -108,7 +108,7 @@ pub struct Float {
 /// Floating point number base
 ///
 /// (C11 6.4.4.2)
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum FloatBase {
     Decimal,
     Hexadecimal,
@@ -117,7 +117,7 @@ pub enum FloatBase {
 /// Floating point number suffix
 ///
 /// (C11 6.4.4.2)
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct FloatSuffix {
     pub format: FloatFormat,
     /// Integer literal is an imaginary part of a complex number
@@ -129,7 +129,7 @@ pub struct FloatSuffix {
 /// Floating point literal format specified by the suffix
 ///
 /// (C11 6.4.4.2)
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum FloatFormat {
     /// `f` suffix
     Float,
@@ -268,7 +268,7 @@ pub enum Expression {
 }
 
 /// Struct or union member access
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum MemberOperator {
     /// `expression.identifier`
     Direct,
@@ -354,7 +354,7 @@ pub struct AlignOf(pub Box<Node<TypeName>>);
 /// All operators with one operand
 ///
 /// (C11 6.5)
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum UnaryOperator {
     /// `operand++`
     PostIncrement,
@@ -404,7 +404,7 @@ pub struct CastExpression {
 /// All operators with two operands
 ///
 /// (C11 6.5)
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum BinaryOperator {
     /// `lhs[rhs]`
     Index,
@@ -572,7 +572,7 @@ pub struct InitDeclarator {
 /// Storage class
 ///
 /// (C11 6.7.1)
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum StorageClassSpecifier {
     /// `typedef`
     Typedef,
@@ -652,7 +652,7 @@ pub enum TypeSpecifier {
 /// Floating point type with guaranteed width and format
 ///
 /// [ISO/IEC TS 18661-3:2015](http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1945.pdf)
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct TS18661FloatType {
     pub format: TS18661FloatFormat,
     pub width: usize,
@@ -661,7 +661,7 @@ pub struct TS18661FloatType {
 /// Floating point formats
 ///
 /// [ISO/IEC TS 18661-3:2015](http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1945.pdf)
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum TS18661FloatFormat {
     BinaryInterchange,
     BinaryExtended,
@@ -687,7 +687,7 @@ pub struct StructType {
 /// The only difference between a `struct` and a `union`
 ///
 /// (C11 6.7.2.1)
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum StructKind {
     Struct,
     Union,
@@ -756,7 +756,7 @@ pub struct Enumerator {
 /// Type qualifier
 ///
 /// (C11 6.7.3)
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum TypeQualifier {
     /// `const`
     ///
@@ -791,7 +791,7 @@ pub enum TypeQualifier {
 /// Function specifier
 ///
 /// (C11 6.7.4)
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum FunctionSpecifier {
     /// `inline`
     ///
@@ -924,7 +924,7 @@ pub struct ParameterDeclaration {
 }
 
 /// Whether function signature ends with a `...`
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum Ellipsis {
     Some,
     None,

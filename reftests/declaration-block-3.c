@@ -13,7 +13,7 @@ Declaration
         Declarator
             DeclaratorKind
                 Identifier "bsearch_b"
-            DerivedDeclarator Pointer
+            PointerDeclarator Pointer
             DerivedDeclarator
                 FunctionDeclarator
                     ParameterDeclaration
@@ -24,7 +24,7 @@ Declaration
                         Declarator
                             DeclaratorKind
                                 Identifier "__key"
-                            DerivedDeclarator Pointer
+                            PointerDeclarator Pointer
                     ParameterDeclaration
                         DeclarationSpecifier
                             TypeQualifier Const
@@ -33,7 +33,7 @@ Declaration
                         Declarator
                             DeclaratorKind
                                 Identifier "__base"
-                            DerivedDeclarator Pointer
+                            PointerDeclarator Pointer
                     ParameterDeclaration
                         DeclarationSpecifier
                             TypeSpecifier TypedefName
@@ -56,7 +56,7 @@ Declaration
                                 Declarator
                                     DeclaratorKind
                                         Identifier "__compar"
-                                    DerivedDeclarator Block
+                                    PointerDeclarator Block
                                         PointerQualifier
                                             TypeQualifier Nonnull
                             DerivedDeclarator
@@ -68,7 +68,7 @@ Declaration
                                             TypeSpecifier Void
                                         Declarator
                                             DeclaratorKind Abstract
-                                            DerivedDeclarator Pointer
+                                            PointerDeclarator Pointer
                                     ParameterDeclaration
                                         DeclarationSpecifier
                                             TypeQualifier Const
@@ -76,7 +76,7 @@ Declaration
                                             TypeSpecifier Void
                                         Declarator
                                             DeclaratorKind Abstract
-                                            DerivedDeclarator Pointer
+                                            PointerDeclarator Pointer
                                     Ellipsis None
                         Extension
                             Attribute "__noescape__"

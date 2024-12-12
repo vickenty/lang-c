@@ -64,3 +64,17 @@ impl<T> Node<T> {
         }
     }
 }
+
+impl<T> std::ops::Deref for Node<T> {
+    type Target = T;
+    
+    fn deref(&self) -> &Self::Target {
+        &self.node
+    }
+}
+
+impl<T> std::ops::DerefMut for Node<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.node
+    }
+}

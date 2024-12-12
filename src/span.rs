@@ -67,7 +67,7 @@ impl<T> Node<T> {
 
 impl<T> std::ops::Deref for Node<T> {
     type Target = T;
-    
+
     fn deref(&self) -> &Self::Target {
         &self.node
     }

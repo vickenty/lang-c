@@ -169,7 +169,7 @@ character_constant -> String =
 
 character = [^'\\\n] / escape_sequence
 
-escape_sequence = "\\" (['"?\\abcfnrtv] / oct*<1,3> / "x" hex+)
+escape_sequence = "\\" (['"?\\abfnrtv] / oct*<1,3> / "x" hex+)
 
 ////
 // 6.4.5 String literal

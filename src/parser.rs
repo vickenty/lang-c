@@ -1531,11 +1531,11 @@ fn __parse_escape_sequence<'input>(__input: &'input str, __state: &mut ParseStat
                 let __choice_res = if __input.len() > __pos {
                     let (__ch, __next) = char_range_at(__input, __pos);
                     match __ch {
-                        '\'' | '"' | '?' | '\\' | 'a' | 'b' | 'c' | 'f' | 'n' | 'r' | 't' | 'v' => Matched(__next, ()),
-                        _ => __state.mark_failure(__pos, "['\"?\\abcfnrtv]"),
+                        '\'' | '"' | '?' | '\\' | 'a' | 'b' | 'f' | 'n' | 'r' | 't' | 'v' => Matched(__next, ()),
+                        _ => __state.mark_failure(__pos, "['\"?\\abfnrtv]"),
                     }
                 } else {
-                    __state.mark_failure(__pos, "['\"?\\abcfnrtv]")
+                    __state.mark_failure(__pos, "['\"?\\abfnrtv]")
                 };
                 match __choice_res {
                     Matched(__pos, __value) => Matched(__pos, __value),

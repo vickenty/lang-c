@@ -27,7 +27,7 @@ TranslationUnit
                     Declarator
                         DeclaratorKind
                             Identifier "argv"
-                        DerivedDeclarator Pointer
-                        DerivedDeclarator Pointer
+                        PointerDeclarator Pointer
+                        PointerDeclarator Pointer
             Statement Compound
 ===*/

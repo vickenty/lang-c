@@ -12,7 +12,7 @@ Declaration
                 Declarator
                     DeclaratorKind
                         Identifier "p"
-                    DerivedDeclarator Block
+                    PointerDeclarator Block
                         PointerQualifier
                             TypeQualifier Const
             DerivedDeclarator

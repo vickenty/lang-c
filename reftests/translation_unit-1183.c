@@ -26,7 +26,7 @@ TranslationUnit
             Declarator
                 DeclaratorKind
                     Identifier "realpath"
-                DerivedDeclarator Pointer
+                PointerDeclarator Pointer
                     PointerQualifier
                         Extension
                             Attribute "__nothrow__"
@@ -42,7 +42,7 @@ TranslationUnit
                             Declarator
                                 DeclaratorKind
                                     Identifier "__name"
-                                DerivedDeclarator Pointer
+                                PointerDeclarator Pointer
                                     PointerQualifier
                                         TypeQualifier Restrict
                         ParameterDeclaration
@@ -51,7 +51,7 @@ TranslationUnit
                             Declarator
                                 DeclaratorKind
                                     Identifier "__resolved"
-                                DerivedDeclarator Pointer
+                                PointerDeclarator Pointer
                                     PointerQualifier
                                         TypeQualifier Restrict
                         Ellipsis None

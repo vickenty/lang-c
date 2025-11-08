@@ -826,6 +826,7 @@ pub struct Declarator {
     /// What is being declared
     pub kind: Node<DeclaratorKind>,
     /// Contains pointer, array and function declarator elements
+    pub pointer: Vec<Node<PointerDeclarator>>,
     pub derived: Vec<Node<DerivedDeclarator>>,
     /// Vendor-specific extensions
     pub extensions: Vec<Node<Extension>>,
@@ -851,23 +852,30 @@ pub enum DeclaratorKind {
     Declarator(Box<Node<Declarator>>),
 }
 
-/// Modifies declarator type
+/// Pointer declarator
 ///
-/// (C11 6.7.6)
+/// (C11 6.7.6.1)
 #[derive(Debug, PartialEq, Clone)]
-pub enum DerivedDeclarator {
+pub enum PointerDeclarator {
     /// `* qualifiers …`
     Pointer(Vec<Node<PointerQualifier>>),
+    /// `^ qualifiers …`
+    ///
+    /// [Clang extension](https://clang.llvm.org/docs/BlockLanguageSpec.html)
+    Block(Vec<Node<PointerQualifier>>),
+}
+
+/// Modifies declarator type
+///
+/// (C11 6.7.6.2, 6.7.6.3)
+#[derive(Debug, PartialEq, Clone)]
+pub enum DerivedDeclarator {
     /// `… []`
     Array(Node<ArrayDeclarator>),
     /// `… ( parameters )`
     Function(Node<FunctionDeclarator>),
     /// `… ( identifiers )`
     KRFunction(Vec<Node<Identifier>>),
-    /// `^ qualifiers …`
-    ///
-    /// [Clang extension](https://clang.llvm.org/docs/BlockLanguageSpec.html)
-    Block(Vec<Node<PointerQualifier>>),
 }
 
 /// Array part of a declarator

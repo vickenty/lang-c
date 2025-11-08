@@ -9907,7 +9907,7 @@ fn __parse_declarator0<'input>(__input: &'input str, __state: &mut ParseState<'i
                                                             }
                                                         };
                                                         match __seq_res {
-                                                            Matched(__pos, derived) => Matched(__pos, { Declarator { kind: kind, derived: concat(pointer, derived), extensions: attr.unwrap_or_default() } }),
+                                                            Matched(__pos, derived) => Matched(__pos, { Declarator { kind: kind, pointer: pointer, derived: derived, extensions: attr.unwrap_or_default() } }),
                                                             Failed => Failed,
                                                         }
                                                     }
@@ -10673,7 +10673,7 @@ fn __parse_function_declarator<'input>(__input: &'input str, __state: &mut Parse
     }
 }
 
-fn __parse_pointer<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Node<DerivedDeclarator>> {
+fn __parse_pointer<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<Node<PointerDeclarator>> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = Matched(__pos, __pos);
@@ -10696,7 +10696,7 @@ fn __parse_pointer<'input>(__input: &'input str, __state: &mut ParseState<'input
     }
 }
 
-fn __parse_pointer0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<DerivedDeclarator> {
+fn __parse_pointer0<'input>(__input: &'input str, __state: &mut ParseState<'input>, __pos: usize, env: &mut Env) -> RuleResult<PointerDeclarator> {
     #![allow(non_snake_case, unused)]
     {
         let __seq_res = {
@@ -10791,9 +10791,9 @@ fn __parse_pointer0<'input>(__input: &'input str, __state: &mut ParseState<'inpu
                         match __seq_res {
                             Matched(__pos, q) => Matched(__pos, {
                                 if t == "^" {
-                                    DerivedDeclarator::Block(q)
+                                    PointerDeclarator::Block(q)
                                 } else {
-                                    DerivedDeclarator::Pointer(q)
+                                    PointerDeclarator::Pointer(q)
                                 }
                             }),
                             Failed => Failed,
@@ -11164,7 +11164,7 @@ fn __parse_abstract_declarator0<'input>(__input: &'input str, __state: &mut Pars
                                                 }
                                             };
                                             match __seq_res {
-                                                Matched(__pos, d) => Matched(__pos, { Declarator { kind: k, derived: concat(p, d), extensions: Vec::new() } }),
+                                                Matched(__pos, d) => Matched(__pos, { Declarator { kind: k, pointer: p, derived: d, extensions: Vec::new() } }),
                                                 Failed => Failed,
                                             }
                                         }
@@ -11263,7 +11263,7 @@ fn __parse_abstract_declarator0<'input>(__input: &'input str, __state: &mut Pars
                                                 }
                                             };
                                             match __seq_res {
-                                                Matched(__pos, d) => Matched(__pos, { Declarator { kind: Node::new(DeclaratorKind::Abstract, Span::span(k, k)), derived: concat(p, d), extensions: Vec::new() } }),
+                                                Matched(__pos, d) => Matched(__pos, { Declarator { kind: Node::new(DeclaratorKind::Abstract, Span::span(k, k)), pointer: p, derived: d, extensions: Vec::new() } }),
                                                 Failed => Failed,
                                             }
                                         }
@@ -11320,7 +11320,7 @@ fn __parse_abstract_declarator0<'input>(__input: &'input str, __state: &mut Pars
                             Matched(__pos, p) => {
                                 let __seq_res = Matched(__pos, __pos);
                                 match __seq_res {
-                                    Matched(__pos, k) => Matched(__pos, { Declarator { kind: Node::new(DeclaratorKind::Abstract, Span::span(k, k)), derived: p, extensions: Vec::new() } }),
+                                    Matched(__pos, k) => Matched(__pos, { Declarator { kind: Node::new(DeclaratorKind::Abstract, Span::span(k, k)), pointer: p, derived: Vec::new(), extensions: Vec::new() } }),
                                     Failed => Failed,
                                 }
                             }

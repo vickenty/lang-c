@@ -399,6 +399,11 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
         print_declarator_kind(self, n);
         visit_declarator_kind(&mut self.block(), n, span);
     }
+    fn visit_pointer_declarator(&mut self, n: &'ast PointerDeclarator, span: &'ast Span) {
+        self.name("PointerDeclarator");
+        print_pointer_declarator(self, n);
+        visit_pointer_declarator(&mut self.block(), n, span);
+    }
     fn visit_derived_declarator(&mut self, n: &'ast DerivedDeclarator, span: &'ast Span) {
         self.name("DerivedDeclarator");
         print_derived_declarator(self, n);
@@ -565,11 +570,15 @@ fn print_declarator_kind<'ast>(p: &mut Printer, n: &'ast DeclaratorKind) {
         _ => {}
     }
 }
+fn print_pointer_declarator<'ast>(p: &mut Printer, n: &'ast PointerDeclarator) {
+    match *n {
+        PointerDeclarator::Pointer(_) => p.w.write_str(" Pointer").unwrap(),
+        PointerDeclarator::Block(_) => p.w.write_str(" Block").unwrap(),
+    }
+}
 fn print_derived_declarator<'ast>(p: &mut Printer, n: &'ast DerivedDeclarator) {
     match *n {
-        DerivedDeclarator::Pointer(_) => p.w.write_str(" Pointer").unwrap(),
         DerivedDeclarator::KRFunction(_) => p.w.write_str(" KRFunction").unwrap(),
-        DerivedDeclarator::Block(_) => p.w.write_str(" Block").unwrap(),
         _ => {}
     }
 }

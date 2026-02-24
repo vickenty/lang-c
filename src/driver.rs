@@ -136,7 +136,7 @@ impl SyntaxError {
         Ok(())
     }
 
-    pub fn get_location(&self) -> (loc::Location, Vec<loc::Location>) {
+    pub fn get_location(&self) -> (loc::Location<'_>, Vec<loc::Location<'_>>) {
         loc::get_location_for_offset(&self.source, self.offset)
     }
 }

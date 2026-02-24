@@ -27,11 +27,11 @@ pub struct Printer<'a> {
 }
 
 impl<'a> Printer<'a> {
-    pub fn new(w: &mut fmt::Write) -> Printer {
+    pub fn new(w: &mut fmt::Write) -> Printer<'_> {
         Printer { w: w, offset: 0 }
     }
 
-    fn block(&mut self) -> Printer {
+    fn block(&mut self) -> Printer<'_> {
         writeln!(&mut self.w, "").unwrap();
         Printer {
             w: &mut self.w,
@@ -69,7 +69,7 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
                 self.field("Character");
                 self.field(c);
             }
-            _ => {},
+            _ => {}
         }
 
         visit_constant(&mut self.block(), n, span);

@@ -107,7 +107,7 @@ fn strip_prefix<'a>(s: &'a str, p: &str) -> Option<&'a str> {
 }
 
 // https://gcc.gnu.org/onlinedocs/cpp/Preprocessor-Output.html
-fn parse_line_directive(s: &str) -> Option<(Location, u32)> {
+fn parse_line_directive(s: &str) -> Option<(Location<'_>, u32)> {
     let s = otry!(strip_prefix(s, "# "));
     let n = otry!(s.find(" "));
     let line = otry!(usize::from_str_radix(&s[..n], 10).ok());
